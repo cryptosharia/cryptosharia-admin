@@ -1,0 +1,20 @@
+{
+	"git.autofetch": true,
+	"terminal.integrated.suggest.enabled": true,
+	"svelte.enable-ts-plugin": true,
+
+	"editor.tabSize": 2,
+
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.formatOnSave": true,
+	"eslint.validate": ["svelte", "typescript", "javascript"],
+
+	"tailwindCSS.experimental.classRegex": [
+		// Show Tailwind Class detail when hovering a string that is prefixed by "/*tw*/"
+		// e.g. const kelasBang = /*tw*/"bg-blue-500 text-white"
+		["/\\*\\s*tw\\s*\\*/[^\"'`]*[\"'`]([^\"'`]*)[\"'`]", "([^\"'`]*)"]
+	],
+	"files.associations": {
+		"*.css": "tailwindcss"
+	}
+}
