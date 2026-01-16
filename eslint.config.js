@@ -16,7 +16,12 @@ const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 	...svelte.configs.prettier,
 
 	{
-		languageOptions: { globals: { ...globals.browser, ...globals.node } }
+		languageOptions: { globals: { ...globals.browser, ...globals.node } },
+
+		rules: {
+			// Uncomment this if the project has many external links
+			// 'svelte/no-navigation-without-resolve': 'off'
+		}
 	},
 
 	{
