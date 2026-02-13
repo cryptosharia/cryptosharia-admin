@@ -1,12 +1,37 @@
 <script lang="ts">
 	import './layout.css';
-	import favicon from '$lib/assets/favicon.svg';
+	import { ModeWatcher } from 'mode-watcher';
+	import { onNavigate } from '$app/navigation';
+	import NProgress from 'nprogress';
+	import 'nprogress/nprogress.css';
 
 	let { children } = $props();
+
+	NProgress.configure({ showSpinner: false });
+
+	onNavigate((navigation) => {
+		if (!document.startViewTransition) return;
+
+		return new Promise((resolve) => {
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
+	
+	import { navigating } from '$app/stores';
+	
+	$effect(() => {
+		if ($navigating) {
+			NProgress.start();
+		} else {
+			NProgress.done();
+		}
+	});
 </script>
 
-<svelte:head>
-	<link rel="icon" href={favicon} />
-</svelte:head>
-
-{@render children()}
+<ModeWatcher />
+<div class="antialiased text-foreground bg-background min-h-screen font-sans selection:bg-primary/30">
+	{@render children()}
+</div>
