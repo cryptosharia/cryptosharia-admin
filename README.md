@@ -36,3 +36,27 @@ npm run build
 You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+
+## Database Setup
+
+This project uses [Drizzle ORM](https://orm.drizzle.team) with PostgreSQL.
+
+1.  Update `.env` with your database credentials:
+    ```env
+    DATABASE_URL=postgresql://user:password@localhost:5432/cryptosharia_admin
+    ```
+2.  Generate migrations (if you change the schema):
+    ```sh
+    npx drizzle-kit generate
+    ```
+3.  Push schema to the database:
+    ```sh
+    npx drizzle-kit push
+    ```
+
+## Admin Panel
+
+The admin panel is built with SvelteKit and TailwindCSS.
+- **Layout**: `src/routes/+layout.svelte` (Sidebar, Glassmorphism design)
+- **Schema**: `src/lib/server/db/schema.ts` (Drizzle schema definition)
+- **Database**: `src/lib/server/db/index.ts` (DB connection)
