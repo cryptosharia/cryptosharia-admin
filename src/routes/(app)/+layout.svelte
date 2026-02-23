@@ -6,7 +6,7 @@
 </script>
 
 <div class="flex min-h-screen bg-background text-foreground font-sans">
-	<AppSidebar user={data.admin} />
+	<AppSidebar user={data.user} />
 
 	<!-- Main Content -->
 	<main class="ml-72 flex-1 min-h-screen relative flex flex-col">

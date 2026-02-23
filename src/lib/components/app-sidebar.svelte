@@ -9,31 +9,27 @@
 	let { user } = $props();
 
 	const navItems = [
-		{ label: 'Dashboard', href: '/', icon: LayoutDashboard },
+		{ label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
 		{ label: 'Posts', href: '/posts', icon: Newspaper },
 		{ label: 'Tokens', href: '/tokens', icon: Coins },
-		{ label: 'Tags', href: '/tags', icon: FileText },
 		{ label: 'Users', href: '/users', icon: Users },
-		{ label: 'Roles', href: '/roles', icon: Shield },
-		{ label: 'Messages', href: '/messages', icon: Bell },
-		{ label: 'Activity', href: '/activity', icon: Activity },
 	];
 </script>
 
 <aside class="fixed inset-y-0 left-0 z-50 w-72 border-r border-sidebar-border bg-sidebar text-sidebar-foreground flex flex-col">
 	<div class="flex h-16 items-center justify-between border-b border-sidebar-border px-6">
-		<div class="flex items-center gap-2 font-bold text-xl">
-			<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
+		<a href="/dashboard" class="flex items-center gap-2 font-bold text-xl hover:opacity-80 transition-opacity">
+			<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10">
 				<img src="/logo.png" alt="CryptoSharia" class="h-6 w-6 object-contain" />
 			</div>
 			<span>CryptoSharia Admin</span>
-		</div>
+		</a>
 	</div>
 
 	<div class="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
 		<nav class="flex flex-col gap-1">
 			{#each navItems as item}
-				{@const active = item.href === '/' ? $page.url.pathname === '/' : $page.url.pathname.startsWith(item.href)}
+				{@const active = $page.url.pathname === item.href || $page.url.pathname.startsWith(item.href + '/')}
 				<Button
 					href={item.href}
 					variant="ghost"

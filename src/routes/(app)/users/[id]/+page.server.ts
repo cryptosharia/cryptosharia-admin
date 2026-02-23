@@ -1,86 +1,99 @@
-import { db } from '$lib/server/db';
-import { users, roles } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { createApiClient } from '$lib/api';
 import { error, fail, redirect } from '@sveltejs/kit';
-import bcrypt from 'bcryptjs';
-import { logActivity } from '$lib/server/db/logger';
-import type { Actions, PageServerLoad } from './$types';
+import type { PageServerLoad, Actions } from './$types';
 
-export const load: PageServerLoad = async ({ params }) => {
-	const user = await db.query.users.findFirst({
-		where: eq(users.id, params.id),
-        with: {
-            role: true
+export const load: PageServerLoad = async ({ params, fetch, locals }) => {
+	const client = createApiClient({ 
+        fetch, 
+        accessToken: locals.user?.accessToken 
+    });
+    try {
+        const [{ data, error: apiError }, { data: rolesRes }] = await Promise.all([
+            client.GET('/users/{id}', {
+                params: { path: { id: params.id } }
+            }),
+            client.GET('/roles' as any, {})
+        ]);
+
+        if (apiError || !data?.success) {
+            console.error('User load error:', apiError);
+            throw error(404, 'User not found');
         }
-	});
 
-	if (!user) throw error(404, 'User not found');
-
-	const allRoles = await db.select().from(roles);
-
-	return { user, roles: allRoles };
+        return { 
+            user: data.data,
+            roles: rolesRes?.success ? rolesRes.data : []
+        };
+    } catch (err: any) {
+        if (err instanceof Response) throw err; // re-throw redirects/errors
+        console.error('Failed to load user:', err);
+        throw error(500, `Failed to load user: ${err.message || 'Unknown error'}`);
+    }
 };
 
 export const actions = {
-	update: async ({ request, params, locals }) => {
-		const data = await request.formData();
-		const name = data.get('name') as string;
-		const email = data.get('email') as string;
-		const password = data.get('password') as string;
-		const roleId = data.get('roleId') as string;
-		const isActive = data.get('status') === 'on';
+    update: async ({ request, params, fetch, locals }) => {
+        const formData = await request.formData();
+        const client = createApiClient({ 
+            fetch, 
+            accessToken: locals.user?.accessToken 
+        });
+        
+        const name = formData.get('name') as string;
+        const email = formData.get('email') as string;
+        const password = formData.get('password') as string;
+        const role = formData.get('role') as string;
+        const status = formData.get('status') === 'on' ? 'active' : 'inactive';
 
-		if (!name || !email) {
-			return fail(400, { missing: true });
-		}
+        // 1. Update Profile (Name, Email, Role) - Password often separate or handled here?
+        // API spec says UsersIdPatchBody.
+        const patchBody: any = { name };
+        // If password provided, include it if API supports it in PATCH. 
+        // If not, we might need a separate endpoint or ignore it.
+        // Assuming API supports password update in PATCH for admin.
+        if (password && password.trim() !== '') {
+            patchBody.password = password;
+        }
 
-		try {
-			const updateData: any = {
-				name,
-				email,
-				roleId: roleId || null,
-				status: isActive ? 'active' : 'inactive',
-				updatedAt: new Date()
-			};
+        const { data: patchData, error: patchError } = await client.PATCH('/users/{id}', {
+            params: { path: { id: params.id } },
+            body: patchBody
+        });
 
-			if (password) {
-				updateData.hashedPassword = await bcrypt.hash(password, 10);
-			}
+        if (patchError) {
+             console.error('Update profile error:', patchError);
+             return fail(400, { success: false, message: patchError.message || 'Failed to update user profile.' });
+        }
 
-			await db.update(users)
-				.set(updateData)
-				.where(eq(users.id, params.id));
+        // 2. Update Role
+        const roleId = formData.get('roleId') as string;
+        if (roleId) {
+            const { error: roleError } = await client.PUT('/users/{id}/role', {
+                params: { path: { id: params.id } },
+                body: { roleId } as any
+            });
 
-			if (locals.admin) {
-				await logActivity(locals.admin.id, 'UPDATE', 'users', params.id, { name });
-			}
-            
-            return { success: true };
-		} catch (err) {
-			console.error('Error updating user:', err);
-			return fail(500, { message: 'Failed to update user' });
-		}
-	},
+            if (roleError) {
+                console.error('Update role error:', roleError);
+                return fail(400, { success: false, message: roleError.message || 'Profile updated, but failed to update role.' });
+            }
+        }
 
-	delete: async ({ params, locals }) => {
-		// Prevent self-deletion
-		if (locals.admin?.id === params.id) {
-			return fail(400, { message: 'You cannot delete your own account.' });
-		}
+        // 3. Update Status
+        // Only if status logic is needed.
+        const { error: statusError } = await client.PUT('/users/{id}/status', {
+            params: { path: { id: params.id } },
+            body: { status }
+        });
 
-		try {
-			const [deleted] = await db.delete(users)
-				.where(eq(users.id, params.id))
-				.returning();
+        if (statusError) {
+            console.error('Update status error:', statusError);
+            return fail(400, { success: false, message: statusError.message || 'Profile updated, but failed to update status.' });
+        }
 
-			if (locals.admin && deleted) {
-				await logActivity(locals.admin.id, 'DELETE', 'users', params.id, { name: deleted.name });
-			}
-		} catch (err) {
-			console.error('Error deleting user:', err);
-			return fail(500, { message: 'Failed to delete user' });
-		}
-
-		throw redirect(303, '/users');
-	}
+        return { success: true, message: 'User updated successfully' };
+    },
+    delete: async () => {
+         return fail(405, { success: false, message: 'Delete operation is not supported by the API yet.' });
+    }
 } satisfies Actions;

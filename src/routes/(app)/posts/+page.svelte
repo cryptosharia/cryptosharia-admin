@@ -43,32 +43,34 @@
 								<div class="space-y-1">
 									<p class="font-medium group-hover:text-primary transition-colors">{post.title}</p>
 									<div class="flex items-center gap-2 text-xs text-muted-foreground">
-										<span>by {post.authorName || 'Unknown'}</span>
+										<span>{post.authorName}</span>
 										<span>•</span>
-										<span>/{post.slug}</span>
+										<span class="font-mono text-[10px]">{post.slug}</span>
 									</div>
 								</div>
 							</Table.Cell>
 							<Table.Cell>
-								<Badge variant="outline" class="uppercase
-									{post.status === 'published' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 
-									 post.status === 'archived' ? 'bg-muted text-muted-foreground border-muted' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'}">
+								<Badge variant="outline" class="capitalize
+									{post.status === 'published' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-900/30' : 
+									 post.status === 'archived' ? 'bg-gray-100 text-gray-500 border-gray-200' : 'bg-yellow-500/10 text-yellow-600 border-yellow-200 dark:border-yellow-900/30'}">
 									{post.status}
 								</Badge>
 							</Table.Cell>
 							<Table.Cell>
-								<span class="text-muted-foreground text-sm capitalize">{post.section}</span>
+								<span class="text-sm capitalize px-2 py-1 rounded-md bg-secondary text-secondary-foreground">
+									{post.section}
+								</span>
 							</Table.Cell>
-							<Table.Cell class="text-muted-foreground text-sm">
-								<div class="flex items-center gap-2">
+							<Table.Cell>
+								<div class="flex items-center gap-2 text-sm text-muted-foreground">
 									<Calendar size={14} />
-									{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : 'Unpublished'}
+									<span>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : '—'}</span>
 								</div>
 							</Table.Cell>
 							<Table.Cell class="text-right">
 								<div class="flex items-center justify-end gap-2">
-									<Button variant="ghost" size="icon" href="/posts/{post.id}" title="Edit">
-										<Edit3 size={18} />
+									<Button variant="ghost" size="icon" href={`/posts/${post.id}`}>
+										<Edit3 size={16} />
 									</Button>
 								</div>
 							</Table.Cell>

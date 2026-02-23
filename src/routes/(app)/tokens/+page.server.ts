@@ -1,27 +1,40 @@
-import { db } from '$lib/server/db';
-import { tokens } from '$lib/server/db/schema';
-import { desc } from 'drizzle-orm';
+import { createApiClient } from '$lib/api';
+import type { PageServerLoad } from './$types';
 
-export const load = async () => {
+export const load: PageServerLoad = async ({ fetch, locals }) => {
+	const client = createApiClient({ 
+		fetch, 
+		accessToken: locals.user?.accessToken 
+	});
+
 	try {
-		const allTokens = await db.query.tokens.findMany({
-			orderBy: [desc(tokens.createdAt)],
-			with: {
-				logo: true
+		const { data } = await client.GET('/tokens', {
+			params: {
+				query: {
+					limit: 100,
+					statuses: ['draft', 'published', 'archived']
+				}
 			}
 		});
 
 		return {
-			tokens: allTokens.map(t => ({
-				...t,
-				logoUrl: t.logo?.pathname // Assuming pathname is the URL or part of it
-			}))
+			tokens: data?.data?.items.map(token => ({
+				id: token.id,
+				name: token.name,
+				ticker: token.ticker,
+				slug: token.slug,
+				rank: token.rank,
+				status: token.status,
+				shariaStatus: token.shariaStatus,
+				logoUrl: token.logo?.url,
+				updatedAt: token.updatedAt
+			})) ?? []
 		};
 	} catch (error) {
-		console.error('Database connection failed:', error);
+		console.error('API connection failed:', error);
 		return {
 			tokens: [],
-			error: 'Database connection failed'
+			error: 'API connection failed'
 		};
 	}
 };

@@ -11,7 +11,9 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
-		"lint": "prettier --check . && eslint ."
+		"lint": "prettier --check . && eslint .",
+		"gen:api-types": "openapi-typescript http://localhost:5173/openapi.json -o src/lib/api-types.ts",
+		"gen:api-types:preview": "openapi-typescript https://preview.api.cryptosharia.id/openapi.json -o src/lib/api-types.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.1",
@@ -22,14 +24,12 @@
 		"@tailwindcss/vite": "^4.1.18",
 		"@types/bcryptjs": "^2.4.6",
 		"@types/node": "^25",
-		"@types/pg": "^8.16.0",
-		"@types/qrcode": "^1.5.6",
 		"dotenv": "^17.2.3",
-		"drizzle-kit": "^0.31.8",
 		"eslint": "^9.39.2",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.14.0",
 		"globals": "^17.0.0",
+		"openapi-typescript": "^7.13.0",
 		"prettier": "^3.8.0",
 		"prettier-plugin-svelte": "^3.4.1",
 		"prettier-plugin-tailwindcss": "^0.7.2",
@@ -46,14 +46,12 @@
 		"bits-ui": "^2.15.5",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
-		"drizzle-orm": "^0.45.1",
 		"drizzle-zod": "^0.8.3",
 		"lucide-svelte": "^0.562.0",
 		"mode-watcher": "^1.1.0",
 		"nprogress": "^0.2.0",
-		"otplib": "^12.0.1",
-		"pg": "^8.17.2",
-		"qrcode": "^1.5.4",
+		"openapi-fetch": "^0.17.0",
+		"pg": "^8.18.0",
 		"tailwind-merge": "^3.4.0",
 		"zod": "^4.3.6"
 	}

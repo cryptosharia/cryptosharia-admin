@@ -1,22 +1,32 @@
-import { db } from '$lib/server/db';
-import { posts, users } from '$lib/server/db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { createApiClient } from '$lib/api';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async () => {
-	const allPosts = await db.select({
-		id: posts.id,
-		title: posts.title,
-		slug: posts.slug,
-		status: posts.status,
-		section: posts.section,
-		publishedAt: posts.publishedAt,
-		updatedAt: posts.updatedAt,
-		authorName: users.name
-	})
-	.from(posts)
-	.leftJoin(users, eq(posts.createdBy, users.id))
-	.orderBy(desc(posts.updatedAt));
+export const load: PageServerLoad = async ({ fetch, locals }) => {
+	const client = createApiClient({ 
+        fetch, 
+        accessToken: locals.user?.accessToken 
+    });
 
-	return { posts: allPosts };
+    // Fetch posts with associated data (author is incl in response)
+	const { data } = await client.GET('/posts', {
+        params: {
+            query: {
+                limit: 100, // Fetch first 100 for now
+                statuses: ['draft', 'published', 'archived']
+            }
+        }
+    });
+
+	return { 
+        posts: data?.data?.items.map(post => ({
+            id: post.id,
+            title: post.title,
+            slug: post.slug,
+            status: post.status,
+            section: post.section,
+            publishedAt: post.publishedAt,
+            updatedAt: post.updatedAt,
+            authorName: post.createdBy?.name || 'Unknown' 
+        })) ?? [] 
+    };
 };

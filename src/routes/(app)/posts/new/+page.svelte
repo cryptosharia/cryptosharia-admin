@@ -159,9 +159,9 @@
 							Save Post
 						</Button>
 
-						{#if form?.error}
+						{#if form?.message}
 							<div class="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium animate-in fade-in slide-in-from-top-2">
-								{form.error}
+								{form.message}
 							</div>
 						{/if}
 					</CardContent>
