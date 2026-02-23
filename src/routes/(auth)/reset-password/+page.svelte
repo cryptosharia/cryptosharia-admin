@@ -8,6 +8,11 @@
 	let loading = $state(false);
 </script>
 
+<div class="flex flex-col space-y-2 text-center mb-6">
+	<h1 class="text-2xl font-semibold tracking-tight">Reset Password</h1>
+	<p class="text-sm text-muted-foreground">Enter your email to receive reset instructions</p>
+</div>
+
 <form
 	method="POST"
 	use:enhance={() => {
@@ -30,35 +35,16 @@
 			class="h-12"
 		/>
 	</div>
-
-	<div class="space-y-2">
-		<div class="flex items-center justify-between">
-			<label for="password" class="text-sm font-medium leading-none">Password</label>
-			<div class="space-x-2 text-xs text-primary">
-				<a href="/reset-password" class="hover:underline">Forgot password?</a>
-				<span>|</span>
-				<a href="/request-access" class="hover:underline">Request Access?</a>
-			</div>
-		</div>
-		<Input
-			type="password"
-			id="password"
-			name="password"
-			required
-			placeholder="••••••••"
-			class="h-12"
-		/>
-	</div>
-
-	{#if form?.invalid}
-		<div class="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center font-medium animate-in fade-in slide-in-from-top-2">
-			Invalid email or password
+    
+    {#if form?.success}
+		<div class="p-3 rounded-md bg-green-500/10 border border-green-500/20 text-green-600 text-sm text-center font-medium animate-in fade-in slide-in-from-top-2">
+			If an account exists, a reset link has been sent.
 		</div>
 	{/if}
-	
-	{#if form?.missing}
+
+	{#if form?.error}
 		<div class="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center font-medium animate-in fade-in slide-in-from-top-2">
-			Please fill in all fields
+			Error processing request.
 		</div>
 	{/if}
 
@@ -69,11 +55,14 @@
 	>
 		{#if loading}
 			<Loader2 class="animate-spin" size={20} />
-			Signing in...
+			Sending...
 		{:else}
-			Sign In
+			Send Reset Link
 			<ArrowRight size={20} />
 		{/if}
 	</Button>
-</form>
 
+    <div class="text-center text-sm">
+        <a href="/login" class="text-primary hover:underline">Back to Login</a>
+    </div>
+</form>

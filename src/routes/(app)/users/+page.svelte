@@ -42,9 +42,13 @@
 						<Table.Row>
 							<Table.Cell class="font-medium">
 								<div class="flex items-center gap-3">
-									<div class="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-										<Users size={20} />
-									</div>
+                                    {#if user.avatarUrl}
+                                        <img src={user.avatarUrl} alt={user.name} class="h-10 w-10 rounded-full object-cover" />
+                                    {:else}
+                                        <div class="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                                            <Users size={20} />
+                                        </div>
+                                    {/if}
 									<div>
 										<p class="font-medium">{user.name || 'Anonymous'}</p>
 										<p class="text-xs text-muted-foreground">{user.email}</p>
@@ -52,14 +56,10 @@
 								</div>
 							</Table.Cell>
 							<Table.Cell>
-								{#if user.role}
-									<Badge variant="outline" class="bg-primary/10 text-primary border-primary/20 flex w-fit items-center gap-1">
-										<Shield size={12} />
-										{user.role.role}
-									</Badge>
-								{:else}
-									<span class="text-muted-foreground text-sm">User</span>
-								{/if}
+								<Badge variant="outline" class="bg-primary/10 text-primary border-primary/20 flex w-fit items-center gap-1 uppercase">
+									<Shield size={12} />
+									{user.role}
+								</Badge>
 							</Table.Cell>
 							<Table.Cell>
 								<Badge variant="outline" class={user.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-destructive/10 text-destructive border-destructive/20'}>

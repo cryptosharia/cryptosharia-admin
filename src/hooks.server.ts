@@ -1,47 +1,47 @@
 import { redirect, type Handle } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { users, permissions, rolePermissions } from '$lib/server/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { createApiClient } from '$lib/api';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	const sessionId = event.cookies.get('admin_session');
+	const accessToken = event.cookies.get('access_token');
 
-	if (sessionId) {
-		const admin = await db.query.users.findFirst({
-			where: eq(users.id, sessionId)
-		});
+	if (accessToken) {
+		const client = createApiClient({ fetch: event.fetch, accessToken });
+		const { data, error } = await client.GET('/auth/me');
 
-		if (admin && admin.status === 'active') {
-			const perms = await db.select({
-				slug: permissions.permission
-			})
-			.from(permissions)
-			.innerJoin(rolePermissions, eq(permissions.id, rolePermissions.permissionId))
-			.where(admin.roleId ? eq(rolePermissions.roleId, admin.roleId) : sql`FALSE`);
-
-			event.locals.admin = {
-				id: admin.id,
-				name: admin.name,
-				email: admin.email,
-				roleId: admin.roleId,
-				permissions: perms.map(p => p.slug)
+		if (data?.success && data.data) {
+			event.locals.user = {
+				id: data.data.id,
+				name: data.data.name,
+				email: data.data.email,
+				role: data.data.role,
+				permissions: data.data.permissions,
+				accessToken: accessToken
 			};
 		} else {
-			// Invalid session
-			event.cookies.delete('admin_session', { path: '/' });
+			// Invalidate session if token is invalid
+			event.cookies.delete('access_token', { path: '/' });
+			event.cookies.delete('refresh_token', { path: '/' });
 		}
 	}
 
-	const isAuthRoute = event.url.pathname.startsWith('/login') || event.url.pathname.startsWith('/request-access');
+	const isAuthRoute = 
+		event.url.pathname.startsWith('/login') || 
+		event.url.pathname.startsWith('/signup') || 
+		event.url.pathname.startsWith('/reset-password') || 
+		event.url.pathname.startsWith('/request-access');
 	
 	// Protect app routes
-	if (!event.locals.admin && !isAuthRoute) {
-		throw redirect(303, '/login');
+	if (!event.locals.user && !isAuthRoute) {
+		// Allow API routes to pass through if needed, or secure them too? 
+		// Usually API routes are protected by the same mechanism or token check.
+		if (!event.url.pathname.startsWith('/api')) {
+			throw redirect(303, '/login');
+		}
 	}
 
 	// Redirect logged in users away from auth routes
-	if (event.locals.admin && isAuthRoute) {
-		throw redirect(303, '/');
+	if (event.locals.user && isAuthRoute) {
+		throw redirect(303, '/dashboard');
 	}
 
 	return resolve(event);

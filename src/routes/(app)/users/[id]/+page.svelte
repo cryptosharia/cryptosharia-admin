@@ -69,11 +69,12 @@
 						<select
 							id="roleId"
 							name="roleId"
+							value={data.user.roleId}
 							class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 						>
-							<option value="" selected={!data.user.roleId}>Default (User)</option>
+							<option value={null}>No Role</option>
 							{#each data.roles as role}
-								<option value={role.id} selected={role.id === data.user.roleId}>{role.name || role.role}</option>
+								<option value={role.id}>{role.role}</option>
 							{/each}
 						</select>
 					</div>
@@ -98,7 +99,7 @@
 					</Button>
 				</div>
 
-				{#if form?.message}
+				{#if form?.message && !form?.success}
 					<div class="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive font-medium animate-in fade-in slide-in-from-top-2">
 						{form.message}
 					</div>
@@ -108,7 +109,7 @@
 					<div class="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-medium animate-in fade-in slide-in-from-top-2">
 						<div class="flex items-center gap-2">
 							<CheckCircle2 size={18} />
-							User updated successfully!
+							{form.message || 'User updated successfully!'}
 						</div>
 					</div>
 				{/if}

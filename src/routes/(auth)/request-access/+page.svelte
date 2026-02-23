@@ -79,15 +79,9 @@
 			/>
 		</div>
 
-		{#if form?.missing}
+		{#if form?.message && !form?.success}
 			<div class="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center font-medium animate-in fade-in slide-in-from-top-2">
-				Please fill in all fields
-			</div>
-		{/if}
-		
-		{#if form?.error}
-			<div class="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center font-medium animate-in fade-in slide-in-from-top-2">
-				{form.error}
+				{form.message}
 			</div>
 		{/if}
 

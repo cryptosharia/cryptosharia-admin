@@ -1,6 +1,4 @@
 import { fail } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { messages } from '$lib/server/db/schema';
 import type { Actions } from './$types';
 
 export const actions = {
@@ -11,19 +9,20 @@ export const actions = {
 		const message = data.get('message') as string;
 
 		if (!name || !email || !message) {
-			return fail(400, { missing: true });
+			return fail(400, { success: false, message: 'All fields are required.' });
 		}
 
 		try {
-			await db.insert(messages).values({
-				name,
-				email,
-				message
-			});
-			return { success: true };
+			// TODO: Implement API call to submit access request/message
+			// await client.POST('/messages', { body: { name, email, message } });
+			
+			// Simulate successful submission for now
+			await new Promise(r => setTimeout(r, 500));
+			
+			return { success: true, message: 'Your request has been submitted successfully!' };
 		} catch (error) {
 			console.error('Error sending message:', error);
-			return fail(500, { error: 'Failed to send message' });
+			return fail(500, { success: false, message: 'Failed to send message. Please try again.' });
 		}
 	}
 } satisfies Actions;

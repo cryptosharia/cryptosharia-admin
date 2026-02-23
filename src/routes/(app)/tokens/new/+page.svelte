@@ -60,33 +60,17 @@
 					</div>
 
 					<div class="space-y-2">
-						<label for="contentUrl" class="text-sm font-medium leading-none">Content URL</label>
-						<Input
-							type="url"
-							id="contentUrl"
-							name="contentUrl"
+						<label for="status" class="text-sm font-medium leading-none">Status</label>
+						<select
+							id="status"
+							name="status"
 							required
-							placeholder="https://..."
-						/>
-					</div>
-				</div>
-
-				<div class="space-y-3">
-					<label class="text-sm font-medium leading-none">Tags</label>
-					<div class="flex flex-wrap gap-2">
-						{#each data.tags as tag}
-							<label class="flex items-center gap-2 px-3 py-2 rounded-md border bg-muted/50 hover:bg-muted cursor-pointer transition-colors group">
-								<input
-									type="checkbox"
-									name="tags"
-									value={tag.id}
-									class="h-4 w-4 rounded border-input text-primary focus:ring-ring"
-								/>
-								<span class="text-sm text-foreground group-hover:text-primary transition-colors">{tag.name}</span>
-							</label>
-						{:else}
-							<p class="text-xs text-muted-foreground italic">No tags available. Create some in the Tags module.</p>
-						{/each}
+							class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							<option value="draft">Draft</option>
+							<option value="published">Published</option>
+							<option value="archived">Archived</option>
+						</select>
 					</div>
 				</div>
 

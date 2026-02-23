@@ -1,32 +1,39 @@
-import { db } from '$lib/server/db';
-import { users } from '$lib/server/db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { createApiClient } from '$lib/api';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async () => {
-	const allUsers = await db.query.users.findMany({
-		orderBy: [desc(users.createdAt)],
-		with: {
-			role: true
-		}
+export const load: PageServerLoad = async ({ fetch, locals }) => {
+	const client = createApiClient({ 
+		fetch, 
+		accessToken: locals.user?.accessToken 
 	});
-	return { users: allUsers };
-};
-	export const actions = {
-	delete: async ({ request }) => {
-		const data = await request.formData();
-		const userId = data.get('id') as string;
 
-		if (!userId) {
-			return { error: 'User ID is required' };
-		}
+	try {
+		const { data } = await client.GET('/users', {
+			params: {
+				query: {
+					limit: 100
+				}
+			}
+		});
 
-		try {
-			await db.delete(users).where(eq(users.id, userId));
-			return { success: true };
-		} catch (err) {
-			console.error('Failed to delete user:', err);
-			return { error: 'Failed to delete user' };
-		}
+		return {
+			users: data?.data?.items.map(user => ({
+				id: user.id,
+				name: user.name,
+				email: user.email,
+				role: user.role, // role is now a string enum from API
+                roleName: user.role, // Mapping for UI compatibility if needed
+				status: user.status,
+				createdAt: user.createdAt,
+				lastLoginAt: user.lastLoginAt,
+                avatarUrl: user.avatar?.url
+			})) ?? []
+		};
+	} catch (error) {
+		console.error('API connection failed:', error);
+		return {
+			users: [],
+			error: 'API connection failed'
+		};
 	}
 };

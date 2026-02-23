@@ -141,7 +141,7 @@
 													type="text"
 													name="token"
 													placeholder="000000"
-													maxlength="6"
+													maxlength={6}
 													required
 													class="text-center text-2xl h-14 tracking-[0.5em] font-bold"
 												/>
@@ -222,18 +222,18 @@
 					</Card>
 				{/if}
 
-				{#if form?.message}
+				{#if form?.success}
 					<div class="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-medium animate-in fade-in slide-in-from-top-2">
 						<div class="flex items-center gap-2">
 							<CheckCircle2 size={18} />
-							{form.message}
+							{form.message || 'Settings updated successfully!'}
 						</div>
 					</div>
 				{/if}
 
-				{#if form?.error}
+				{#if form?.message && !form?.success}
 					<div class="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive font-medium animate-in fade-in slide-in-from-top-2">
-						{form.error}
+						{form.message}
 					</div>
 				{/if}
 			</div>
