@@ -7,6 +7,7 @@
 	import { Badge } from "$lib/components/ui/badge";
 
 	let { data, form } = $props();
+	let loading = $state(false);
 
 	const statusOptions = [
 		{ value: 'active', label: 'Active' },
@@ -52,7 +53,18 @@
 				</div>
 			</div>
 
-			<form method="POST" action="?/update" use:enhance class="space-y-5">
+			<form 
+				method="POST" 
+				action="?/update" 
+				use:enhance={() => {
+					loading = true;
+					return async ({ update }) => {
+						loading = false;
+						update();
+					};
+				}} 
+				class="space-y-5"
+			>
 				<div class="space-y-2">
 					<label for="name" class="text-sm font-medium leading-none flex items-center gap-2">
 						<User size={14} /> Full Name
@@ -123,10 +135,15 @@
 				</div>
 
 				<div class="flex justify-end gap-3 pt-4 border-t">
-					<Button href="/users" variant="ghost">Cancel</Button>
-					<Button type="submit" class="gap-2">
-						<Save size={18} />
-						Save Changes
+					<Button href="/users" variant="ghost" disabled={loading}>Cancel</Button>
+					<Button type="submit" disabled={loading} class="gap-2 w-36">
+						{#if loading}
+							<div class="h-4 w-4 animate-spin rounded-full border-2 border-background border-r-transparent mr-2"></div>
+							Saving...
+						{:else}
+							<Save size={18} />
+							Save Changes
+						{/if}
 					</Button>
 				</div>
 
