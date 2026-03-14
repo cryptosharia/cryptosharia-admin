@@ -21,21 +21,41 @@ export const actions = {
 			return fail(401, { invalid: true, message: res?.message || 'Invalid credentials' });
 		}
 
-		// Set cookies
-		cookies.set('access_token', res.data.accessToken, {
+		const cookieOptions = {
 			path: '/',
 			httpOnly: true,
-			sameSite: 'strict',
+			sameSite: 'strict' as const,
 			secure: process.env.NODE_ENV === 'production',
+		};
+
+		// Set tokens
+		cookies.set('access_token', res.data.accessToken, {
+			...cookieOptions,
 			maxAge: 60 * 60 // 1 hour
 		});
 		cookies.set('refresh_token', res.data.refreshToken, {
-			path: '/',
-			httpOnly: true,
-			sameSite: 'strict',
-			secure: process.env.NODE_ENV === 'production',
+			...cookieOptions,
 			maxAge: 60 * 60 * 24 * 7 // 1 week
 		});
+
+		// Cache user data immediately so hooks.server.ts doesn't need to call /auth/me
+		// Fetch full user profile with role/permissions
+		const meClient = createApiClient({ fetch, accessToken: res.data.accessToken });
+		const { data: meRes } = await meClient.GET('/auth/me');
+		
+		if (meRes?.success && meRes.data) {
+			const userData = {
+				id: meRes.data.id,
+				name: meRes.data.name,
+				email: meRes.data.email,
+				role: meRes.data.role,
+				permissions: meRes.data.permissions,
+			};
+			cookies.set('user_session', JSON.stringify(userData), {
+				...cookieOptions,
+				maxAge: 60 * 60 // 1 hour
+			});
+		}
 
 		throw redirect(303, '/dashboard');
 	}
