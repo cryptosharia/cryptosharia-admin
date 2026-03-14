@@ -1,47 +1,44 @@
-import { json } from '@sveltejs/kit';
-import { IMGBB_API_KEY } from '$env/static/private';
+import { error, json } from '@sveltejs/kit';
+import { env } from '$env/dynamic/public';
+import type { RequestHandler } from './$types';
 
-export const POST = async ({ request, fetch }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
 	const formData = await request.formData();
 	const image = formData.get('image');
 
-	if (!image || !(image instanceof Blob)) {
-		return json({ success: false, message: 'No image file provided' }, { status: 400 });
+	if (!image) {
+		throw error(400, 'Image file is required');
 	}
 
-	const imgbbData = new FormData();
-	imgbbData.append('image', image);
-	imgbbData.append('key', IMGBB_API_KEY);
-
+	const apiUrl = env.PUBLIC_CS_API_URL || 'http://localhost:5173';
+	
 	try {
-		const response = await fetch('https://api.imgbb.com/1/upload', {
+        // We forward to /imgbb since user specified this endpoint
+		const res = await fetch(`${apiUrl}/imgbb`, {
 			method: 'POST',
-			body: imgbbData
+			headers: {
+				'Authorization': `Bearer ${locals.user?.accessToken || ''}`
+			},
+			body: formData
 		});
 
-		const result = await response.json();
-
-		if (result.success) {
-			return json({
-				success: true,
-				data: {
-					url: result.data.url,
-					delete_url: result.data.delete_url,
-					thumb: result.data.thumb?.url,
-					medium: result.data.medium?.url,
-                    filename: result.data.image?.filename || 'image.png',
-                    size: result.data.size,
-                    width: result.data.width,
-                    height: result.data.height,
-                    mime: result.data.mime
-				}
-			});
-		} else {
-			console.error('ImgBB Error:', result);
-			return json({ success: false, message: result.error?.message || 'Failed to upload to ImgBB' }, { status: result.status || 500 });
+		if (!res.ok) {
+			const errText = await res.text();
+			console.error('ImgBB API error:', errText);
+			return json({ success: false, message: 'Upload failed' }, { status: res.status });
 		}
-	} catch (error) {
-		console.error('ImgBB Upload Exception:', error);
-		return json({ success: false, message: 'Internal server error during upload' }, { status: 500 });
+
+		const data = await res.json();
+		// The API must return URL in response so that TUI Editor can use it.
+		// Usually data.data.url or data.url. We just return it directly.
+        // The user says "tampilin deh image-nya pakai URL dari field response-nya" 
+        // which means the frontend should read res.url
+		return json({
+			success: true,
+			url: data.data?.url || data.url || ''
+		});
+	} catch (err: any) {
+		console.error('Upload error:', err);
+		return json({ success: false, message: err.message }, { status: 500 });
 	}
 };

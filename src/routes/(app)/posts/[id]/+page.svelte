@@ -17,6 +17,58 @@
 
 	let title = $state(data.post.title);
 	let slug = $state(data.post.slug);
+
+	let editorContainer: HTMLElement;
+	let editor: any;
+	let content = $state(data.post.content || '');
+
+	$effect(() => {
+		const initEditor = async () => {
+			const Editor = (await import('@toast-ui/editor')).default;
+			await import('@toast-ui/editor/dist/toastui-editor.css');
+
+			editor = new Editor({
+				el: editorContainer,
+				height: '500px',
+				initialEditType: 'markdown',
+				previewStyle: 'vertical',
+				initialValue: content,
+				events: {
+					change: () => {
+						content = editor.getMarkdown();
+					}
+				},
+				hooks: {
+					addImageBlobHook: async (blob: Blob, callback: (url: string, altText: string) => void) => {
+						const formData = new FormData();
+						formData.append('image', blob);
+						try {
+							const response = await fetch('/api/imgbb', {
+								method: 'POST',
+								body: formData
+							});
+							const res = await response.json();
+							if (res.success && res.url) {
+								callback(res.url, 'uploaded image');
+							} else {
+								console.error('Failed to upload image', res);
+							}
+						} catch (err) {
+							console.error(err);
+						}
+					}
+				}
+			});
+		};
+
+		if (typeof window !== 'undefined' && editorContainer && !editor) {
+			initEditor();
+		}
+
+		return () => {
+			if (editor) editor.destroy();
+		};
+	});
 </script>
 
 <div class="space-y-6 max-w-5xl mx-auto">
@@ -90,12 +142,8 @@
 							</div>
 							<div class="space-y-2">
 								<label for="content" class="text-sm font-medium leading-none">Body Content (Markdown)</label>
-								<Textarea
-									id="content"
-									name="content"
-									rows={15}
-									class="font-mono text-sm min-h-[400px]"
-								>{data.post.content || ''}</Textarea>
+								<div bind:this={editorContainer}></div>
+								<input type="hidden" name="content" bind:value={content} />
 							</div>
 						</div>
 					</CardContent>
@@ -140,16 +188,6 @@
 									<option value="event">Event</option>
 									<option value="announcement">Announcement</option>
 								</select>
-							</div>
-
-							<div class="space-y-2">
-								<label for="publishedAt" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Publish Date</label>
-								<Input
-									type="datetime-local"
-									id="publishedAt"
-									name="publishedAt"
-									value={formatDate(data.post.publishedAt)}
-								/>
 							</div>
 						</div>
 

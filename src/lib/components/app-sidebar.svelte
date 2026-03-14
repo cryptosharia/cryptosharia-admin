@@ -5,7 +5,7 @@
 	import LogoutButton from '$lib/components/LogoutButton.svelte';
 	import ThemeToggle from '$lib/components/theme-toggle.svelte';
 
-	let { user } = $props();
+	let { user, class: className } = $props();
 
 	const navItems = [
 		{ label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -17,7 +17,7 @@
 	];
 </script>
 
-<aside class="fixed inset-y-0 left-0 z-50 w-72 border-r border-sidebar-border bg-sidebar text-sidebar-foreground flex flex-col">
+<aside class={cn("fixed inset-y-0 left-0 z-50 w-72 border-r border-sidebar-border bg-sidebar text-sidebar-foreground flex flex-col", className)}>
 	<div class="flex h-16 items-center justify-between border-b border-sidebar-border px-6">
 		<a href="/dashboard" class="flex items-center gap-2 font-bold text-xl hover:opacity-80 transition-opacity">
 			<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10">
