@@ -29,10 +29,6 @@
 		params.set('page', String(p));
 		goto(`?${params.toString()}`);
 	}
-
-	function toggleExpand(id: string) {
-		expandedId = expandedId === id ? null : id;
-	}
 </script>
 
 <div class="space-y-6">
@@ -93,11 +89,11 @@
 				<div class="space-y-3">
 					{#each data.messages as message (message.id)}
 						<div
-							class="border border-border rounded-lg p-4 transition-all duration-200 hover:border-orange-500/30 hover:bg-card/50 cursor-pointer"
-							onclick={() => toggleExpand(message.id)}
+							onclick={() => window.location.href = `/messages/${message.id}`}
+							class="border border-border rounded-lg p-4 transition-all duration-200 hover:border-orange-500/30 hover:bg-card/50 cursor-pointer block"
 							role="button"
 							tabindex="0"
-							onkeydown={(e) => e.key === 'Enter' && toggleExpand(message.id)}
+							onkeydown={(e) => e.key === 'Enter' && (window.location.href = `/messages/${message.id}`)}
 						>
 							<div class="flex items-start justify-between gap-4">
 								<div class="flex items-start gap-3 flex-1 min-w-0">
@@ -107,23 +103,20 @@
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2 flex-wrap">
 											<p class="font-semibold text-foreground">{message.name}</p>
-											<a
-												href="mailto:{message.email}"
-												class="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-												onclick={(e) => e.stopPropagation()}
+											<button
+												onclick={(e) => {
+													e.preventDefault();
+													window.location.href = `mailto:${message.email}`;
+												}}
+												class="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors bg-transparent border-0 p-0 text-left cursor-pointer"
 											>
 												<Mail size={12} />
 												{message.email}
-											</a>
+											</button>
 										</div>
-										<p class="text-sm text-muted-foreground mt-1 {expandedId === message.id ? '' : 'line-clamp-2'}">
+										<p class="text-sm text-muted-foreground mt-1 line-clamp-2">
 											{message.message}
 										</p>
-										{#if expandedId === message.id && message.message.length > 120}
-											<p class="text-xs text-orange-500 mt-1">Click to collapse</p>
-										{:else if message.message.length > 120}
-											<p class="text-xs text-orange-500 mt-1">Click to read more</p>
-										{/if}
 									</div>
 								</div>
 								<div class="flex items-center gap-1.5 text-xs text-muted-foreground flex-shrink-0">

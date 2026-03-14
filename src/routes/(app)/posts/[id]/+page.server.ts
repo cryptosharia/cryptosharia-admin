@@ -44,7 +44,6 @@ export const actions = {
 		const excerpt = formData.get('excerpt') as string;
 		const content = formData.get('content') as string;
 		const isFeatured = formData.get('isFeatured') === 'on';
-		const publishedAt = formData.get('publishedAt') ? new Date(formData.get('publishedAt') as string).toISOString() : null;
 
 		if (!title || !slug || !section) {
 			return fail(400, { missing: true, message: 'Title, Slug and Section are required.' });
@@ -61,8 +60,7 @@ export const actions = {
 					status: status || 'draft',
 					excerpt,
 					content,
-					isFeatured,
-                    publishedAt
+					isFeatured
                 }
             });
 
