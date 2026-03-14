@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { LayoutDashboard, Coins, BookOpen, Users, Settings, ShieldCheck, Activity, FileText, Bell, ExternalLink, Share2, Shield, Newspaper, Image as ImageIcon, Box } from 'lucide-svelte';
+	import { LayoutDashboard, Coins, Users, MessageSquare, Newspaper, Tag } from 'lucide-svelte';
 	import { cn } from '$lib/utils';
-	import { Button } from '$lib/components/ui/button';
 	import LogoutButton from '$lib/components/LogoutButton.svelte';
 	import ThemeToggle from '$lib/components/theme-toggle.svelte';
 
@@ -12,7 +11,9 @@
 		{ label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
 		{ label: 'Posts', href: '/posts', icon: Newspaper },
 		{ label: 'Tokens', href: '/tokens', icon: Coins },
+		{ label: 'Tags', href: '/tags', icon: Tag },
 		{ label: 'Users', href: '/users', icon: Users },
+		{ label: 'Messages', href: '/messages', icon: MessageSquare },
 	];
 </script>
 
@@ -27,20 +28,19 @@
 	</div>
 
 	<div class="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
-		<nav class="flex flex-col gap-1">
+		<nav class="flex flex-col gap-1" data-sveltekit-preload-data="tap">
 			{#each navItems as item}
 				{@const active = $page.url.pathname === item.href || $page.url.pathname.startsWith(item.href + '/')}
-				<Button
+				<a
 					href={item.href}
-					variant="ghost"
 					class={cn(
-						"w-full justify-start gap-3 px-3 relative transition-all duration-200",
+						"flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all duration-150",
 						active ? "bg-orange-500 text-white shadow-md shadow-orange-500/20 font-semibold" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-muted-foreground"
 					)}
 				>
-					<item.icon class="size-4" />
+					<item.icon class="size-4 flex-shrink-0" />
 					{item.label}
-				</Button>
+				</a>
 			{/each}
 		</nav>
 	</div>

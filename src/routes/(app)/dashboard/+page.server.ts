@@ -1,15 +1,13 @@
 import { createApiClient } from '$lib/api';
 
-export const load = async ({ fetch, locals }) => {
+export const load = async ({ fetch, locals, setHeaders }) => {
 	const client = createApiClient({ 
 		fetch, 
 		accessToken: locals.user?.accessToken 
 	});
 
 	try {
-        // Fetch stats from API
-        // Since we don't have a dedicated "dashboard stats" endpoint yet, 
-        // we can fetch the lists with a limit of 1 to get the total count from pagination.
+		// Fetch all 3 in parallel - much faster than sequential
 		const [tokensRes, usersRes, postsRes] = await Promise.all([
 			client.GET('/tokens', { params: { query: { limit: 1 } } }),
 			client.GET('/users', { params: { query: { limit: 1 } } }),
@@ -20,8 +18,7 @@ export const load = async ({ fetch, locals }) => {
 			tokenCount: tokensRes.data?.data?.pagination.total ?? 0,
 			userCount: usersRes.data?.data?.pagination.total ?? 0,
 			postCount: postsRes.data?.data?.pagination.total ?? 0,
-            // Mocking these for now as they might not be exposed publicly or require different endpoints
-			messageCount: 0, 
+			messageCount: 0,
 			tagCount: 0
 		};
 	} catch (error) {
@@ -29,7 +26,7 @@ export const load = async ({ fetch, locals }) => {
 		return {
 			tokenCount: 0,
 			userCount: 0,
-            postCount: 0,
+			postCount: 0,
 			messageCount: 0,
 			tagCount: 0,
 			error: 'API connection failed'

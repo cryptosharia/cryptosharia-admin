@@ -7,14 +7,21 @@
 
 	let { children } = $props();
 
-	NProgress.configure({ showSpinner: false });
+	// Configure NProgress for snappier feel
+	NProgress.configure({ 
+		showSpinner: false,
+		minimum: 0.15,
+		trickleSpeed: 100,
+		speed: 250
+	});
 
+	// View Transition - only apply the visual effect, don't block navigation
 	onNavigate((navigation) => {
 		if (!document.startViewTransition) return;
 
 		return new Promise((resolve) => {
 			document.startViewTransition(async () => {
-				resolve();
+				resolve(); // resolve immediately - don't block network fetch
 				await navigation.complete;
 			});
 		});
@@ -31,7 +38,7 @@
 	});
 </script>
 
-<ModeWatcher />
+<ModeWatcher defaultMode="dark" />
 <div class="antialiased text-foreground bg-background min-h-screen font-sans selection:bg-primary/30">
 	{@render children()}
 </div>

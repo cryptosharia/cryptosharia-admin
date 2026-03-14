@@ -1,47 +1,41 @@
 <script lang="ts">
-	import { TrendingUp, Users, FileText, Activity, ShieldCheck, Bell, ChevronRight, ArrowRight } from 'lucide-svelte';
+	import { TrendingUp, Users, FileText, Activity, ShieldCheck } from 'lucide-svelte';
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
-	import Button from '$lib/components/ui/button/button.svelte';
-	import { fade, fly } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 
 	let { data } = $props();
 
 	let stats = $derived([
-		{ label: 'Total Tokens', value: data.tokenCount.toLocaleString(), change: 'Tokens tracked', icon: TrendingUp, color: 'text-orange-500' },
-		{ label: 'Total Users', value: data.userCount.toLocaleString(), change: 'Registered users', icon: Users, color: 'text-blue-500' },
-		{ label: 'Total Posts', value: data.postCount.toLocaleString(), change: 'Content published', icon: FileText, color: 'text-emerald-500' },
-		{ label: 'System Health', value: '100%', change: 'All systems operational', icon: ShieldCheck, color: 'text-purple-500' }
+		{ label: 'Total Tokens', value: data.tokenCount.toLocaleString(), change: 'Tokens tracked', icon: TrendingUp, accent: 'orange' },
+		{ label: 'Total Users', value: data.userCount.toLocaleString(), change: 'Registered users', icon: Users, accent: 'blue' },
+		{ label: 'Total Posts', value: data.postCount.toLocaleString(), change: 'Content published', icon: FileText, accent: 'emerald' },
+		{ label: 'System Health', value: '100%', change: 'All systems operational', icon: ShieldCheck, accent: 'purple' }
 	]);
 </script>
 
-<div class="space-y-12">
-	<!-- Hero Section -->
-
-
-	<!-- Stats Bento Grid -->
+<div class="space-y-8">
+	<!-- Stats Grid -->
 	<section>
-		<div class="flex items-center justify-between mb-6">
-			<div>
-				<h2 class="text-2xl font-bold tracking-tight">System Overview</h2>
-				<p class="text-muted-foreground">Real-time metrics from the ecosystem.</p>
-			</div>
+		<div class="mb-6">
+			<h2 class="text-2xl font-bold tracking-tight">System Overview</h2>
+			<p class="text-muted-foreground mt-1">Real-time metrics from the ecosystem.</p>
 		</div>
 
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
 			{#each stats as stat, i}
-				<div in:fly={{ y: 20, duration: 400, delay: i * 100 }}>
-					<Card class="h-full hover:border-orange-500/30 transition-colors duration-300 group">
+				<div in:fly={{ y: 20, duration: 400, delay: i * 80 }}>
+					<Card class="h-full hover:border-orange-500/40 transition-all duration-300 group cursor-default">
 						<CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-							<CardTitle class="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">{stat.label}</CardTitle>
-							<div class={`p-2 rounded-lg bg-secondary/50 group-hover:bg-orange-50 dark:group-hover:bg-orange-950/20 transition-colors ${stat.color}`}>
-								<stat.icon class="h-5 w-5" />
+							<CardTitle class="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+								{stat.label}
+							</CardTitle>
+							<div class="p-2 rounded-lg bg-muted/60 group-hover:scale-110 transition-transform duration-200">
+								<stat.icon class="h-5 w-5 text-muted-foreground group-hover:text-orange-500 transition-colors" />
 							</div>
 						</CardHeader>
 						<CardContent>
 							<div class="text-3xl font-bold tracking-tight mb-1">{stat.value}</div>
-							<p class="text-xs text-muted-foreground font-medium">
-								{stat.change}
-							</p>
+							<p class="text-xs text-muted-foreground font-medium">{stat.change}</p>
 						</CardContent>
 					</Card>
 				</div>
@@ -49,9 +43,10 @@
 		</div>
 	</section>
 
-	<!-- Activity & System (Bottom Bento) -->
-	<section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-		<Card class="lg:col-span-2 relative overflow-hidden">
+	<!-- Bottom Row -->
+	<section class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+		<!-- Recent Activity -->
+		<Card class="lg:col-span-2">
 			<CardHeader>
 				<CardTitle class="flex items-center gap-2">
 					<Activity class="h-5 w-5 text-orange-500" />
@@ -59,43 +54,44 @@
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<div class="space-y-6">
+				<div class="space-y-1">
 					{#each [1, 2, 3] as i}
-						<div class="flex items-center justify-between group p-2 rounded-lg hover:bg-secondary/40 transition-colors">
-							<div class="flex items-center gap-4">
-								<div class="h-10 w-10 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform">
-									<FileText class="h-5 w-5" />
+						<div class="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors group">
+							<div class="flex items-center gap-3">
+								<div class="h-9 w-9 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500 flex-shrink-0 group-hover:scale-105 transition-transform">
+									<FileText class="h-4 w-4" />
 								</div>
 								<div>
-									<p class="text-sm font-medium text-foreground">Token Analysis Updated</p>
+									<p class="text-sm font-medium">Token Analysis Updated</p>
 									<p class="text-xs text-muted-foreground">BTC-2024 Report finalized</p>
 								</div>
 							</div>
-							<div class="text-sm text-muted-foreground">2m ago</div>
+							<span class="text-xs text-muted-foreground whitespace-nowrap">{i * 2}m ago</span>
 						</div>
 					{/each}
 				</div>
 			</CardContent>
 		</Card>
 
-		<Card class="bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-gray-900 border-emerald-100 dark:border-emerald-900/30">
+		<!-- System Health -->
+		<Card class="border-emerald-500/20">
 			<CardHeader>
 				<CardTitle class="flex items-center gap-2">
-					<ShieldCheck class="h-5 w-5 text-emerald-600" />
+					<ShieldCheck class="h-5 w-5 text-emerald-500" />
 					System Health
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<div class="flex flex-col items-center justify-center h-48 space-y-4">
+				<div class="flex flex-col items-center justify-center h-44 space-y-4">
 					<div class="relative">
-						<div class="absolute inset-0 bg-emerald-500 blur-xl opacity-20 animate-pulse"></div>
-						<div class="h-24 w-24 rounded-full border-4 border-emerald-100 dark:border-emerald-900 flex items-center justify-center bg-white dark:bg-gray-900 relative z-10">
-							<span class="text-2xl font-bold text-emerald-600">98%</span>
+						<div class="absolute inset-0 bg-emerald-500/20 blur-2xl rounded-full animate-pulse"></div>
+						<div class="relative z-10 h-24 w-24 rounded-full border-4 border-emerald-500/30 bg-emerald-500/10 flex items-center justify-center">
+							<span class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">98%</span>
 						</div>
 					</div>
 					<div class="text-center">
-						<p class="font-medium text-foreground">Operational</p>
-						<p class="text-xs text-muted-foreground">All nodes synced</p>
+						<p class="font-semibold text-foreground">Operational</p>
+						<p class="text-xs text-muted-foreground mt-0.5">All nodes synced</p>
 					</div>
 				</div>
 			</CardContent>

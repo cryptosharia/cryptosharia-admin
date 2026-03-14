@@ -37,7 +37,7 @@
 		</div>
 	</div>
 
-	<form method="POST" use:enhance class="space-y-8">
+	<form method="POST" enctype="multipart/form-data" use:enhance class="space-y-8">
 		<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 			<!-- Main Editor -->
 			<div class="lg:col-span-2 space-y-6">
@@ -176,12 +176,14 @@
 					</CardHeader>
 					<CardContent class="space-y-4">
 						<div class="space-y-2">
-							<label for="coverImage" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cover Image URL</label>
+							<label for="coverImage" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cover Image Upload *</label>
 							<Input
-								type="text"
+								type="file"
 								id="coverImage"
 								name="coverImage"
-								placeholder="https://..."
+								accept="image/*"
+								required
+								class="bg-background/50 focus:bg-background"
 							/>
 						</div>
 						<div class="flex items-center space-x-2">

@@ -1,11 +1,19 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { ArrowLeft, Save, Trash2, CheckCircle2 } from 'lucide-svelte';
+	import { ArrowLeft, Save, Trash2, CheckCircle2, User, Shield, Clock, Mail } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
-	import { Card, CardContent } from "$lib/components/ui/card";
+	import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
+	import { Badge } from "$lib/components/ui/badge";
 
 	let { data, form } = $props();
+
+	const statusOptions = [
+		{ value: 'active', label: 'Active' },
+		{ value: 'inactive', label: 'Inactive' },
+		{ value: 'suspended', label: 'Suspended' },
+		{ value: 'banned', label: 'Banned' },
+	];
 </script>
 
 <div class="max-w-2xl mx-auto space-y-6">
@@ -19,79 +27,87 @@
 				<p class="text-muted-foreground">Update user account details and permissions.</p>
 			</div>
 		</div>
-		
-		<form action="?/delete" method="POST" use:enhance onsubmit={(e) => !confirm('Are you sure you want to delete this user?') && e.preventDefault()}>
-			<Button type="submit" variant="destructive" class="gap-2">
-				<Trash2 size={18} />
-				Delete
-			</Button>
-		</form>
 	</div>
 
+	<!-- User Info Card -->
 	<Card>
 		<CardContent class="pt-6">
-			<form method="POST" action="?/update" use:enhance class="space-y-6">
-				<div class="grid grid-cols-1 gap-6">
-					<div class="space-y-2">
-						<label for="name" class="text-sm font-medium leading-none">Full Name</label>
-						<Input
-							type="text"
-							id="name"
-							name="name"
-							value={data.user.name}
-							required
-						/>
+			<div class="flex items-center gap-4 mb-6 pb-6 border-b">
+				{#if data.user.avatar?.url}
+					<img src={data.user.avatar.url} alt={data.user.name} class="h-16 w-16 rounded-full object-cover" />
+				{:else}
+					<div class="h-16 w-16 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500 font-bold text-xl">
+						{data.user.name?.[0]?.toUpperCase() ?? 'U'}
 					</div>
-
-					<div class="space-y-2">
-						<label for="email" class="text-sm font-medium leading-none">Email Address</label>
-						<Input
-							type="email"
-							id="email"
-							name="email"
-							value={data.user.email}
-							required
-						/>
+				{/if}
+				<div>
+					<p class="text-lg font-semibold">{data.user.name || 'Anonymous'}</p>
+					<p class="text-sm text-muted-foreground">{data.user.email}</p>
+					<div class="flex items-center gap-2 mt-1">
+						<Badge variant="outline" class="text-xs capitalize">{data.user.role}</Badge>
+						<Badge variant="outline" class={data.user.status === 'active' ? 'text-xs bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'text-xs bg-destructive/10 text-destructive border-destructive/20'}>
+							{data.user.status}
+						</Badge>
 					</div>
+				</div>
+			</div>
 
-					<div class="space-y-2">
-						<label for="password" class="text-sm font-medium leading-none">Password (Leave blank to keep current)</label>
-						<Input
-							type="password"
-							id="password"
-							name="password"
-							placeholder="••••••••"
-						/>
-					</div>
+			<form method="POST" action="?/update" use:enhance class="space-y-5">
+				<div class="space-y-2">
+					<label for="name" class="text-sm font-medium leading-none flex items-center gap-2">
+						<User size={14} /> Full Name
+					</label>
+					<Input
+						type="text"
+						id="name"
+						name="name"
+						value={data.user.name}
+						required
+					/>
+				</div>
 
-					<div class="space-y-2">
-						<label for="roleId" class="text-sm font-medium leading-none">Role</label>
-						<select
-							id="roleId"
-							name="roleId"
-							value={data.user.roleId}
-							class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-						>
-							<option value={null}>No Role</option>
-							{#each data.roles as role}
-								<option value={role.id}>{role.role}</option>
-							{/each}
-						</select>
-					</div>
+				<div class="space-y-2">
+					<label for="email" class="text-sm font-medium leading-none flex items-center gap-2">
+						<Mail size={14} /> Email Address
+					</label>
+					<Input
+						type="email"
+						id="email"
+						name="email"
+						value={data.user.email}
+						disabled
+						class="opacity-60 cursor-not-allowed"
+					/>
+					<p class="text-xs text-muted-foreground">Email cannot be changed via admin panel.</p>
+				</div>
 
-					<div class="flex items-center space-x-2">
-						<input
-							type="checkbox"
-							id="status"
-							name="status"
-							checked={data.user.status === 'active'}
-							class="h-4 w-4 rounded border-input text-primary focus:ring-ring"
-						/>
-						<label for="status" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Account Active</label>
+				<div class="space-y-2">
+					<label for="status" class="text-sm font-medium leading-none flex items-center gap-2">
+						<Shield size={14} /> Account Status
+					</label>
+					<select
+						id="status"
+						name="status"
+						class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+					>
+						{#each statusOptions as opt}
+							<option value={opt.value} selected={data.user.status === opt.value}>{opt.label}</option>
+						{/each}
+					</select>
+				</div>
+
+				<div class="space-y-2">
+					<label class="text-sm font-medium leading-none flex items-center gap-2">
+						<Clock size={14} /> Account Info
+					</label>
+					<div class="rounded-md border border-input bg-muted/50 px-3 py-3 text-sm space-y-1 text-muted-foreground">
+						<p>Joined: {new Date(data.user.createdAt).toLocaleString('id-ID')}</p>
+						<p>Last Login: {data.user.lastLoginAt ? new Date(data.user.lastLoginAt).toLocaleString('id-ID') : 'Never'}</p>
+						<p>Email Verified: {data.user.isEmailVerified ? '✅ Yes' : '❌ No'}</p>
 					</div>
 				</div>
 
-				<div class="flex justify-end gap-3 pt-6 border-t">
+				<div class="flex justify-end gap-3 pt-4 border-t">
 					<Button href="/users" variant="ghost">Cancel</Button>
 					<Button type="submit" class="gap-2">
 						<Save size={18} />

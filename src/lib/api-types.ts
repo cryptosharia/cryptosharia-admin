@@ -227,6 +227,140 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/password/forgot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Forgot Password
+         * @description Request a password reset email. Always returns a generic success response.
+         */
+        post: {
+            parameters: {
+                query?: {
+                    /** @description Whether to trigger a password reset email */
+                    notify?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AuthPasswordForgotPostBody"];
+                };
+            };
+            responses: {
+                /** @description If your email is registered, a reset link has been sent */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Invalid email format */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to process password reset request */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/password/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Password
+         * @description Reset password using a valid one-time reset token.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AuthPasswordResetPostBody"];
+                };
+            };
+            responses: {
+                /** @description Password reset successful */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Invalid request payload */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Invalid or expired reset token */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to reset password */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/signin": {
         parameters: {
             query?: never;
@@ -683,6 +817,15 @@ export interface paths {
                         "application/json": components["schemas"]["ApiResponse"];
                     };
                 };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
                 /** @description Insufficient permissions to update this user */
                 403: {
                     headers: {
@@ -754,6 +897,15 @@ export interface paths {
                 };
                 /** @description Invalid status provided */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Authentication required */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -844,6 +996,15 @@ export interface paths {
                         "application/json": components["schemas"]["ApiResponse"];
                     };
                 };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
                 /** @description Insufficient permissions to manage user roles */
                 403: {
                     headers: {
@@ -904,6 +1065,8 @@ export interface paths {
                     slugs?: string[];
                     /** @description List of post slugs to exclude.<br>Example: this-is-a-post,this-is-another-post */
                     exclude?: string[];
+                    /** @description List of tag slugs to filter by.<br>Example: education,halal */
+                    tags?: string[];
                     search?: string;
                     limit?: number;
                     page?: number;
@@ -964,7 +1127,81 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /**
+         * Create Post
+         * @description Create a post and optionally set tag relations. Values in `tags` can be tag UUIDs or slugs.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PostsCreateBody"];
+                };
+            };
+            responses: {
+                /** @description Post created successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"] & {
+                            data: components["schemas"]["PostsGetData"];
+                        };
+                    };
+                };
+                /** @description Invalid request body provided */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Invalid or missing API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Missing required permission: posts.manage */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Post with this slug already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to create post due to an internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -1036,10 +1273,160 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete Post
+         * @description Delete a post by UUID or Slug.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The UUID or Slug of the post */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Post deleted successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"] & {
+                            data: components["schemas"]["PostsDeleteData"];
+                        };
+                    };
+                };
+                /** @description Invalid or missing API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Missing required permission: posts.manage */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Post not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to delete post due to an internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update Post
+         * @description Update an existing post by UUID or Slug. When `tags` is provided, the existing post tags are replaced.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The UUID or Slug of the post */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PostsUpdateBody"];
+                };
+            };
+            responses: {
+                /** @description Post updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"] & {
+                            data: components["schemas"]["PostsGetData"];
+                        };
+                    };
+                };
+                /** @description Invalid request body provided */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Invalid or missing API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Missing required permission: posts.manage */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Post not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Post with this slug already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to update post due to an internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/tokens": {
@@ -1064,6 +1451,8 @@ export interface paths {
                     slugs?: string[];
                     /** @description List of token slugs to exclude.<br>Example: bitcoin,ethereum,sui */
                     exclude?: string[];
+                    /** @description List of tag slugs to filter by.<br>Example: defi,platform */
+                    tags?: string[];
                     search?: string;
                     limit?: number;
                     page?: number;
@@ -1124,7 +1513,81 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /**
+         * Create Token
+         * @description Create a token and optionally set tag relations. Values in `tags` can be tag UUIDs or slugs.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TokensCreateBody"];
+                };
+            };
+            responses: {
+                /** @description Token created successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"] & {
+                            data: components["schemas"]["TokensGetData"];
+                        };
+                    };
+                };
+                /** @description Invalid request body provided */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Invalid or missing API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Missing required permission: tokens.manage */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Token with this slug or ticker already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to create token due to an internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -1196,10 +1659,160 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete Token
+         * @description Delete a token by UUID or Slug.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The UUID or Slug of the cryptocurrency token */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Token deleted successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"] & {
+                            data: components["schemas"]["TokensDeleteData"];
+                        };
+                    };
+                };
+                /** @description Invalid or missing API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Missing required permission: tokens.manage */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Token not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to delete token due to an internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update Token
+         * @description Update an existing token by UUID or Slug. When `tags` is provided, existing token tags are replaced.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The UUID or Slug of the cryptocurrency token */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TokensUpdateBody"];
+                };
+            };
+            responses: {
+                /** @description Token updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"] & {
+                            data: components["schemas"]["TokensGetData"];
+                        };
+                    };
+                };
+                /** @description Invalid request body provided */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Invalid or missing API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Missing required permission: tokens.manage */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Token not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Token with this slug or ticker already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to update token due to an internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/tokens/quotes": {
@@ -1280,6 +1893,387 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Tags
+         * @description Retrieve a list of tags with filtering, searching, and pagination support.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    /** @description List of tag slugs to filter by.<br>Example: halal,defi */
+                    slugs?: string[];
+                    limit?: number;
+                    page?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paginated list of tags retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"] & {
+                            data: components["schemas"]["PaginatedTagsGetItem"];
+                        };
+                    };
+                };
+                /** @description Invalid query parameters provided */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Invalid or missing API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to retrieve tags due to an internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Create Tag
+         * @description Create a new tag with name, slug, and optional description.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TagsCreateBody"];
+                };
+            };
+            responses: {
+                /** @description Tag created successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"] & {
+                            data: components["schemas"]["TagsGetItem"];
+                        };
+                    };
+                };
+                /** @description Invalid request body provided */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Invalid or missing API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Missing required permission: tags.manage */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Tag with this name or slug already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to create tag due to an internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tags/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Tag by Identifier
+         * @description Retrieve a single tag using its UUID or Slug.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The UUID or Slug of the tag */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tag retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"] & {
+                            data: components["schemas"]["TagsGetItem"];
+                        };
+                    };
+                };
+                /** @description Invalid or missing API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Tag not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to retrieve tag due to an internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /**
+         * Delete Tag
+         * @description Delete a tag by UUID or Slug. By default, returns 409 if the tag is still in use by posts or tokens. Use force=true to delete anyway.
+         */
+        delete: {
+            parameters: {
+                query?: {
+                    /** @description Force delete even if tag is in use */
+                    force?: boolean | null;
+                };
+                header?: never;
+                path: {
+                    /** @description The UUID or Slug of the tag */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tag deleted successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"] & {
+                            data: components["schemas"]["TagsDeleteResponse"];
+                        };
+                    };
+                };
+                /** @description Invalid or missing API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Missing required permission: tags.manage */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Tag not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Tag is in use */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to delete tag due to an internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /**
+         * Update Tag
+         * @description Update an existing tag by UUID or Slug.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The UUID or Slug of the tag */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TagsUpdateBody"];
+                };
+            };
+            responses: {
+                /** @description Tag updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"] & {
+                            data: components["schemas"]["TagsGetItem"];
+                        };
+                    };
+                };
+                /** @description Invalid request body provided */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Invalid or missing API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Missing required permission: tags.manage */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Tag not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Tag with this name or slug already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to update tag due to an internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/messages": {
@@ -1415,6 +2409,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/messages/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Message Detail
+         * @description Retrieve detailed information for a specific message. Requires permission: `messages.read`.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Message details retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"] & {
+                            data: components["schemas"]["MessagesIdGetResponse"];
+                        };
+                    };
+                };
+                /** @description Invalid or missing API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Message not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to retrieve message details due to an internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/imgbb": {
         parameters: {
             query?: never;
@@ -1437,13 +2501,7 @@ export interface paths {
             };
             requestBody?: {
                 content: {
-                    "multipart/form-data": {
-                        /**
-                         * Format: binary
-                         * @description The image file to upload (max 32MB, image/* MIME types only)
-                         */
-                        image?: string;
-                    };
+                    "multipart/form-data": unknown;
                 };
             };
             responses: {
@@ -1527,6 +2585,168 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Asset to Vercel Blob
+         * @description Uploads a file (max 4MB) to Vercel Blob and stores its metadata in the assets table. Requires `posts.manage` or `tokens.manage` permission.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": unknown;
+                };
+            };
+            responses: {
+                /** @description Asset uploaded successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"] & {
+                            data: components["schemas"]["AssetsPostResponse"];
+                        };
+                    };
+                };
+                /** @description Invalid request: missing file, empty file, or file exceeds 4MB */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Requires posts.manage or tokens.manage permission */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to process asset upload due to an internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to upload asset to storage provider */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ops/assets/cleanup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cleanup Orphan Assets
+         * @description Remove orphaned Vercel Blob assets not referenced by posts, tokens, or user avatars. Requires Api-Key equal to CS_API_KEY_OPS.
+         */
+        post: {
+            parameters: {
+                query?: {
+                    dryRun?: boolean;
+                    limit?: number;
+                    maxAgeDays?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Assets cleanup executed successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"] & {
+                            data: components["schemas"]["OpsAssetsCleanupData"];
+                        };
+                    };
+                };
+                /** @description Invalid cleanup query parameters provided */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Invalid or missing Api-Key for ops endpoints */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+                /** @description Failed to clean up orphan assets due to an internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/seed/demo": {
         parameters: {
             query?: never;
@@ -1538,7 +2758,7 @@ export interface paths {
         put?: never;
         /**
          * Seed Demo Data
-         * @description Initialize the database with sample data (Users, Posts, Tokens, Messages) for development and testing.
+         * @description Initialize the database with sample data (Users, Posts, Tokens, Messages) for development and testing. **WARNING: This will wipe out all existing data.**
          */
         post: {
             parameters: {
@@ -1615,6 +2835,14 @@ export interface components {
             /** @description The verification token received via email */
             token: string;
         };
+        AuthPasswordForgotPostBody: {
+            /** Format: email */
+            email: string;
+        };
+        AuthPasswordResetPostBody: {
+            token: string;
+            password: string;
+        };
         /** @description Successful signin response with tokens and user info */
         AuthSigninPostResponse: {
             user: components["schemas"]["UserMetadata"];
@@ -1676,8 +2904,6 @@ export interface components {
         };
         UsersGetItem: components["schemas"]["UserMetadata"] & {
             avatar: components["schemas"]["AssetMetadata"];
-            /** Format: uuid */
-            roleId: string | null;
             /** @enum {string} */
             role: "super_admin" | "admin" | "posts_manager" | "tokens_manager" | "member";
             /** @enum {string} */
@@ -1702,8 +2928,6 @@ export interface components {
         };
         UsersIdGetResponse: components["schemas"]["UserMetadata"] & {
             avatar: components["schemas"]["AssetMetadata"];
-            /** Format: uuid */
-            roleId: string | null;
             /** @enum {string} */
             role: "super_admin" | "admin" | "posts_manager" | "tokens_manager" | "member";
             /** @enum {string} */
@@ -1726,8 +2950,11 @@ export interface components {
             status: "active" | "inactive" | "suspended" | "banned";
         };
         UsersIdRolePutBody: {
-            /** Format: uuid */
-            roleId: string | null;
+            /**
+             * @description The role name (e.g. "admin", "member")
+             * @enum {string}
+             */
+            role: "super_admin" | "admin" | "posts_manager" | "tokens_manager" | "member";
         };
         PaginatedPostsGetItem: {
             items: components["schemas"]["PostsGetItem"][];
@@ -1758,6 +2985,13 @@ export interface components {
             createdBy: components["schemas"]["UserMetadata"] & (Record<string, never> | null);
             updatedBy: components["schemas"]["UserMetadata"] & (Record<string, never> | null);
             coverImage: components["schemas"]["AssetMetadata"];
+            tags: components["schemas"]["PostsTagItem"][];
+        };
+        PostsTagItem: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
         };
         PostsGetData: {
             /** Format: uuid */
@@ -1785,6 +3019,63 @@ export interface components {
             createdBy: components["schemas"]["UserMetadata"] & (Record<string, never> | null);
             updatedBy: components["schemas"]["UserMetadata"] & (Record<string, never> | null);
             coverImage: components["schemas"]["AssetMetadata"];
+            tags: components["schemas"]["PostsTagDetail"][];
+        };
+        PostsTagDetail: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            description: string | null;
+        };
+        PostsCreateBody: {
+            title: string;
+            slug: string;
+            excerpt: string;
+            content: string;
+            /** Format: uuid */
+            coverImageId: string;
+            /** @enum {string} */
+            section: "news" | "education" | "research" | "activity";
+            /** @enum {string} */
+            type: "article" | "webinar" | "video" | "headline";
+            /**
+             * @default draft
+             * @enum {string}
+             */
+            status: "draft" | "published" | "archived";
+            /** @default false */
+            isFeatured: boolean;
+            /** Format: date-time */
+            eventDate?: string | null;
+            /** Format: uri */
+            externalLink?: string | null;
+            /** @description List of tag identifiers (UUID or slug) to attach to this post */
+            tags?: string[];
+        };
+        PostsUpdateBody: {
+            title?: string;
+            slug?: string;
+            excerpt?: string;
+            content?: string;
+            /** Format: uuid */
+            coverImageId?: string;
+            /** @enum {string} */
+            section?: "news" | "education" | "research" | "activity";
+            /** @enum {string} */
+            type?: "article" | "webinar" | "video" | "headline";
+            /** @enum {string} */
+            status?: "draft" | "published" | "archived";
+            isFeatured?: boolean;
+            /** Format: date-time */
+            eventDate?: string | null;
+            /** Format: uri */
+            externalLink?: string | null;
+            /** @description List of tag identifiers (UUID or slug) to attach to this post */
+            tags?: string[];
+        };
+        PostsDeleteData: {
+            message: string;
         };
         PaginatedTokensGetItem: {
             items: components["schemas"]["TokensGetItem"][];
@@ -1813,6 +3104,13 @@ export interface components {
             createdBy: components["schemas"]["UserMetadata"] & (Record<string, never> | null);
             updatedBy: components["schemas"]["UserMetadata"] & (Record<string, never> | null);
             logo: components["schemas"]["AssetMetadata"];
+            tags: components["schemas"]["TokensTagItem"][];
+        };
+        TokensTagItem: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
         };
         TokensGetData: {
             /** Format: uuid */
@@ -1838,6 +3136,58 @@ export interface components {
             createdBy: components["schemas"]["UserMetadata"] & (Record<string, never> | null);
             updatedBy: components["schemas"]["UserMetadata"] & (Record<string, never> | null);
             logo: components["schemas"]["AssetMetadata"];
+            tags: components["schemas"]["TokensTagDetail"][];
+        };
+        TokensTagDetail: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            description: string | null;
+        };
+        TokensCreateBody: {
+            name: string;
+            ticker: string;
+            slug: string;
+            rank: number;
+            /** @enum {string} */
+            shariaStatus: "halal" | "haram" | "syubhat";
+            /**
+             * @default draft
+             * @enum {string}
+             */
+            status: "draft" | "published" | "archived";
+            excerpt: string;
+            content: string;
+            /** Format: uri */
+            website: string;
+            tradingviewSymbol?: string | null;
+            /** Format: uuid */
+            logoId: string;
+            /** @description List of tag identifiers (UUID or slug) to attach to this token */
+            tags?: string[];
+        };
+        TokensUpdateBody: {
+            name?: string;
+            ticker?: string;
+            slug?: string;
+            rank?: number;
+            /** @enum {string} */
+            shariaStatus?: "halal" | "haram" | "syubhat";
+            /** @enum {string} */
+            status?: "draft" | "published" | "archived";
+            excerpt?: string;
+            content?: string;
+            /** Format: uri */
+            website?: string;
+            tradingviewSymbol?: string | null;
+            /** Format: uuid */
+            logoId?: string;
+            /** @description List of tag identifiers (UUID or slug) to attach to this token */
+            tags?: string[];
+        };
+        TokensDeleteData: {
+            message: string;
         };
         TokensQuotesGetItem: {
             slug: string;
@@ -1849,6 +3199,36 @@ export interface components {
             marketCapUsd: number;
             marketCapDominance: number;
             percentChange24h: number;
+        };
+        PaginatedTagsGetItem: {
+            items: components["schemas"]["TagsGetItem"][];
+            pagination: components["schemas"]["Pagination"];
+        };
+        TagsGetItem: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            description: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string | null;
+            createdBy: components["schemas"]["UserMetadata"] & (Record<string, never> | null);
+            updatedBy: components["schemas"]["UserMetadata"] & (Record<string, never> | null);
+        };
+        TagsCreateBody: {
+            name: string;
+            slug: string;
+            description?: string;
+        };
+        TagsUpdateBody: {
+            name?: string;
+            slug?: string;
+            description?: string;
+        };
+        TagsDeleteResponse: {
+            message: string;
         };
         PaginatedMessagesGetItem: {
             items: components["schemas"]["MessagesGetItem"][];
@@ -1869,6 +3249,47 @@ export interface components {
             /** Format: email */
             email: string;
             message: string;
+        };
+        MessagesIdGetResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: email */
+            email: string;
+            message: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AssetsPostResponse: {
+            /** Format: uuid */
+            id: string;
+            pathname: string;
+            filename: string;
+            size: number;
+            mimeType: string | null;
+            width: number | null;
+            height: number | null;
+            /** @enum {string} */
+            provider: "picsum" | "vercel_blob";
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            createdBy: string | null;
+        };
+        OpsAssetsCleanupData: {
+            dryRun: boolean;
+            limit: number;
+            maxAgeDays: number;
+            candidates: number;
+            deleted: number;
+            failed: number;
+            failures: components["schemas"]["OpsAssetsCleanupFailure"][];
+        };
+        OpsAssetsCleanupFailure: {
+            /** Format: uuid */
+            assetId: string;
+            pathname: string;
+            reason: string;
         };
     };
     responses: never;
