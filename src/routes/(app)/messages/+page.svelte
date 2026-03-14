@@ -32,12 +32,12 @@
 </script>
 
 <div class="space-y-6">
-	<div class="flex items-center justify-between">
+	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 		<div>
 			<h1 class="text-3xl font-bold tracking-tight text-foreground">Messages</h1>
-			<p class="text-muted-foreground mt-2">Contact form submissions from CryptoSharia users.</p>
+			<p class="text-muted-foreground mt-2 text-sm sm:text-base">Contact form submissions from CryptoSharia users.</p>
 		</div>
-		<div class="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-2 rounded-lg">
+		<div class="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-2 rounded-lg w-fit">
 			<MessageSquare size={16} />
 			<span>{data.pagination.total} total messages</span>
 		</div>
@@ -46,20 +46,22 @@
 	<!-- Search Bar -->
 	<Card>
 		<CardContent class="pt-4 pb-4">
-			<form onsubmit={handleSearch} class="flex gap-3">
+			<form onsubmit={handleSearch} class="flex flex-col sm:flex-row gap-3">
 				<div class="relative flex-1">
 					<Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 					<Input
 						type="text"
 						placeholder="Search by name, email, or message..."
 						bind:value={searchValue}
-						class="pl-9"
+						class="pl-9 w-full"
 					/>
 				</div>
-				<Button type="submit" variant="outline">Search</Button>
-				{#if data.search}
-					<Button href="/messages" variant="ghost">Clear</Button>
-				{/if}
+				<div class="flex items-center gap-2">
+					<Button type="submit" variant="outline" class="flex-1 sm:flex-none">Search</Button>
+					{#if data.search}
+						<Button href="/messages" variant="ghost">Clear</Button>
+					{/if}
+				</div>
 			</form>
 		</CardContent>
 	</Card>

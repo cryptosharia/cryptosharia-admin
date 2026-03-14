@@ -1,23 +1,29 @@
 import { createApiClient } from '$lib/api';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ fetch, locals }) => {
+export const load: PageServerLoad = async ({ fetch, locals, url }) => {
 	const client = createApiClient({ 
         fetch, 
         accessToken: locals.user?.accessToken 
     });
 
+    const search = url.searchParams.get('search') || undefined;
+    const page = Number(url.searchParams.get('page') || '1');
+
+    const query: any = {
+        limit: 100,
+        page,
+        statuses: ['draft', 'published', 'archived']
+    };
+    if (search) query.search = search;
+
     // Fetch posts with associated data (author is incl in response)
 	const { data } = await client.GET('/posts', {
-        params: {
-            query: {
-                limit: 100, // Fetch first 100 for now
-                statuses: ['draft', 'published', 'archived']
-            }
-        }
+        params: { query }
     });
 
 	return { 
+        search: search || '',
         posts: data?.data?.items.map(post => ({
             id: post.id,
             title: post.title,

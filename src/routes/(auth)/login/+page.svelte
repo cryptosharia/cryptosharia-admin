@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Loader2, ArrowRight } from 'lucide-svelte';
+	import { Loader2, ArrowRight, Eye, EyeOff } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 
 	let { form } = $props();
 	let loading = $state(false);
+	let showPassword = $state(false);
 </script>
 
 <form
@@ -40,14 +41,27 @@
 				<a href="/request-access" class="hover:underline">Request Access?</a>
 			</div>
 		</div>
-		<Input
-			type="password"
-			id="password"
-			name="password"
-			required
-			placeholder="••••••••"
-			class="h-12"
-		/>
+		<div class="relative">
+			<Input
+				type={showPassword ? "text" : "password"}
+				id="password"
+				name="password"
+				required
+				placeholder="••••••••"
+				class="h-12 pr-10"
+			/>
+			<button 
+				type="button" 
+				class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+				onclick={() => showPassword = !showPassword}
+			>
+				{#if showPassword}
+					<EyeOff size={18} />
+				{:else}
+					<Eye size={18} />
+				{/if}
+			</button>
+		</div>
 	</div>
 
 	{#if form?.invalid}

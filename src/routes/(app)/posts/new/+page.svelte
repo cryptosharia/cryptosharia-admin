@@ -33,12 +33,14 @@
 		const initEditor = async () => {
 			const Editor = (await import('@toast-ui/editor')).default;
 			await import('@toast-ui/editor/dist/toastui-editor.css');
+			await import('@toast-ui/editor/dist/theme/toastui-editor-dark.css');
 
 			editor = new Editor({
 				el: editorContainer,
 				height: '500px',
 				initialEditType: 'markdown',
 				previewStyle: 'vertical',
+				theme: 'dark',
 				initialValue: content,
 				events: {
 					change: () => {
