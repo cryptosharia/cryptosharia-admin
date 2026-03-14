@@ -51,48 +51,57 @@ export const actions = {
         const role = formData.get('role') as string;
         const status = formData.get('status') as string;
 
-        // 1. Update profile name
-        if (name) {
-            const { error: patchError } = await client.PATCH('/users/{id}', {
-                params: { path: { id: params.id } },
-                body: { name }
-            });
-
-            if (patchError) {
-                console.error('Update profile error:', patchError);
-                return fail(400, { success: false, message: 'Failed to update user profile.' });
-            }
+        if (!name && !role && !status) {
+            return fail(400, { success: false, message: 'No valid fields provided for update.' });
         }
 
-        // 2. Update Role
-        if (role) {
-            const roleValue = role as any;
-            const { error: roleError } = await client.PUT('/users/{id}/role', {
-                params: { path: { id: params.id } },
-                body: { role: roleValue }
-            });
+        try {
+            // 1. Update profile name
+            if (name) {
+                const { error: patchError } = await client.PATCH('/users/{id}', {
+                    params: { path: { id: params.id } },
+                    body: { name }
+                });
 
-            if (roleError) {
-                console.error('Update role error:', roleError);
-                return fail(400, { success: false, message: 'Profile updated, but failed to update role.' });
+                if (patchError) {
+                    console.error('Update profile error:', patchError);
+                    return fail(400, { success: false, message: 'Failed to update user profile.' });
+                }
             }
-        }
 
-        // 3. Update Status
-        if (status) {
-            const statusValue = status as 'active' | 'inactive' | 'suspended' | 'banned';
-            const { error: statusError } = await client.PUT('/users/{id}/status', {
-                params: { path: { id: params.id } },
-                body: { status: statusValue }
-            });
+            // 2. Update Role
+            if (role) {
+                const roleValue = role as any;
+                const { error: roleError } = await client.PUT('/users/{id}/role', {
+                    params: { path: { id: params.id } },
+                    body: { role: roleValue }
+                });
 
-            if (statusError) {
-                console.error('Update status error:', statusError);
-                return fail(400, { success: false, message: 'Profile updated, but failed to update status.' });
+                if (roleError) {
+                    console.error('Update role error:', roleError);
+                    return fail(400, { success: false, message: 'Profile updated, but failed to update role.' });
+                }
             }
-        }
 
-        return { success: true, message: 'User updated successfully' };
+            // 3. Update Status
+            if (status) {
+                const statusValue = status as 'active' | 'inactive' | 'suspended' | 'banned';
+                const { error: statusError } = await client.PUT('/users/{id}/status', {
+                    params: { path: { id: params.id } },
+                    body: { status: statusValue }
+                });
+
+                if (statusError) {
+                    console.error('Update status error:', statusError);
+                    return fail(400, { success: false, message: 'Profile updated, but failed to update status.' });
+                }
+            }
+
+            return { success: true, message: 'User updated successfully' };
+        } catch (error: any) {
+            console.error('Unexpected error updating user:', error);
+            return fail(500, { success: false, message: 'An unexpected internal error occurred.' });
+        }
     },
     delete: async () => {
         return fail(405, { success: false, message: 'Delete operation is not supported by the API yet.' });
