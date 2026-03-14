@@ -1,11 +1,30 @@
 <script lang="ts">
-	import { Plus } from 'lucide-svelte';
+	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { Plus, Search } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
+	import { Input } from "$lib/components/ui/input";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
 	import * as Table from "$lib/components/ui/table";
 
 	let { data } = $props();
+
+	let searchValue = $state('');
+	$effect(() => { searchValue = data.search || ''; });
+
+	function handleSearch(e: Event) {
+		e.preventDefault();
+		const params = new URLSearchParams($page.url.searchParams);
+		if (searchValue) {
+			params.set('search', searchValue);
+		} else {
+			params.delete('search');
+		}
+		params.set('page', '1');
+		goto(`?${params.toString()}`);
+	}
 </script>
 
 <div class="space-y-6">
@@ -16,16 +35,39 @@
 		</div>
 	{/if}
 
-	<div class="flex items-center justify-between">
+	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 		<div>
 			<h1 class="text-3xl font-bold tracking-tight text-foreground">Tokens</h1>
-			<p class="text-muted-foreground mt-2">Manage your crypto tokens here.</p>
+			<p class="text-muted-foreground mt-1 text-sm sm:text-base">Manage your crypto tokens here.</p>
 		</div>
-		<Button href="/tokens/new">
+		<Button href="/tokens/new" class="w-full sm:w-auto">
 			<Plus class="mr-2 h-4 w-4" />
 			Add Token
 		</Button>
 	</div>
+
+	<!-- Search Bar -->
+	<Card>
+		<CardContent class="pt-4 pb-4">
+			<form onsubmit={handleSearch} class="flex flex-col sm:flex-row gap-3">
+				<div class="relative flex-1">
+					<Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+					<Input
+						type="text"
+						placeholder="Search tokens..."
+						bind:value={searchValue}
+						class="pl-9 w-full"
+					/>
+				</div>
+				<div class="flex items-center gap-2">
+					<Button type="submit" variant="outline" class="flex-1 sm:flex-none">Search</Button>
+					{#if data.search}
+						<Button href="/tokens" variant="ghost">Clear</Button>
+					{/if}
+				</div>
+			</form>
+		</CardContent>
+	</Card>
 
 	<Card>
 		<CardHeader>
@@ -33,7 +75,8 @@
 			<CardDescription>A list of all registered tokens in the system.</CardDescription>
 		</CardHeader>
 		<CardContent>
-			<Table.Root>
+			<div class="overflow-x-auto">
+			<Table.Root class="min-w-[800px]">
 				<Table.Header>
 					<Table.Row>
 						<Table.Head>Asset</Table.Head>
@@ -45,7 +88,7 @@
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
-					{#each data.tokens as token}
+					{#each data.tokens || [] as token}
 						<Table.Row class="group">
 							<Table.Cell>
 								<div class="flex items-center gap-3 font-medium">
@@ -75,7 +118,9 @@
                             </Table.Cell>
 							<Table.Cell>#{token.rank || '-'}</Table.Cell>
 							<Table.Cell class="text-right">
-								<Button href={`/tokens/${token.slug}`} variant="ghost" size="sm">Edit</Button>
+								<Button href={`/tokens/${token.slug}`} variant="ghost" size="icon" class="h-8 w-8 text-primary shadow-sm border border-transparent hover:border-border transition-all">
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 Z"></path></svg>
+								</Button>
 							</Table.Cell>
 						</Table.Row>
 					{:else}
@@ -87,6 +132,7 @@
 					{/each}
 				</Table.Body>
 			</Table.Root>
+			</div>
 		</CardContent>
 	</Card>
 </div>

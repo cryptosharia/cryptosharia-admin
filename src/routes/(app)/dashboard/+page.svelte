@@ -21,7 +21,7 @@
 			<p class="text-muted-foreground mt-1">Real-time metrics from the ecosystem.</p>
 		</div>
 
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+		<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
 			{#each stats as stat, i}
 				<div in:fly={{ y: 20, duration: 400, delay: i * 80 }}>
 					<Card class="h-full hover:border-orange-500/40 transition-all duration-300 group cursor-default">

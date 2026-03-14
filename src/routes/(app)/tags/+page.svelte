@@ -7,7 +7,8 @@
 
 	let { data } = $props();
 
-	let searchValue = $state(data.search || '');
+	let searchValue = $state('');
+	$effect(() => { searchValue = data.search || ''; });
 
 	function handleSearch(e: Event) {
 		e.preventDefault();
@@ -29,12 +30,12 @@
 </script>
 
 <div class="space-y-6">
-	<div class="flex items-center justify-between">
+	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 		<div>
 			<h1 class="text-3xl font-bold tracking-tight text-foreground">Tags</h1>
-			<p class="text-muted-foreground mt-2">Manage taxonomy tags for posts and items.</p>
+			<p class="text-muted-foreground mt-2 text-sm sm:text-base">Manage taxonomy tags for posts and items.</p>
 		</div>
-		<Button href="/tags/new" class="gap-2">
+		<Button href="/tags/new" class="gap-2 w-full sm:w-auto">
 			<Plus size={18} />
 			Create Tag
 		</Button>
@@ -96,7 +97,7 @@
 									href={`/tags/${tag.slug}`}
 									variant="ghost"
 									size="icon"
-									class="h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+									class="h-8 w-8 text-primary shadow-sm border border-transparent hover:border-border transition-all"
 								>
 									<Edit size={14} />
 								</Button>
