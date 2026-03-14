@@ -15,23 +15,37 @@
 		return new Date(date).toISOString().slice(0, 16);
 	}
 
-	let title = $state(data.post.title);
-	let slug = $state(data.post.slug);
+	let title = $state(data.post?.title || '');
+	let slug = $state(data.post?.slug || '');
 
 	let editorContainer: HTMLElement;
 	let editor: any;
-	let content = $state(data.post.content || '');
+	let content = $state(data.post?.content || '');
+
+	// Keep updated when navigation changes
+	$effect(() => {
+		if (data.post) {
+			title = data.post.title;
+			slug = data.post.slug;
+			if (editor && content !== data.post.content) {
+				content = data.post.content || '';
+				editor.setMarkdown(content);
+			}
+		}
+	});
 
 	$effect(() => {
 		const initEditor = async () => {
 			const Editor = (await import('@toast-ui/editor')).default;
 			await import('@toast-ui/editor/dist/toastui-editor.css');
+			await import('@toast-ui/editor/dist/theme/toastui-editor-dark.css');
 
 			editor = new Editor({
 				el: editorContainer,
 				height: '500px',
 				initialEditType: 'markdown',
 				previewStyle: 'vertical',
+				theme: 'dark',
 				initialValue: content,
 				events: {
 					change: () => {
@@ -106,9 +120,8 @@
 									type="text"
 									id="title"
 									name="title"
-									value={data.post.title}
+									bind:value={title}
 									required
-									oninput={(e) => title = e.currentTarget.value}
 									class="text-lg font-bold h-12"
 								/>
 							</div>
@@ -120,7 +133,7 @@
 										type="text"
 										id="slug"
 										name="slug"
-										value={data.post.slug}
+										bind:value={slug}
 										required
 										class="rounded-l-none h-10"
 									/>

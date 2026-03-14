@@ -64,15 +64,18 @@ export const actions = {
             }
         }
 
-        // 2. Update Role - API expects roleId (UUID) but we send role name
-        // We use a special endpoint PUT /users/{id}/role with roleId
-        // Since API uses roleId UUID but we only have role name from form,
-        // we skip role change if it matches current or handle separately
+        // 2. Update Role
         if (role) {
-            // The API's PUT /users/{id}/role expects { roleId: string | null }
-            // However since we don't have a /roles list endpoint, 
-            // we pass null to remove role or use existing roleId flow
-            // For now we store role name and update status separately
+            const roleValue = role as any;
+            const { error: roleError } = await client.PUT('/users/{id}/role', {
+                params: { path: { id: params.id } },
+                body: { role: roleValue }
+            });
+
+            if (roleError) {
+                console.error('Update role error:', roleError);
+                return fail(400, { success: false, message: 'Profile updated, but failed to update role.' });
+            }
         }
 
         // 3. Update Status

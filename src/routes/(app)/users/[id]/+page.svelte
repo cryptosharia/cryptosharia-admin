@@ -97,6 +97,21 @@
 				</div>
 
 				<div class="space-y-2">
+					<label for="role" class="text-sm font-medium leading-none flex items-center gap-2">
+						<Shield size={14} /> User Role
+					</label>
+					<select
+						id="role"
+						name="role"
+						class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+					>
+						{#each data.roles as opt}
+							<option value={opt.value} selected={data.user.role === opt.value}>{opt.label}</option>
+						{/each}
+					</select>
+				</div>
+
+				<div class="space-y-2">
 					<label class="text-sm font-medium leading-none flex items-center gap-2">
 						<Clock size={14} /> Account Info
 					</label>

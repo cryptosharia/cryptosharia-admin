@@ -1,24 +1,66 @@
 <script lang="ts">
-	import { FileText, Plus, Calendar, Edit3, Eye } from 'lucide-svelte';
+	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { FileText, Plus, Calendar, Edit3, Eye, Search } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
+	import { Input } from "$lib/components/ui/input";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
 	import * as Table from "$lib/components/ui/table";
 
 	let { data } = $props();
+
+	let searchValue = $state('');
+	$effect(() => { searchValue = data.search || ''; });
+
+	function handleSearch(e: Event) {
+		e.preventDefault();
+		const params = new URLSearchParams($page.url.searchParams);
+		if (searchValue) {
+			params.set('search', searchValue);
+		} else {
+			params.delete('search');
+		}
+		params.set('page', '1');
+		goto(`?${params.toString()}`);
+	}
 </script>
 
 <div class="space-y-6">
-	<div class="flex items-center justify-between">
+	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 		<div>
 			<h1 class="text-3xl font-bold tracking-tight text-foreground">Posts & Articles</h1>
-			<p class="text-muted-foreground mt-2">Manage blog posts, events, and other content.</p>
+			<p class="text-muted-foreground mt-1 text-sm sm:text-base">Manage blog posts, events, and other content.</p>
 		</div>
-		<Button href="/posts/new" class="flex items-center gap-2">
-			<Plus size={18} />
+		<Button href="/posts/new" class="w-full sm:w-auto">
+			<Plus class="mr-2 h-4 w-4" />
 			Create Post
 		</Button>
 	</div>
+
+	<!-- Search Bar -->
+	<Card>
+		<CardContent class="pt-4 pb-4">
+			<form onsubmit={handleSearch} class="flex flex-col sm:flex-row gap-3">
+				<div class="relative flex-1">
+					<Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+					<Input
+						type="text"
+						placeholder="Search posts by title or slug..."
+						bind:value={searchValue}
+						class="pl-9 w-full"
+					/>
+				</div>
+				<div class="flex items-center gap-2">
+					<Button type="submit" variant="outline" class="flex-1 sm:flex-none">Search</Button>
+					{#if data.search}
+						<Button href="/posts" variant="ghost">Clear</Button>
+					{/if}
+				</div>
+			</form>
+		</CardContent>
+	</Card>
 
 	<Card>
 		<CardHeader>
