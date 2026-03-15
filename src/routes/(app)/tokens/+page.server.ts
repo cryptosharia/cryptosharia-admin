@@ -1,0 +1,46 @@
+import { createApiClient } from '$lib/api';
+import type { PageServerLoad } from './$types';
+
+export const load: PageServerLoad = async ({ fetch, locals, url }) => {
+	const client = createApiClient({ 
+		fetch, 
+		accessToken: locals.user?.accessToken 
+	});
+
+	const search = url.searchParams.get('search') || undefined;
+	const page = Number(url.searchParams.get('page') || '1');
+
+	try {
+        const query: any = {
+            limit: 100,
+            page,
+            statuses: ['draft', 'published', 'archived']
+        };
+        if (search) query.search = search;
+
+		const { data } = await client.GET('/tokens', {
+			params: { query }
+		});
+
+		return {
+            search: search || '',
+			tokens: data?.data?.items?.map((token: any) => ({
+				id: token.id,
+				name: token.name,
+				ticker: token.ticker,
+				slug: token.slug,
+				rank: token.rank,
+				status: token.status,
+				shariaStatus: token.shariaStatus,
+				logoUrl: token.logo?.url,
+				updatedAt: token.updatedAt
+			})) ?? []
+		};
+	} catch (error) {
+		console.error('API connection failed:', error);
+		return {
+			tokens: [],
+			error: 'API connection failed'
+		};
+	}
+};

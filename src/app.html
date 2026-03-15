@@ -3,7 +3,29 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!-- Anti-FOUC: set dark/light class before page renders, using mode-watcher's official approach -->
+		<script>
+			(function setInitialMode({ defaultMode = "system", themeColors, darkClassNames = ["dark"], lightClassNames = [], defaultTheme = "", modeStorageKey = "mode-watcher-mode", themeStorageKey = "mode-watcher-theme" } = {}) {
+				const rootEl = document.documentElement;
+				const mode = localStorage.getItem(modeStorageKey) ?? defaultMode;
+				const theme = localStorage.getItem(themeStorageKey) ?? defaultTheme;
+				const light = mode === "light" || (mode === "system" && window.matchMedia("(prefers-color-scheme: light)").matches);
+				if (light) {
+					if (darkClassNames.length) rootEl.classList.remove(...darkClassNames.filter(Boolean));
+					if (lightClassNames.length) rootEl.classList.add(...lightClassNames.filter(Boolean));
+				} else {
+					if (lightClassNames.length) rootEl.classList.remove(...lightClassNames.filter(Boolean));
+					if (darkClassNames.length) rootEl.classList.add(...darkClassNames.filter(Boolean));
+				}
+				rootEl.style.colorScheme = light ? "light" : "dark";
+				if (theme) rootEl.setAttribute("data-theme", theme);
+				localStorage.setItem(modeStorageKey, mode);
+			})({ defaultMode: "dark" });
+		</script>
 		%sveltekit.head%
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>

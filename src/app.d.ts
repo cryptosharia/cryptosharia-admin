@@ -3,11 +3,25 @@
 declare global {
 	namespace App {
 		// interface Error {}
-		// interface Locals {}
+		interface Locals {
+			user?: {
+				id: string;
+				name: string;
+				email: string;
+				role: string;
+				permissions: string[];
+				accessToken: string;
+			};
+		}
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}
 	}
+}
+
+declare module '@toast-ui/editor' {
+    const Editor: any;
+    export default Editor;
 }
 
 export {};

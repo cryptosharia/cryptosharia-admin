@@ -1,38 +1,79 @@
-# sv
+# CryptoSharia Admin
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Sistem administrasi pusat untuk mengelola platform CryptoSharia - analisis syariah cryptocurrency terpercaya.
 
-## Creating a project
+![CryptoSharia Banner](static/logo.png)
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Fitur Utama
 
-```sh
-# create a new project in the current directory
-npx sv create
+- **Dashboard Analitik**: Pantau metrik sistem secara real-time.
+- **Manajemen Token**: CRUD data token crypto, status kepatuhan syariah, dan tagging.
+- **Manajemen Konten (CMS)**: Buat dan kelola artikel, berita, dan events.
+- **Manajemen Pengguna**: Kelola akun pengguna, staff, dan role-based access control (RBAC).
+- **Audit Log**: Pencatatan aktivitas sistem untuk keamanan dan transparansi.
+- **Pesan Masuk**: Kelola pesan dan pertanyaan dari pengguna publik.
 
-# create a new project in my-app
-npx sv create my-app
-```
+## Teknologi
 
-## Developing
+Dibangun dengan stack modern untuk performa dan keamanan maksimal:
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+- **Framework**: [SvelteKit](https://kit.svelte.dev) + [Svelte 5](https://svelte.dev) Runes
+- **Styling**: [Tailwind CSS](https://tailwindcss.com) + [Shadcn-Svelte](https://next.shadcn-svelte.com/)
+- **Database**: PostgreSQL
+- **ORM**: [Drizzle ORM](https://orm.drizzle.team)
+- **Auth**: Custom Session & Role-Based Auth
+- **Icons**: Lucide Svelte
 
-```sh
-npm run dev
+## Instalasi & Menjalankan
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+### Persyaratan
 
-## Building
+- Node.js versi 20+
+- PostgreSQL database
 
-To create a production version of your app:
+### Langkah-langkah
 
-```sh
-npm run build
-```
+1.  **Clone repository ini**:
+    ```bash
+    git clone https://github.com/cryptosharia/cryptosharia-admin.git
+    cd cryptosharia-admin
+    ```
 
-You can preview the production build with `npm run preview`.
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+3.  **Setup Environment Variables**:
+    Buat file `.env` berdasarkan contoh dan isi kredensial database Anda:
+    ```env
+    DATABASE_URL=postgresql://user:password@localhost:5432/cryptosharia_db
+    ```
+
+4.  **Setup Database**:
+    Jalankan migrasi atau push schema ke database lokal:
+    ```bash
+    npx drizzle-kit push
+    ```
+
+5.  **Jalankan Development Server**:
+    ```bash
+    npm run dev
+    ```
+    Akses dashboard di `http://localhost:5173`.
+
+## Struktur Direktori
+
+- `src/routes`: Halaman dan API endpoints (File-based routing).
+    - `(app)`: Halaman yang membutuhkan login (Dashboard, Users, Tokens, etc).
+    - `(auth)`: Halaman autentikasi (Login, Register).
+- `src/lib/server/db`: Konfigurasi Database dan Schema Drizzle.
+- `src/lib/components`: Komponen UI reusable (Button, Input, Sidebar, etc).
+
+## Kontribusi
+
+Silakan buat *Pull Request* untuk fitur baru atau perbaikan bug. Pastikan kode Anda mengikuti standar coding convention yang telah ditetapkan.
+
+## Lisensi
+
+Private Proprietary - CryptoSharia Team.
