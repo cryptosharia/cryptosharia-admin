@@ -92,6 +92,8 @@
 					name="name"
 					bind:value={name}
 					required
+					minlength={1}
+					maxlength={50}
 					class="bg-background/50 focus:bg-background"
 				/>
 			</div>
@@ -103,6 +105,8 @@
 					name="slug"
 					bind:value={slug}
 					required
+					minlength={1}
+					maxlength={50}
 					class="bg-background/50 focus:bg-background font-mono text-sm"
 				/>
 			</div>

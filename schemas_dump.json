@@ -1,0 +1,367 @@
+{
+  "PostsCreateBody": {
+    "type": "object",
+    "properties": {
+      "title": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 255
+      },
+      "slug": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 255
+      },
+      "excerpt": {
+        "type": "string",
+        "minLength": 1
+      },
+      "content": {
+        "type": "string",
+        "minLength": 1
+      },
+      "coverImageId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "section": {
+        "type": "string",
+        "enum": [
+          "news",
+          "education",
+          "research",
+          "activity"
+        ]
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "article",
+          "webinar",
+          "video",
+          "headline"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "published",
+          "archived"
+        ],
+        "default": "draft"
+      },
+      "isFeatured": {
+        "type": "boolean",
+        "default": false
+      },
+      "eventDate": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "externalLink": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "uri"
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maxItems": 50,
+        "description": "List of tag identifiers (UUID or slug) to attach to this post"
+      }
+    },
+    "required": [
+      "title",
+      "slug",
+      "excerpt",
+      "content",
+      "coverImageId",
+      "section",
+      "type"
+    ]
+  },
+  "PostsUpdateBody": {
+    "type": "object",
+    "properties": {
+      "title": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 255
+      },
+      "slug": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 255
+      },
+      "excerpt": {
+        "type": "string",
+        "minLength": 1
+      },
+      "content": {
+        "type": "string",
+        "minLength": 1
+      },
+      "coverImageId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "section": {
+        "type": "string",
+        "enum": [
+          "news",
+          "education",
+          "research",
+          "activity"
+        ]
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "article",
+          "webinar",
+          "video",
+          "headline"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "published",
+          "archived"
+        ]
+      },
+      "isFeatured": {
+        "type": "boolean"
+      },
+      "eventDate": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "externalLink": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "uri"
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maxItems": 50,
+        "description": "List of tag identifiers (UUID or slug) to attach to this post"
+      }
+    }
+  },
+  "TokensCreateBody": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100
+      },
+      "ticker": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20
+      },
+      "slug": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100
+      },
+      "rank": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "shariaStatus": {
+        "type": "string",
+        "enum": [
+          "halal",
+          "haram",
+          "syubhat"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "published",
+          "archived"
+        ],
+        "default": "draft"
+      },
+      "excerpt": {
+        "type": "string",
+        "minLength": 1
+      },
+      "content": {
+        "type": "string",
+        "minLength": 1
+      },
+      "website": {
+        "type": "string",
+        "format": "uri"
+      },
+      "tradingviewSymbol": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "maxLength": 64
+      },
+      "logoId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maxItems": 50,
+        "description": "List of tag identifiers (UUID or slug) to attach to this token"
+      }
+    },
+    "required": [
+      "name",
+      "ticker",
+      "slug",
+      "rank",
+      "shariaStatus",
+      "excerpt",
+      "content",
+      "website",
+      "logoId"
+    ]
+  },
+  "TokensUpdateBody": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100
+      },
+      "ticker": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20
+      },
+      "slug": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100
+      },
+      "rank": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "shariaStatus": {
+        "type": "string",
+        "enum": [
+          "halal",
+          "haram",
+          "syubhat"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "published",
+          "archived"
+        ]
+      },
+      "excerpt": {
+        "type": "string",
+        "minLength": 1
+      },
+      "content": {
+        "type": "string",
+        "minLength": 1
+      },
+      "website": {
+        "type": "string",
+        "format": "uri"
+      },
+      "tradingviewSymbol": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "maxLength": 64
+      },
+      "logoId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maxItems": 50,
+        "description": "List of tag identifiers (UUID or slug) to attach to this token"
+      }
+    }
+  },
+  "TagsCreateBody": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 50
+      },
+      "slug": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 50
+      },
+      "description": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "name",
+      "slug"
+    ]
+  },
+  "TagsUpdateBody": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 50
+      },
+      "slug": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 50
+      },
+      "description": {
+        "type": "string"
+      }
+    }
+  }
+}

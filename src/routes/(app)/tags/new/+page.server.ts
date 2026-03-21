@@ -3,9 +3,12 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 
 export const actions = {
-    default: async ({ request, fetch }) => {
+    default: async ({ request, fetch, locals }) => {
         const formData = await request.formData();
-        const client = createApiClient({ fetch }) as any;
+        const client = createApiClient({ 
+            fetch,
+            accessToken: locals.user?.accessToken
+        }) as any;
 
         const name = formData.get('name') as string;
         const slug = formData.get('slug') as string;

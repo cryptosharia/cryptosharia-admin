@@ -1,0 +1,93 @@
+
+> cryptosharia-admin@0.0.1 check
+> svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+
+Loading svelte-check in workspace: c:\Misi-NUS\cryptosharia-admin
+Getting Svelte diagnostics...
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\lib\components\ui\separator\separator.svelte[39m:17:24
+[31mError[39m: Expression produces a union type that is too complex to represent. (ts)
+[36m
+<SeparatorPrimitive.Roo[35mt
+	{orientation}
+	{decorative}
+	class={cn(
+		"shrink-0 bg-border",
+		orientation === "horizontal" ? "h-[1px] w-full" : "h-full w-[1px]",
+		className
+	)}
+	{...rest[36m}
+/>[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\lib\components\ui\separator\separator.svelte[39m:17:24
+[31mError[39m: Type '{ accesskey?: string | undefined | null; autocapitalize?: "characters" | "off" | "on" | "none" | "sentences" | "words" | undefined | null; autofocus?: boolean | undefined | null; ... 435 more ...; class: string; }' is not assignable to type 'Omit<{ orientation?: Orientation | undefined; decorative?: boolean | undefined; }, "children" | "child"> & { child?: Snippet<[{ props: Record<string, unknown>; }]> | undefined; children?: Snippet<...> | undefined; style?: any; ref?: HTMLElement | ... 1 more ... | undefined; } & Without<...>'.
+  Type '{ accesskey?: string | undefined | null; autocapitalize?: "characters" | "off" | "on" | "none" | "sentences" | "words" | undefined | null; autofocus?: boolean | undefined | null; ... 435 more ...; class: string; }' is not assignable to type 'Without<BitsPrimitiveDivAttributes, SeparatorRootPropsWithoutHTML>'.
+    Types of property 'id' are incompatible.
+      Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+        Type 'null' is not assignable to type 'string | undefined'. (ts)
+[36m
+<SeparatorPrimitive.Roo[35m[36mt
+	{orientation}[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\lib\components\ui\table\table-caption.svelte[39m:8:8
+[31mError[39m: Argument of type '{ accesskey?: string | undefined | null; autocapitalize?: "characters" | "off" | "on" | "none" | "sentences" | "words" | undefined | null; autofocus?: boolean | undefined | null; ... 432 more ...; class: string; }' is not assignable to parameter of type 'HTMLProps<"caption", HTMLAttributes<any>>'.
+  Type '{ accesskey?: string | undefined | null; autocapitalize?: "characters" | "off" | "on" | "none" | "sentences" | "words" | undefined | null; autofocus?: boolean | undefined | null; ... 432 more ...; class: string; }' is not assignable to type 'Omit<HTMLAttributes<HTMLElement>, never>'.
+    Types of property ''on:copy'' are incompatible.
+      Type 'ClipboardEventHandler<HTMLTableCaptionElement> | null | undefined' is not assignable to type 'ClipboardEventHandler<HTMLElement> | null | undefined'.
+        Type 'ClipboardEventHandler<HTMLTableCaptionElement>' is not assignable to type 'ClipboardEventHandler<HTMLElement>'.
+          Property 'align' is missing in type 'HTMLElement' but required in type 'HTMLTableCaptionElement'. (ts)
+[36m
+<captio[35mn
+	class={cn("mt-4 text-sm text-muted-foreground", className)}
+	{...props[36m}
+>[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\routes\(app)\messages\[id]\+page.svelte[39m:8:14
+[33mWarn[39m: This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+[36m	let { data } = $props();
+	const msg = [35mdata[36m.message;
+</script>[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\routes\(app)\posts\[id]\+page.svelte[39m:18:21
+[33mWarn[39m: This reference only captures the initial value of `data`. Did you mean to reference it inside a derived instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+[36m
+	let title = $state([35mdata[36m.post?.title || '');
+	let slug = $state(data.post?.slug || '');[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\routes\(app)\posts\[id]\+page.svelte[39m:19:20
+[33mWarn[39m: This reference only captures the initial value of `data`. Did you mean to reference it inside a derived instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+[36m	let title = $state(data.post?.title || '');
+	let slug = $state([35mdata[36m.post?.slug || '');[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\routes\(app)\posts\[id]\+page.svelte[39m:23:23
+[33mWarn[39m: This reference only captures the initial value of `data`. Did you mean to reference it inside a derived instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+[36m	let editor: any;
+	let content = $state([35mdata[36m.post?.content || '');[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\routes\(app)\tags\[slug]\+page.svelte[39m:14:20
+[33mWarn[39m: This reference only captures the initial value of `data`. Did you mean to reference it inside a derived instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+[36m
+	let name = $state([35mdata[36m.tag.name);
+	let slug = $state(data.tag.slug);[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\routes\(app)\tags\[slug]\+page.svelte[39m:15:20
+[33mWarn[39m: This reference only captures the initial value of `data`. Did you mean to reference it inside a derived instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+[36m	let name = $state(data.tag.name);
+	let slug = $state([35mdata[36m.tag.slug);[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\routes\(app)\tokens\[slug]\+page.svelte[39m:10:18
+[33mWarn[39m: This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+[36m	let { data, form } = $props();
+	let { token } = [35mdata[36m;
+</script>[39m
+
+====================================
+[31msvelte-check found 3 errors and 7 warnings in 6 files
+[39m

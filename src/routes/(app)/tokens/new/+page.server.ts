@@ -39,11 +39,14 @@ export const actions = {
         const shariaStatus = formData.get('shariaStatus') as "halal" | "haram" | "syubhat";
         const status = formData.get('status') as "draft" | "published" | "archived";
         
-        const slug = name ? name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
-        const rank = 0; // Default rank for new token
-        const excerpt = '';
-        const content = '';
-        const website = '';
+        const slug = formData.get('slug') as string;
+        const rank = parseInt(formData.get('rank') as string || '0', 10);
+        const excerpt = formData.get('excerpt') as string;
+        const content = formData.get('content') as string;
+        const website = formData.get('website') as string;
+        const tradingviewSymbol = formData.get('tradingviewSymbol') as string || null;
+        const tagsStr = formData.get('tags') as string;
+        const tags = tagsStr ? tagsStr.split(',').map(s => s.trim()).filter(Boolean) : undefined;
         
         const logoFile = formData.get('logoImage') as File | null;
 
@@ -72,6 +75,8 @@ export const actions = {
                     excerpt,
                     content,
                     website,
+                    tradingviewSymbol,
+                    tags,
                     logoId
                 }
             });

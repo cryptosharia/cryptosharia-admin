@@ -1,0 +1,700 @@
+{
+  "AuthSignupPostResponse": {
+    "id": {
+      "format": "uuid"
+    },
+    "email": {
+      "format": "email"
+    }
+  },
+  "AuthSignupPostBody": {
+    "name": {
+      "minLength": 2,
+      "maxLength": 120
+    },
+    "email": {
+      "maxLength": 255,
+      "format": "email"
+    },
+    "password": {
+      "minLength": 12
+    }
+  },
+  "AuthPasswordForgotPostBody": {
+    "email": {
+      "format": "email"
+    }
+  },
+  "AuthPasswordResetPostBody": {
+    "token": {
+      "minLength": 1
+    },
+    "password": {
+      "minLength": 12
+    }
+  },
+  "UserMetadata": {
+    "id": {
+      "format": "uuid"
+    },
+    "email": {
+      "format": "email"
+    }
+  },
+  "AuthSigninPostBody": {
+    "email": {
+      "format": "email"
+    },
+    "password": {
+      "minLength": 12
+    }
+  },
+  "AuthMeGetResponse": {
+    "role": {
+      "enum": [
+        "super_admin",
+        "admin",
+        "posts_manager",
+        "tokens_manager",
+        "member"
+      ]
+    }
+  },
+  "AssetMetadata": {
+    "id": {
+      "format": "uuid"
+    },
+    "url": {
+      "format": "uri"
+    }
+  },
+  "UsersGetItem": {
+    "role": {
+      "enum": [
+        "super_admin",
+        "admin",
+        "posts_manager",
+        "tokens_manager",
+        "member"
+      ]
+    },
+    "status": {
+      "enum": [
+        "active",
+        "inactive",
+        "suspended",
+        "banned"
+      ]
+    },
+    "lastLoginAt": {
+      "format": "date-time"
+    },
+    "createdAt": {
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "format": "date-time"
+    }
+  },
+  "UsersIdGetResponse": {
+    "role": {
+      "enum": [
+        "super_admin",
+        "admin",
+        "posts_manager",
+        "tokens_manager",
+        "member"
+      ]
+    },
+    "status": {
+      "enum": [
+        "active",
+        "inactive",
+        "suspended",
+        "banned"
+      ]
+    },
+    "lastLoginAt": {
+      "format": "date-time"
+    },
+    "createdAt": {
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "format": "date-time"
+    }
+  },
+  "UsersIdPatchBody": {
+    "name": {
+      "minLength": 2,
+      "maxLength": 120
+    },
+    "avatarId": {
+      "format": "uuid"
+    }
+  },
+  "UsersIdStatusPutBody": {
+    "status": {
+      "enum": [
+        "active",
+        "inactive",
+        "suspended",
+        "banned"
+      ]
+    }
+  },
+  "UsersIdRolePutBody": {
+    "role": {
+      "enum": [
+        "super_admin",
+        "admin",
+        "posts_manager",
+        "tokens_manager",
+        "member"
+      ]
+    }
+  },
+  "PostsGetItem": {
+    "id": {
+      "format": "uuid"
+    },
+    "title": {
+      "maxLength": 255
+    },
+    "slug": {
+      "maxLength": 255
+    },
+    "section": {
+      "enum": [
+        "news",
+        "education",
+        "research",
+        "activity"
+      ]
+    },
+    "type": {
+      "enum": [
+        "article",
+        "webinar",
+        "video",
+        "headline"
+      ]
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ]
+    },
+    "eventDate": {
+      "format": "date-time"
+    },
+    "publishedAt": {
+      "format": "date-time"
+    },
+    "createdAt": {
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "format": "date-time"
+    }
+  },
+  "PostsTagItem": {
+    "id": {
+      "format": "uuid"
+    },
+    "name": {
+      "maxLength": 50
+    },
+    "slug": {
+      "maxLength": 50
+    }
+  },
+  "PostsGetData": {
+    "id": {
+      "format": "uuid"
+    },
+    "title": {
+      "maxLength": 255
+    },
+    "slug": {
+      "maxLength": 255
+    },
+    "section": {
+      "enum": [
+        "news",
+        "education",
+        "research",
+        "activity"
+      ]
+    },
+    "type": {
+      "enum": [
+        "article",
+        "webinar",
+        "video",
+        "headline"
+      ]
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ]
+    },
+    "eventDate": {
+      "format": "date-time"
+    },
+    "publishedAt": {
+      "format": "date-time"
+    },
+    "createdAt": {
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "format": "date-time"
+    }
+  },
+  "PostsTagDetail": {
+    "id": {
+      "format": "uuid"
+    },
+    "name": {
+      "maxLength": 50
+    },
+    "slug": {
+      "maxLength": 50
+    }
+  },
+  "PostsCreateBody": {
+    "title": {
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "slug": {
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "excerpt": {
+      "minLength": 1
+    },
+    "content": {
+      "minLength": 1
+    },
+    "coverImageId": {
+      "format": "uuid"
+    },
+    "section": {
+      "enum": [
+        "news",
+        "education",
+        "research",
+        "activity"
+      ]
+    },
+    "type": {
+      "enum": [
+        "article",
+        "webinar",
+        "video",
+        "headline"
+      ]
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ]
+    },
+    "eventDate": {
+      "format": "date-time"
+    },
+    "externalLink": {
+      "format": "uri"
+    }
+  },
+  "PostsUpdateBody": {
+    "title": {
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "slug": {
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "excerpt": {
+      "minLength": 1
+    },
+    "content": {
+      "minLength": 1
+    },
+    "coverImageId": {
+      "format": "uuid"
+    },
+    "section": {
+      "enum": [
+        "news",
+        "education",
+        "research",
+        "activity"
+      ]
+    },
+    "type": {
+      "enum": [
+        "article",
+        "webinar",
+        "video",
+        "headline"
+      ]
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ]
+    },
+    "eventDate": {
+      "format": "date-time"
+    },
+    "externalLink": {
+      "format": "uri"
+    }
+  },
+  "TokensGetItem": {
+    "id": {
+      "format": "uuid"
+    },
+    "slug": {
+      "maxLength": 100
+    },
+    "rank": {
+      "min": -2147483648,
+      "max": 2147483647
+    },
+    "name": {
+      "maxLength": 100
+    },
+    "ticker": {
+      "maxLength": 20
+    },
+    "shariaStatus": {
+      "enum": [
+        "halal",
+        "haram",
+        "syubhat"
+      ]
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ]
+    },
+    "tradingviewSymbol": {
+      "maxLength": 64
+    },
+    "publishedAt": {
+      "format": "date-time"
+    },
+    "createdAt": {
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "format": "date-time"
+    }
+  },
+  "TokensTagItem": {
+    "id": {
+      "format": "uuid"
+    },
+    "name": {
+      "maxLength": 50
+    },
+    "slug": {
+      "maxLength": 50
+    }
+  },
+  "TokensGetData": {
+    "id": {
+      "format": "uuid"
+    },
+    "slug": {
+      "maxLength": 100
+    },
+    "rank": {
+      "min": -2147483648,
+      "max": 2147483647
+    },
+    "name": {
+      "maxLength": 100
+    },
+    "ticker": {
+      "maxLength": 20
+    },
+    "shariaStatus": {
+      "enum": [
+        "halal",
+        "haram",
+        "syubhat"
+      ]
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ]
+    },
+    "tradingviewSymbol": {
+      "maxLength": 64
+    },
+    "publishedAt": {
+      "format": "date-time"
+    },
+    "createdAt": {
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "format": "date-time"
+    }
+  },
+  "TokensTagDetail": {
+    "id": {
+      "format": "uuid"
+    },
+    "name": {
+      "maxLength": 50
+    },
+    "slug": {
+      "maxLength": 50
+    }
+  },
+  "TokensCreateBody": {
+    "name": {
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "ticker": {
+      "minLength": 1,
+      "maxLength": 20
+    },
+    "slug": {
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "rank": {
+      "min": 1
+    },
+    "shariaStatus": {
+      "enum": [
+        "halal",
+        "haram",
+        "syubhat"
+      ]
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ]
+    },
+    "excerpt": {
+      "minLength": 1
+    },
+    "content": {
+      "minLength": 1
+    },
+    "website": {
+      "format": "uri"
+    },
+    "tradingviewSymbol": {
+      "maxLength": 64
+    },
+    "logoId": {
+      "format": "uuid"
+    }
+  },
+  "TokensUpdateBody": {
+    "name": {
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "ticker": {
+      "minLength": 1,
+      "maxLength": 20
+    },
+    "slug": {
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "rank": {
+      "min": 1
+    },
+    "shariaStatus": {
+      "enum": [
+        "halal",
+        "haram",
+        "syubhat"
+      ]
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ]
+    },
+    "excerpt": {
+      "minLength": 1
+    },
+    "content": {
+      "minLength": 1
+    },
+    "website": {
+      "format": "uri"
+    },
+    "tradingviewSymbol": {
+      "maxLength": 64
+    },
+    "logoId": {
+      "format": "uuid"
+    }
+  },
+  "TagsGetItem": {
+    "id": {
+      "format": "uuid"
+    },
+    "name": {
+      "maxLength": 50
+    },
+    "slug": {
+      "maxLength": 50
+    },
+    "createdAt": {
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "format": "date-time"
+    }
+  },
+  "TagsCreateBody": {
+    "name": {
+      "minLength": 1,
+      "maxLength": 50
+    },
+    "slug": {
+      "minLength": 1,
+      "maxLength": 50
+    }
+  },
+  "TagsUpdateBody": {
+    "name": {
+      "minLength": 1,
+      "maxLength": 50
+    },
+    "slug": {
+      "minLength": 1,
+      "maxLength": 50
+    }
+  },
+  "MessagesGetItem": {
+    "id": {
+      "format": "uuid"
+    },
+    "name": {
+      "minLength": 2,
+      "maxLength": 120
+    },
+    "email": {
+      "maxLength": 255,
+      "format": "email"
+    },
+    "message": {
+      "minLength": 10,
+      "maxLength": 5000
+    },
+    "createdAt": {
+      "format": "date-time"
+    }
+  },
+  "MessagesPostBody": {
+    "name": {
+      "minLength": 2,
+      "maxLength": 120
+    },
+    "email": {
+      "maxLength": 255,
+      "format": "email"
+    },
+    "message": {
+      "minLength": 10,
+      "maxLength": 5000
+    }
+  },
+  "MessagesIdGetResponse": {
+    "id": {
+      "format": "uuid"
+    },
+    "name": {
+      "minLength": 2,
+      "maxLength": 120
+    },
+    "email": {
+      "maxLength": 255,
+      "format": "email"
+    },
+    "message": {
+      "minLength": 10,
+      "maxLength": 5000
+    },
+    "createdAt": {
+      "format": "date-time"
+    }
+  },
+  "AssetsPostResponse": {
+    "id": {
+      "format": "uuid"
+    },
+    "filename": {
+      "maxLength": 255
+    },
+    "size": {
+      "min": -9007199254740991,
+      "max": 9007199254740991
+    },
+    "mimeType": {
+      "maxLength": 100
+    },
+    "width": {
+      "min": -2147483648,
+      "max": 2147483647
+    },
+    "height": {
+      "min": -2147483648,
+      "max": 2147483647
+    },
+    "provider": {
+      "enum": [
+        "picsum",
+        "vercel_blob"
+      ]
+    },
+    "createdAt": {
+      "format": "date-time"
+    },
+    "createdBy": {
+      "format": "uuid"
+    }
+  },
+  "OpsAssetsCleanupFailure": {
+    "assetId": {
+      "format": "uuid"
+    }
+  }
+}

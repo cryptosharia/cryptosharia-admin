@@ -173,6 +173,7 @@
 												name="current_password"
 												placeholder="••••••••"
 												required
+												minlength={12}
 											/>
 										</div>
 										<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -184,6 +185,7 @@
 													name="new_password"
 													placeholder="••••••••"
 													required
+													minlength={12}
 												/>
 											</div>
 											<div class="space-y-2">
@@ -194,6 +196,7 @@
 													name="confirm_password"
 													placeholder="••••••••"
 													required
+													minlength={12}
 												/>
 											</div>
 										</div>

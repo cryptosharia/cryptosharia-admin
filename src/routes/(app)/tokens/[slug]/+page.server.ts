@@ -32,22 +32,74 @@ export const load: PageServerLoad = async ({ fetch, params }) => {
 	}
 };
 
+import { env } from '$env/dynamic/public';
+
+async function uploadAsset(fetchFn: typeof fetch, file: File, accessToken: string) {
+	const formData = new FormData();
+	formData.append('file', file);
+	const apiUrl = env.PUBLIC_CS_API_URL || 'http://localhost:5173';
+	const res = await fetchFn(`${apiUrl}/assets`, {
+		method: 'POST',
+		headers: {
+			'Authorization': `Bearer ${accessToken}`
+		},
+		body: formData
+	});
+	if (!res.ok) {
+        const errorText = await res.text();
+		throw new Error(errorText || 'File upload failed');
+	}
+	const json = await res.json();
+	return json.data;
+}
+
 export const actions = {
-    update: async ({ request, params, fetch }) => {
+    update: async ({ request, params, fetch, locals }) => {
         const formData = await request.formData();
-        const client = createApiClient({ fetch }) as any;
+        const client = createApiClient({ 
+            fetch,
+            accessToken: locals.user?.accessToken
+        }) as any;
         
         const name = formData.get('name') as string;
-        // ticker might be read-only in some APIs, but let's assume updateable
+        const ticker = formData.get('ticker') as string;
         const shariaStatus = formData.get('shariaStatus') as string;
         const status = formData.get('status') as string;
+        const slug = formData.get('slug') as string;
+        const rank = parseInt(formData.get('rank') as string || '0', 10);
+        const website = formData.get('website') as string;
+        const excerpt = formData.get('excerpt') as string;
+        const content = formData.get('content') as string;
+        
+        const tradingviewSymbolStr = formData.get('tradingviewSymbol') as string;
+        const tradingviewSymbol = tradingviewSymbolStr ? tradingviewSymbolStr : null;
+
+        const tagsStr = formData.get('tags') as string;
+        const tags = tagsStr ? tagsStr.split(',').map(s => s.trim()).filter(Boolean) : undefined;
+        
+        const logoFile = formData.get('logoImage') as File | null;
+        let logoId: string | undefined = undefined;
 
         try {
+            if (logoFile && logoFile.size > 0) {
+                const uploadedAsset = await uploadAsset(fetch, logoFile, locals.user?.accessToken || '');
+                logoId = uploadedAsset.id;
+            }
+
             const { data, error } = await client.PATCH(`/tokens/${params.slug}`, {
                 body: {
                     name,
+                    ticker,
+                    slug,
+                    rank,
+                    website,
+                    excerpt,
+                    content,
                     shariaStatus,
-                    status
+                    status,
+                    tradingviewSymbol,
+                    tags,
+                    logoId
                 }
             });
 
