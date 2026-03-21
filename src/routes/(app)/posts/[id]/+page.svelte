@@ -15,18 +15,18 @@
 		return new Date(date).toISOString().slice(0, 16);
 	}
 
-	let title = $state(data.post?.title || '');
-	let slug = $state(data.post?.slug || '');
+	let title = $state('');
+	let slug = $state('');
 
 	let editorContainer: HTMLElement;
 	let editor: any;
-	let content = $state(data.post?.content || '');
+	let content = $state('');
 
 	// Keep updated when navigation changes
 	$effect(() => {
 		if (data.post) {
-			title = data.post.title;
-			slug = data.post.slug;
+			title = data.post.title || '';
+			slug = data.post.slug || '';
 			if (editor && content !== data.post.content) {
 				content = data.post.content || '';
 				editor.setMarkdown(content);

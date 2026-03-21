@@ -8,11 +8,11 @@
 	import { Textarea } from "$lib/components/ui/textarea";
 
 	let { data, form } = $props();
-	let { token } = data;
+	let token = $derived(data.token);
 
 	let editorContainer: HTMLElement;
 	let editor: any;
-	let content = $state(token.content || '');
+	let content = $state('');
 
 	// Keep updated when navigation changes
 	$effect(() => {
