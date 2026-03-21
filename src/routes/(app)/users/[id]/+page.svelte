@@ -75,6 +75,8 @@
 						name="name"
 						value={data.user.name}
 						required
+						minlength={2}
+						maxlength={120}
 					/>
 				</div>
 

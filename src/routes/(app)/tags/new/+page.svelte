@@ -55,6 +55,8 @@
 					bind:value={name}
 					onblur={generateSlug}
 					required
+					minlength={1}
+					maxlength={50}
 					placeholder="e.g. Education, Exchange, DeFi"
 					class="bg-background/50 focus:bg-background"
 				/>
@@ -67,6 +69,8 @@
 					name="slug"
 					bind:value={slug}
 					required
+					minlength={1}
+					maxlength={50}
 					placeholder="e.g. education"
 					class="bg-background/50 focus:bg-background font-mono text-sm"
 				/>

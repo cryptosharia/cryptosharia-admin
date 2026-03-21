@@ -30,6 +30,8 @@
 							id="name"
 							name="name"
 							required
+							minlength={2}
+							maxlength={120}
 							placeholder="e.g. John Doe"
 						/>
 					</div>
@@ -41,6 +43,7 @@
 							id="email"
 							name="email"
 							required
+							maxlength={255}
 							placeholder="user@example.com"
 						/>
 					</div>
@@ -52,6 +55,7 @@
 							id="password"
 							name="password"
 							required
+							minlength={12}
 							placeholder="••••••••"
 						/>
 					</div>

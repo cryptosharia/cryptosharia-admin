@@ -109,6 +109,8 @@
 									id="title"
 									name="title"
 									required
+									minlength={1}
+									maxlength={255}
 									oninput={handleTitleInput}
 									placeholder="Enter post title..."
 									class="text-lg font-bold h-12"
@@ -124,6 +126,8 @@
 										name="slug"
 										bind:value={slug}
 										required
+										minlength={1}
+										maxlength={255}
 										class="rounded-l-none h-10"
 									/>
 								</div>
@@ -134,11 +138,21 @@
 
 						<div class="space-y-4">
 							<div class="space-y-2">
+								<label for="tags" class="text-sm font-medium leading-none">Tags (comma separated)</label>
+								<Input
+									type="text"
+									id="tags"
+									name="tags"
+									placeholder="e.g. news, crypto, sharia"
+								/>
+							</div>
+							<div class="space-y-2">
 								<label for="excerpt" class="text-sm font-medium leading-none">Excerpt</label>
 								<Textarea
 									id="excerpt"
 									name="excerpt"
 									rows={3}
+									minlength={1}
 									placeholder="Short summary for SEO and previews..."
 									class="resize-none"
 								/>
@@ -184,10 +198,24 @@
 									name="section"
 									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 								>
-									<option value="blog">Blog</option>
 									<option value="news">News</option>
-									<option value="event">Event</option>
-									<option value="announcement">Announcement</option>
+									<option value="education">Education</option>
+									<option value="research">Research</option>
+									<option value="activity">Activity</option>
+								</select>
+							</div>
+
+							<div class="space-y-2">
+								<label for="type" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Type</label>
+								<select
+									id="type"
+									name="type"
+									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									<option value="article">Article</option>
+									<option value="webinar">Webinar</option>
+									<option value="video">Video</option>
+									<option value="headline">Headline</option>
 								</select>
 							</div>
 						</div>
@@ -252,6 +280,15 @@
 								type="datetime-local"
 								id="eventDate"
 								name="eventDate"
+							/>
+						</div>
+						<div class="space-y-2 mt-4">
+							<label for="externalLink" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">External Link (Optional)</label>
+							<Input
+								type="url"
+								id="externalLink"
+								name="externalLink"
+								placeholder="https://..."
 							/>
 						</div>
 					</CardContent>

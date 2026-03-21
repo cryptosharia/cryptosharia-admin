@@ -30,6 +30,8 @@
 							id="name"
 							name="name"
 							required
+							minlength={1}
+							maxlength={100}
 							placeholder="e.g. Bitcoin"
 						/>
 					</div>
@@ -41,7 +43,45 @@
 							id="ticker"
 							name="ticker"
 							required
+							minlength={1}
+							maxlength={20}
 							placeholder="e.g. BTC"
+						/>
+					</div>
+
+					<div class="space-y-2">
+						<label for="slug" class="text-sm font-medium leading-none">URL Slug</label>
+						<Input
+							type="text"
+							id="slug"
+							name="slug"
+							required
+							minlength={1}
+							maxlength={100}
+							placeholder="e.g. bitcoin"
+						/>
+					</div>
+
+					<div class="space-y-2">
+						<label for="rank" class="text-sm font-medium leading-none">Rank</label>
+						<Input
+							type="number"
+							id="rank"
+							name="rank"
+							required
+							min={1}
+							placeholder="e.g. 1"
+						/>
+					</div>
+
+					<div class="space-y-2">
+						<label for="website" class="text-sm font-medium leading-none">Website</label>
+						<Input
+							type="url"
+							id="website"
+							name="website"
+							placeholder="https://bitcoin.org"
+							class="font-mono text-sm"
 						/>
 					</div>
 
@@ -57,6 +97,53 @@
 							<option value="haram">Haram</option>
 							<option value="syubhat">Syubhat</option>
 						</select>
+					</div>
+
+					<div class="space-y-2">
+						<label for="excerpt" class="text-sm font-medium leading-none">Excerpt</label>
+						<textarea
+							id="excerpt"
+							name="excerpt"
+							required
+							minlength={1}
+							rows={3}
+							placeholder="Short token summary..."
+							class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+						></textarea>
+					</div>
+					
+					<div class="space-y-2 md:col-span-2">
+						<label for="content" class="text-sm font-medium leading-none">Content Markdown</label>
+						<textarea
+							id="content"
+							name="content"
+							required
+							minlength={1}
+							rows={6}
+							placeholder="Detailed token description..."
+							class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+						></textarea>
+					</div>
+
+					<div class="space-y-2">
+						<label for="tradingviewSymbol" class="text-sm font-medium leading-none">TradingView Symbol</label>
+						<Input
+							type="text"
+							id="tradingviewSymbol"
+							name="tradingviewSymbol"
+							maxlength={64}
+							placeholder="e.g. BINANCE:BTCUSDT"
+						/>
+					</div>
+
+					<div class="space-y-2 flex-1">
+						<label for="tags" class="text-sm font-medium leading-none">Tags (comma separated)</label>
+						<Input
+							type="text"
+							id="tags"
+							name="tags"
+							placeholder="e.g. halal, bitcoin, web3"
+						/>
 					</div>
 
 					<div class="space-y-2">

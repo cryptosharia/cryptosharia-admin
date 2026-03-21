@@ -27,6 +27,7 @@
 			id="email"
 			name="email"
 			required
+			maxlength={255}
 			placeholder="admin@cryptosharia.com"
 			class="h-12"
 		/>
@@ -47,6 +48,7 @@
 				id="password"
 				name="password"
 				required
+				minlength={12}
 				placeholder="••••••••"
 				class="h-12 pr-10"
 			/>

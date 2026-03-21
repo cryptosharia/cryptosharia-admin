@@ -32,7 +32,7 @@
 
 	<Card>
 		<CardContent class="pt-6">
-			<form action="?/update" method="POST" use:enhance class="space-y-8">
+			<form action="?/update" method="POST" enctype="multipart/form-data" use:enhance class="space-y-8">
 				<!-- Core Info -->
 				<div class="space-y-4">
 					<div class="flex items-center gap-2">
@@ -47,6 +47,8 @@
 								id="name"
 								name="name"
 								required
+								minlength={1}
+								maxlength={100}
 								value={token.name}
 							/>
 						</div>
@@ -58,7 +60,45 @@
 								id="ticker"
 								name="ticker"
 								required
+								minlength={1}
+								maxlength={20}
 								value={token.ticker}
+							/>
+						</div>
+
+						<div class="space-y-2">
+							<label for="slug" class="text-sm font-medium leading-none">URL Slug</label>
+							<Input
+								type="text"
+								id="slug"
+								name="slug"
+								required
+								minlength={1}
+								maxlength={100}
+								value={token.slug}
+							/>
+						</div>
+
+						<div class="space-y-2">
+							<label for="rank" class="text-sm font-medium leading-none">Rank</label>
+							<Input
+								type="number"
+								id="rank"
+								name="rank"
+								required
+								min={1}
+								value={token.rank}
+							/>
+						</div>
+
+						<div class="space-y-2">
+							<label for="website" class="text-sm font-medium leading-none">Website</label>
+							<Input
+								type="url"
+								id="website"
+								name="website"
+								value={token.website}
+								class="font-mono text-sm"
 							/>
 						</div>
 
@@ -76,6 +116,66 @@
 								<option value="syubhat">Syubhat</option>
 							</select>
 						</div>
+
+						<div class="space-y-2">
+							<label for="excerpt" class="text-sm font-medium leading-none">Excerpt</label>
+							<textarea
+								id="excerpt"
+								name="excerpt"
+								required
+								minlength={1}
+								rows={3}
+								class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+							>{token.excerpt || ''}</textarea>
+						</div>
+						
+						<div class="space-y-2 md:col-span-2">
+							<label for="content" class="text-sm font-medium leading-none">Content Markdown</label>
+							<textarea
+								id="content"
+								name="content"
+								required
+								minlength={1}
+								rows={6}
+								class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+							>{token.content || ''}</textarea>
+						</div>
+
+					    <div class="space-y-2 flex-1">
+						    <label for="tradingviewSymbol" class="text-sm font-medium leading-none">TradingView Symbol</label>
+						    <Input
+							    type="text"
+							    id="tradingviewSymbol"
+							    name="tradingviewSymbol"
+							    maxlength={64}
+							    placeholder="e.g. BINANCE:BTCUSDT"
+                                value={token.tradingviewSymbol || ''}
+						    />
+					    </div>
+
+					    <div class="space-y-2 flex-1">
+						    <label for="tags" class="text-sm font-medium leading-none">Tags (comma separated)</label>
+						    <Input
+							    type="text"
+							    id="tags"
+							    name="tags"
+							    placeholder="e.g. halal, bitcoin, web3"
+                                value={token.tags?.map(t => t.slug).join(', ') || ''}
+						    />
+					    </div>
+
+					    <div class="space-y-2">
+						    <label for="logoImage" class="text-sm font-medium leading-none">Logo Image (Optional to update)</label>
+						    <Input
+							    type="file"
+							    id="logoImage"
+							    name="logoImage"
+							    accept="image/*"
+						    />
+                            {#if token.logoUrl}
+                                <p class="text-xs text-muted-foreground mt-2">Current logo: <a href={token.logoUrl} target="_blank" class="underline">View</a></p>
+                            {/if}
+					    </div>
 
                         <div class="space-y-2">
 							<label for="status" class="text-sm font-medium leading-none">Status</label>
