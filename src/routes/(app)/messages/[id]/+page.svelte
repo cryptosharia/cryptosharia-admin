@@ -5,7 +5,7 @@
 	import { Separator } from '$lib/components/ui/separator';
 
 	let { data } = $props();
-	const msg = data.message;
+	let msg = $derived(data.message);
 </script>
 
 <div class="space-y-6 max-w-5xl mx-auto">
