@@ -160,48 +160,17 @@
 						<Card>
 							<CardHeader>
 								<CardTitle>Change Password</CardTitle>
-								<CardDescription>Update your login credentials.</CardDescription>
+								<CardDescription>Request a password reset link to your email.</CardDescription>
 							</CardHeader>
 							<CardContent>
-								<form action="?/update" method="POST" use:enhance class="space-y-4">
-									<div class="grid grid-cols-1 gap-4">
-										<div class="space-y-2">
-											<label for="current_password" class="text-sm font-medium leading-none">Current Password</label>
-											<Input
-												type="password"
-												id="current_password"
-												name="current_password"
-												placeholder="••••••••"
-												required
-											/>
-										</div>
-										<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-											<div class="space-y-2">
-												<label for="new_password" class="text-sm font-medium leading-none">New Password</label>
-												<Input
-													type="password"
-													id="new_password"
-													name="new_password"
-													placeholder="••••••••"
-													required
-												/>
-											</div>
-											<div class="space-y-2">
-												<label for="confirm_password" class="text-sm font-medium leading-none">Confirm New Password</label>
-												<Input
-													type="password"
-													id="confirm_password"
-													name="confirm_password"
-													placeholder="••••••••"
-													required
-												/>
-											</div>
-										</div>
-									</div>
+								<form action="?/changePassword" method="POST" use:enhance class="space-y-4">
+									<p class="text-sm text-muted-foreground">
+										We'll send a password reset link to <strong>{data.user?.email}</strong>.
+									</p>
 									<div class="flex justify-end pt-4 border-t">
 										<Button type="submit">
 											<Save size={18} class="mr-2" />
-											Update Password
+											Send Reset Link
 										</Button>
 									</div>
 								</form>

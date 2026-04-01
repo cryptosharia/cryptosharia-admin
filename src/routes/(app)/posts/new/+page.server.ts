@@ -1,7 +1,13 @@
 import { createApiClient } from '$lib/api';
 import { fail, redirect } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { env } from '$env/dynamic/public';
+
+export const load: PageServerLoad = async ({ fetch, locals }) => {
+	const client = createApiClient({ fetch, accessToken: locals.user?.accessToken });
+	const { data } = await client.GET('/tags', { params: { query: { limit: 100 } } });
+	return { tags: data?.data?.items ?? [] };
+};
 
 // A helper to perform raw fetch to /assets if openapi-fetch struggles with FormData
 async function uploadAsset(fetchFn: typeof fetch, file: File, accessToken: string) {
@@ -37,10 +43,15 @@ export const actions = {
 		const status = formData.get('status') as 'draft' | 'published' | 'archived';
 		const excerpt = formData.get('excerpt') as string;
 		const content = formData.get('content') as string;
-		const type = 'article'; // Default to article. Admin UI could expose this later.
+		const type = formData.get('type') as string;
+		const eventDateStr = formData.get('eventDate') as string;
+		const eventDate = eventDateStr ? new Date(eventDateStr).toISOString() : null;
+		const externalLink = formData.get('externalLink') as string || null;
 		const coverImageFile = formData.get('coverImage') as File | null;
 
 		const isFeatured = formData.get('isFeatured') === 'on';
+        const tagsStr = formData.get('tags') as string;
+        const tags = tagsStr ? tagsStr.split(',').map(s => s.trim()).filter(Boolean) : undefined;
 
 		if (!title || !slug || !section) {
 			return fail(400, { missing: true, message: 'Title, Slug and Section are required.' });
@@ -68,7 +79,10 @@ export const actions = {
                     excerpt,
                     content,
 					coverImageId,
-                    isFeatured
+                    isFeatured,
+					eventDate,
+					externalLink,
+                    tags
                 }
             });
 

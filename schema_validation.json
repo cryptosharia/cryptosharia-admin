@@ -1,0 +1,1239 @@
+{
+  "AuthSignupPostBody": {
+    "required": [
+      "name",
+      "email",
+      "password"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 120
+      },
+      "email": {
+        "type": "string",
+        "format": "email",
+        "maxLength": 255
+      },
+      "password": {
+        "type": "string",
+        "minLength": 12
+      }
+    }
+  },
+  "AuthVerifyPostBody": {
+    "required": [
+      "token"
+    ],
+    "properties": {
+      "token": {
+        "type": "string"
+      }
+    }
+  },
+  "AuthPasswordForgotPostBody": {
+    "required": [
+      "email"
+    ],
+    "properties": {
+      "email": {
+        "type": "string",
+        "format": "email"
+      }
+    }
+  },
+  "AuthPasswordResetPostBody": {
+    "required": [
+      "token",
+      "password"
+    ],
+    "properties": {
+      "token": {
+        "type": "string",
+        "minLength": 1
+      },
+      "password": {
+        "type": "string",
+        "minLength": 12
+      }
+    }
+  },
+  "AuthSigninPostBody": {
+    "required": [
+      "email",
+      "password"
+    ],
+    "properties": {
+      "email": {
+        "type": "string",
+        "format": "email"
+      },
+      "password": {
+        "type": "string",
+        "minLength": 12
+      }
+    }
+  },
+  "AuthSignoutPostBody": {
+    "required": [
+      "refreshToken"
+    ],
+    "properties": {
+      "refreshToken": {
+        "type": "string"
+      }
+    }
+  },
+  "AuthRefreshPostBody": {
+    "required": [
+      "refreshToken"
+    ],
+    "properties": {
+      "refreshToken": {
+        "type": "string"
+      }
+    }
+  },
+  "UsersGetItem": {
+    "required": [
+      "avatar",
+      "role",
+      "status",
+      "isEmailVerified",
+      "lastLoginAt",
+      "createdAt",
+      "updatedAt"
+    ],
+    "properties": {
+      "avatar": {},
+      "role": {
+        "type": "string",
+        "enum": [
+          "super_admin",
+          "admin",
+          "posts_manager",
+          "tokens_manager",
+          "member"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "active",
+          "inactive",
+          "suspended",
+          "banned"
+        ]
+      },
+      "isEmailVerified": {
+        "type": "boolean"
+      },
+      "lastLoginAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updatedAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      }
+    }
+  },
+  "UsersIdPatchBody": {
+    "required": [],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 120
+      },
+      "avatarId": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "uuid"
+      }
+    }
+  },
+  "UsersIdStatusPutBody": {
+    "required": [
+      "status"
+    ],
+    "properties": {
+      "status": {
+        "type": "string",
+        "enum": [
+          "active",
+          "inactive",
+          "suspended",
+          "banned"
+        ]
+      }
+    }
+  },
+  "UsersIdRolePutBody": {
+    "required": [
+      "role"
+    ],
+    "properties": {
+      "role": {
+        "type": "string",
+        "enum": [
+          "super_admin",
+          "admin",
+          "posts_manager",
+          "tokens_manager",
+          "member"
+        ]
+      }
+    }
+  },
+  "PaginatedPostsGetItem": {
+    "required": [
+      "items",
+      "pagination"
+    ],
+    "properties": {
+      "items": {
+        "type": "array"
+      },
+      "pagination": {}
+    }
+  },
+  "PostsGetItem": {
+    "required": [
+      "id",
+      "title",
+      "slug",
+      "excerpt",
+      "section",
+      "type",
+      "status",
+      "isFeatured",
+      "eventDate",
+      "externalLink",
+      "publishedAt",
+      "createdAt",
+      "updatedAt",
+      "createdBy",
+      "updatedBy",
+      "coverImage",
+      "tags"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "title": {
+        "type": "string",
+        "maxLength": 255
+      },
+      "slug": {
+        "type": "string",
+        "maxLength": 255
+      },
+      "excerpt": {
+        "type": "string"
+      },
+      "section": {
+        "type": "string",
+        "enum": [
+          "news",
+          "education",
+          "research",
+          "activity"
+        ]
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "article",
+          "webinar",
+          "video",
+          "headline"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "published",
+          "archived"
+        ]
+      },
+      "isFeatured": {
+        "type": "boolean"
+      },
+      "eventDate": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "externalLink": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "publishedAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updatedAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "createdBy": {},
+      "updatedBy": {},
+      "coverImage": {},
+      "tags": {
+        "type": "array"
+      }
+    }
+  },
+  "PostsTagItem": {
+    "required": [
+      "id",
+      "name",
+      "slug"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "name": {
+        "type": "string",
+        "maxLength": 50
+      },
+      "slug": {
+        "type": "string",
+        "maxLength": 50
+      }
+    }
+  },
+  "PostsGetData": {
+    "required": [
+      "id",
+      "title",
+      "slug",
+      "excerpt",
+      "content",
+      "section",
+      "type",
+      "status",
+      "isFeatured",
+      "eventDate",
+      "externalLink",
+      "publishedAt",
+      "createdAt",
+      "updatedAt",
+      "createdBy",
+      "updatedBy",
+      "coverImage",
+      "tags"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "title": {
+        "type": "string",
+        "maxLength": 255
+      },
+      "slug": {
+        "type": "string",
+        "maxLength": 255
+      },
+      "excerpt": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string"
+      },
+      "section": {
+        "type": "string",
+        "enum": [
+          "news",
+          "education",
+          "research",
+          "activity"
+        ]
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "article",
+          "webinar",
+          "video",
+          "headline"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "published",
+          "archived"
+        ]
+      },
+      "isFeatured": {
+        "type": "boolean"
+      },
+      "eventDate": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "externalLink": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "publishedAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updatedAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "createdBy": {},
+      "updatedBy": {},
+      "coverImage": {},
+      "tags": {
+        "type": "array"
+      }
+    }
+  },
+  "PostsCreateBody": {
+    "required": [
+      "title",
+      "slug",
+      "excerpt",
+      "content",
+      "coverImageId",
+      "section",
+      "type"
+    ],
+    "properties": {
+      "title": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 255
+      },
+      "slug": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 255
+      },
+      "excerpt": {
+        "type": "string",
+        "minLength": 1
+      },
+      "content": {
+        "type": "string",
+        "minLength": 1
+      },
+      "coverImageId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "section": {
+        "type": "string",
+        "enum": [
+          "news",
+          "education",
+          "research",
+          "activity"
+        ]
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "article",
+          "webinar",
+          "video",
+          "headline"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "published",
+          "archived"
+        ]
+      },
+      "isFeatured": {
+        "type": "boolean"
+      },
+      "eventDate": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "externalLink": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "uri"
+      },
+      "tags": {
+        "type": "array"
+      }
+    }
+  },
+  "PostsUpdateBody": {
+    "required": [],
+    "properties": {
+      "title": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 255
+      },
+      "slug": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 255
+      },
+      "excerpt": {
+        "type": "string",
+        "minLength": 1
+      },
+      "content": {
+        "type": "string",
+        "minLength": 1
+      },
+      "coverImageId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "section": {
+        "type": "string",
+        "enum": [
+          "news",
+          "education",
+          "research",
+          "activity"
+        ]
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "article",
+          "webinar",
+          "video",
+          "headline"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "published",
+          "archived"
+        ]
+      },
+      "isFeatured": {
+        "type": "boolean"
+      },
+      "eventDate": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "externalLink": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "uri"
+      },
+      "tags": {
+        "type": "array"
+      }
+    }
+  },
+  "PostsDeleteData": {
+    "required": [
+      "message"
+    ],
+    "properties": {
+      "message": {
+        "type": "string"
+      }
+    }
+  },
+  "PaginatedTokensGetItem": {
+    "required": [
+      "items",
+      "pagination"
+    ],
+    "properties": {
+      "items": {
+        "type": "array"
+      },
+      "pagination": {}
+    }
+  },
+  "TokensGetItem": {
+    "required": [
+      "id",
+      "slug",
+      "rank",
+      "name",
+      "ticker",
+      "shariaStatus",
+      "status",
+      "excerpt",
+      "tradingviewSymbol",
+      "website",
+      "publishedAt",
+      "createdAt",
+      "updatedAt",
+      "createdBy",
+      "updatedBy",
+      "logo",
+      "tags"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "slug": {
+        "type": "string",
+        "maxLength": 100
+      },
+      "rank": {
+        "type": "integer",
+        "min": -2147483648,
+        "max": 2147483647
+      },
+      "name": {
+        "type": "string",
+        "maxLength": 100
+      },
+      "ticker": {
+        "type": "string",
+        "maxLength": 20
+      },
+      "shariaStatus": {
+        "type": "string",
+        "enum": [
+          "halal",
+          "haram",
+          "syubhat"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "published",
+          "archived"
+        ]
+      },
+      "excerpt": {
+        "type": "string"
+      },
+      "tradingviewSymbol": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "maxLength": 64
+      },
+      "website": {
+        "type": "string"
+      },
+      "publishedAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updatedAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "createdBy": {},
+      "updatedBy": {},
+      "logo": {},
+      "tags": {
+        "type": "array"
+      }
+    }
+  },
+  "TokensTagItem": {
+    "required": [
+      "id",
+      "name",
+      "slug"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "name": {
+        "type": "string",
+        "maxLength": 50
+      },
+      "slug": {
+        "type": "string",
+        "maxLength": 50
+      }
+    }
+  },
+  "TokensGetData": {
+    "required": [
+      "id",
+      "slug",
+      "rank",
+      "name",
+      "ticker",
+      "shariaStatus",
+      "status",
+      "excerpt",
+      "tradingviewSymbol",
+      "website",
+      "content",
+      "publishedAt",
+      "createdAt",
+      "updatedAt",
+      "createdBy",
+      "updatedBy",
+      "logo",
+      "tags"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "slug": {
+        "type": "string",
+        "maxLength": 100
+      },
+      "rank": {
+        "type": "integer",
+        "min": -2147483648,
+        "max": 2147483647
+      },
+      "name": {
+        "type": "string",
+        "maxLength": 100
+      },
+      "ticker": {
+        "type": "string",
+        "maxLength": 20
+      },
+      "shariaStatus": {
+        "type": "string",
+        "enum": [
+          "halal",
+          "haram",
+          "syubhat"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "published",
+          "archived"
+        ]
+      },
+      "excerpt": {
+        "type": "string"
+      },
+      "tradingviewSymbol": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "maxLength": 64
+      },
+      "website": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string"
+      },
+      "publishedAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updatedAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "createdBy": {},
+      "updatedBy": {},
+      "logo": {},
+      "tags": {
+        "type": "array"
+      }
+    }
+  },
+  "TokensCreateBody": {
+    "required": [
+      "name",
+      "ticker",
+      "slug",
+      "rank",
+      "shariaStatus",
+      "excerpt",
+      "content",
+      "website",
+      "logoId"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100
+      },
+      "ticker": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20
+      },
+      "slug": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100
+      },
+      "rank": {
+        "type": "integer",
+        "min": 1
+      },
+      "shariaStatus": {
+        "type": "string",
+        "enum": [
+          "halal",
+          "haram",
+          "syubhat"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "published",
+          "archived"
+        ]
+      },
+      "excerpt": {
+        "type": "string",
+        "minLength": 1
+      },
+      "content": {
+        "type": "string",
+        "minLength": 1
+      },
+      "website": {
+        "type": "string",
+        "format": "uri"
+      },
+      "tradingviewSymbol": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "maxLength": 64
+      },
+      "logoId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "tags": {
+        "type": "array"
+      }
+    }
+  },
+  "TokensUpdateBody": {
+    "required": [],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100
+      },
+      "ticker": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20
+      },
+      "slug": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100
+      },
+      "rank": {
+        "type": "integer",
+        "min": 1
+      },
+      "shariaStatus": {
+        "type": "string",
+        "enum": [
+          "halal",
+          "haram",
+          "syubhat"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "published",
+          "archived"
+        ]
+      },
+      "excerpt": {
+        "type": "string",
+        "minLength": 1
+      },
+      "content": {
+        "type": "string",
+        "minLength": 1
+      },
+      "website": {
+        "type": "string",
+        "format": "uri"
+      },
+      "tradingviewSymbol": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "maxLength": 64
+      },
+      "logoId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "tags": {
+        "type": "array"
+      }
+    }
+  },
+  "TokensDeleteData": {
+    "required": [
+      "message"
+    ],
+    "properties": {
+      "message": {
+        "type": "string"
+      }
+    }
+  },
+  "TokensQuotesGetItem": {
+    "required": [
+      "slug",
+      "rank",
+      "infiniteSupply",
+      "maxSupply",
+      "circulatingSupply",
+      "priceUsd",
+      "marketCapUsd",
+      "marketCapDominance",
+      "percentChange24h"
+    ],
+    "properties": {
+      "slug": {
+        "type": "string"
+      },
+      "rank": {
+        "type": "number"
+      },
+      "infiniteSupply": {
+        "type": "boolean"
+      },
+      "maxSupply": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "circulatingSupply": {
+        "type": "number"
+      },
+      "priceUsd": {
+        "type": "number"
+      },
+      "marketCapUsd": {
+        "type": "number"
+      },
+      "marketCapDominance": {
+        "type": "number"
+      },
+      "percentChange24h": {
+        "type": "number"
+      }
+    }
+  },
+  "PaginatedTagsGetItem": {
+    "required": [
+      "items",
+      "pagination"
+    ],
+    "properties": {
+      "items": {
+        "type": "array"
+      },
+      "pagination": {}
+    }
+  },
+  "TagsGetItem": {
+    "required": [
+      "id",
+      "name",
+      "slug",
+      "description",
+      "createdAt",
+      "updatedAt",
+      "createdBy",
+      "updatedBy"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "name": {
+        "type": "string",
+        "maxLength": 50
+      },
+      "slug": {
+        "type": "string",
+        "maxLength": 50
+      },
+      "description": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updatedAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "createdBy": {},
+      "updatedBy": {}
+    }
+  },
+  "TagsCreateBody": {
+    "required": [
+      "name",
+      "slug"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 50
+      },
+      "slug": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 50
+      },
+      "description": {
+        "type": "string"
+      }
+    }
+  },
+  "TagsUpdateBody": {
+    "required": [],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 50
+      },
+      "slug": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 50
+      },
+      "description": {
+        "type": "string"
+      }
+    }
+  },
+  "PaginatedMessagesGetItem": {
+    "required": [
+      "items",
+      "pagination"
+    ],
+    "properties": {
+      "items": {
+        "type": "array"
+      },
+      "pagination": {}
+    }
+  },
+  "MessagesGetItem": {
+    "required": [
+      "id",
+      "name",
+      "email",
+      "message",
+      "createdAt"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "name": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 120
+      },
+      "email": {
+        "type": "string",
+        "format": "email",
+        "maxLength": 255
+      },
+      "message": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 5000
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      }
+    }
+  },
+  "MessagesPostBody": {
+    "required": [
+      "name",
+      "email",
+      "message"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 120
+      },
+      "email": {
+        "type": "string",
+        "format": "email",
+        "maxLength": 255
+      },
+      "message": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 5000
+      }
+    }
+  },
+  "OpsAssetsCleanupData": {
+    "required": [
+      "dryRun",
+      "limit",
+      "maxAgeDays",
+      "candidates",
+      "deleted",
+      "failed",
+      "failures"
+    ],
+    "properties": {
+      "dryRun": {
+        "type": "boolean"
+      },
+      "limit": {
+        "type": "integer"
+      },
+      "maxAgeDays": {
+        "type": "integer"
+      },
+      "candidates": {
+        "type": "integer"
+      },
+      "deleted": {
+        "type": "integer"
+      },
+      "failed": {
+        "type": "integer"
+      },
+      "failures": {
+        "type": "array"
+      }
+    }
+  }
+}

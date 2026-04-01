@@ -1,6 +1,26 @@
 import { createApiClient } from '$lib/api';
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { env } from '$env/dynamic/public';
+
+async function uploadAsset(fetchFn: typeof fetch, file: File, accessToken: string) {
+	const formData = new FormData();
+	formData.append('file', file);
+	const apiUrl = env.PUBLIC_CS_API_URL || 'http://localhost:5173';
+	const res = await fetchFn(`${apiUrl}/assets`, {
+		method: 'POST',
+		headers: {
+			'Authorization': `Bearer ${accessToken}`
+		},
+		body: formData
+	});
+	if (!res.ok) {
+        const errorText = await res.text();
+		throw new Error(errorText || 'File upload failed');
+	}
+	const json = await res.json();
+	return json.data;
+}
 
 export const load: PageServerLoad = async ({ params, fetch, locals }) => {
     const client = createApiClient({ 
@@ -9,21 +29,24 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
     });
 
     try {
-        const { data, error: apiError } = await client.GET('/posts/{id}', {
-            params: { path: { id: params.id } }
-        });
+        const [postRes, tagsRes] = await Promise.all([
+            client.GET('/posts/{id}', { params: { path: { id: params.id } } }),
+            client.GET('/tags', { params: { query: { limit: 100 } } })
+        ]);
 
-        if (apiError || !data?.success || !data?.data) {
+        if (postRes.error || !postRes.data?.success || !postRes.data?.data) {
             throw error(404, 'Post not found');
         }
 
         return { 
             post: {
-                ...data.data,
-                coverImage: data.data.coverImage?.url || ''
-            } 
+                ...postRes.data.data,
+                coverImage: postRes.data.data.coverImage?.url || ''
+            },
+            tags: tagsRes.data?.data?.items ?? []
         };
-    } catch (err) {
+    } catch (err: any) {
+        if (err?.status) throw err; // re-throw SvelteKit errors (404, etc.)
         console.error('Failed to load post:', err);
         throw error(500, 'Failed to load post');
     }
@@ -44,12 +67,27 @@ export const actions = {
 		const excerpt = formData.get('excerpt') as string;
 		const content = formData.get('content') as string;
 		const isFeatured = formData.get('isFeatured') === 'on';
+		const type = formData.get('type') as string;
+		const eventDateStr = formData.get('eventDate') as string;
+		const eventDate = eventDateStr ? new Date(eventDateStr).toISOString() : null;
+		const externalLink = formData.get('externalLink') as string || null;
+
+        const tagsStr = formData.get('tags') as string;
+        const tags = tagsStr ? tagsStr.split(',').map(s => s.trim()).filter(Boolean) : undefined;
+        
+        const coverImageFile = formData.get('coverImage') as File | null;
+        let coverImageId: string | undefined = undefined;
 
 		if (!title || !slug || !section) {
 			return fail(400, { missing: true, message: 'Title, Slug and Section are required.' });
 		}
 
 		try {
+            if (coverImageFile && coverImageFile.size > 0) {
+                const uploadedAsset = await uploadAsset(fetch, coverImageFile, locals.user?.accessToken || '');
+                coverImageId = uploadedAsset.id;
+            }
+
             // Using PATCH usually for updates
             const { data, error } = await (client as any).PATCH('/posts/{id}', {
                 params: { path: { id: params.id } },
@@ -57,10 +95,15 @@ export const actions = {
 					title,
 					slug,
 					section,
+					type,
 					status: status || 'draft',
 					excerpt,
 					content,
-					isFeatured
+					isFeatured,
+					eventDate,
+					externalLink,
+                    tags,
+                    coverImageId
                 }
             });
 

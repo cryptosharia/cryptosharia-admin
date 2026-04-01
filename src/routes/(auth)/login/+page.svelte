@@ -27,6 +27,7 @@
 			id="email"
 			name="email"
 			required
+			maxlength={255}
 			placeholder="admin@cryptosharia.com"
 			class="h-12"
 		/>
@@ -38,7 +39,7 @@
 			<div class="space-x-2 text-xs text-primary">
 				<a href="/reset-password" class="hover:underline">Forgot password?</a>
 				<span>|</span>
-				<a href="/request-access" class="hover:underline">Request Access?</a>
+				<a href="/signup" class="hover:underline">Sign Up</a>
 			</div>
 		</div>
 		<div class="relative">
@@ -47,6 +48,7 @@
 				id="password"
 				name="password"
 				required
+				minlength={12}
 				placeholder="••••••••"
 				class="h-12 pr-10"
 			/>

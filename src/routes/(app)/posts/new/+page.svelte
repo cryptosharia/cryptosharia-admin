@@ -1,16 +1,18 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { ArrowLeft, Save, Calendar, Image as ImageIcon } from 'lucide-svelte';
+	import { ArrowLeft, Save, Calendar, Image as ImageIcon, X } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
 	import { Textarea } from "$lib/components/ui/textarea";
 	import { Separator } from "$lib/components/ui/separator";
+	import { Badge } from "$lib/components/ui/badge";
 
-	let { form } = $props();
+	let { data, form } = $props();
 
 	let title = $state('');
 	let slug = $state('');
+	let selectedTags = $state<string[]>([]);
 
 	function generateSlug(str: string) {
 		return str
@@ -23,6 +25,14 @@
 		const target = e.target as HTMLInputElement;
 		title = target.value;
 		slug = generateSlug(title);
+	}
+
+	function toggleTag(slug: string) {
+		if (selectedTags.includes(slug)) {
+			selectedTags = selectedTags.filter(t => t !== slug);
+		} else {
+			selectedTags = [...selectedTags, slug];
+		}
 	}
 
 	let editorContainer: HTMLElement;
@@ -109,6 +119,8 @@
 									id="title"
 									name="title"
 									required
+									minlength={1}
+									maxlength={255}
 									oninput={handleTitleInput}
 									placeholder="Enter post title..."
 									class="text-lg font-bold h-12"
@@ -124,6 +136,8 @@
 										name="slug"
 										bind:value={slug}
 										required
+										minlength={1}
+										maxlength={255}
 										class="rounded-l-none h-10"
 									/>
 								</div>
@@ -134,11 +148,30 @@
 
 						<div class="space-y-4">
 							<div class="space-y-2">
+							<label class="text-sm font-medium leading-none">Tags</label>
+							<div class="flex flex-wrap gap-2 p-3 rounded-md border border-input bg-background min-h-[42px]">
+								{#each data.tags as tag}
+									<button
+										type="button"
+										onclick={() => toggleTag(tag.slug)}
+										class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors {selectedTags.includes(tag.slug) ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}"
+									>
+										{tag.name}
+										{#if selectedTags.includes(tag.slug)}<X size={10} />{/if}
+									</button>
+								{:else}
+									<span class="text-xs text-muted-foreground">No tags available</span>
+								{/each}
+							</div>
+							<input type="hidden" name="tags" value={selectedTags.join(',')} />
+						</div>
+							<div class="space-y-2">
 								<label for="excerpt" class="text-sm font-medium leading-none">Excerpt</label>
 								<Textarea
 									id="excerpt"
 									name="excerpt"
 									rows={3}
+									minlength={1}
 									placeholder="Short summary for SEO and previews..."
 									class="resize-none"
 								/>
@@ -184,10 +217,24 @@
 									name="section"
 									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 								>
-									<option value="blog">Blog</option>
 									<option value="news">News</option>
-									<option value="event">Event</option>
-									<option value="announcement">Announcement</option>
+									<option value="education">Education</option>
+									<option value="research">Research</option>
+									<option value="activity">Activity</option>
+								</select>
+							</div>
+
+							<div class="space-y-2">
+								<label for="type" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Type</label>
+								<select
+									id="type"
+									name="type"
+									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									<option value="article">Article</option>
+									<option value="webinar">Webinar</option>
+									<option value="video">Video</option>
+									<option value="headline">Headline</option>
 								</select>
 							</div>
 						</div>
@@ -252,6 +299,15 @@
 								type="datetime-local"
 								id="eventDate"
 								name="eventDate"
+							/>
+						</div>
+						<div class="space-y-2 mt-4">
+							<label for="externalLink" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">External Link (Optional)</label>
+							<Input
+								type="url"
+								id="externalLink"
+								name="externalLink"
+								placeholder="https://..."
 							/>
 						</div>
 					</CardContent>

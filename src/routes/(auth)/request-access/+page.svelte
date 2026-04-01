@@ -50,6 +50,8 @@
 				id="name"
 				name="name"
 				required
+				minlength={2}
+				maxlength={120}
 				placeholder="John Doe"
 				class="h-12"
 			/>
@@ -62,6 +64,7 @@
 				id="email"
 				name="email"
 				required
+				maxlength={255}
 				placeholder="john@example.com"
 				class="h-12"
 			/>
@@ -73,6 +76,8 @@
 				id="message"
 				name="message"
 				required
+				minlength={10}
+				maxlength={5000}
 				rows={4}
 				placeholder="I need access because..."
 				class="resize-none"
