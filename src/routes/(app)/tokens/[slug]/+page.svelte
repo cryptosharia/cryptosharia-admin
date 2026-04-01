@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Trash2, Save, ArrowLeft, CheckCircle2, ImageIcon, Link as LinkIcon } from 'lucide-svelte';
+	import { Trash2, Save, ArrowLeft, CheckCircle2, ImageIcon, X } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
@@ -9,6 +9,21 @@
 
 	let { data, form } = $props();
 	let token = $derived(data.token);
+	let selectedTags = $state<string[]>([]);
+
+	$effect(() => {
+		if (data.token) {
+			selectedTags = data.token.tags?.map((t: any) => t.slug) ?? [];
+		}
+	});
+
+	function toggleTag(tagSlug: string) {
+		if (selectedTags.includes(tagSlug)) {
+			selectedTags = selectedTags.filter(t => t !== tagSlug);
+		} else {
+			selectedTags = [...selectedTags, tagSlug];
+		}
+	}
 
 	let editorContainer: HTMLElement;
 	let editor: any;
@@ -156,14 +171,22 @@
 						<div class="space-y-4">
 							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div class="space-y-2">
-									<label for="tags" class="text-sm font-medium leading-none">Tags (comma separated)</label>
-									<Input
-										type="text"
-										id="tags"
-										name="tags"
-										placeholder="e.g. halal, bitcoin, web3"
-										value={token.tags?.map((t: any) => t.slug).join(', ') || ''}
-									/>
+									<label class="text-sm font-medium leading-none">Tags</label>
+									<div class="flex flex-wrap gap-2 p-3 rounded-md border border-input bg-background min-h-[42px]">
+										{#each data.tags as tag}
+											<button
+												type="button"
+												onclick={() => toggleTag(tag.slug)}
+												class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors {selectedTags.includes(tag.slug) ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}"
+											>
+												{tag.name}
+												{#if selectedTags.includes(tag.slug)}<X size={10} />{/if}
+											</button>
+										{:else}
+											<span class="text-xs text-muted-foreground">No tags available</span>
+										{/each}
+									</div>
+									<input type="hidden" name="tags" value={selectedTags.join(',')} />
 								</div>
 								<div class="space-y-2">
 									<label for="tradingviewSymbol" class="text-sm font-medium leading-none">TradingView Symbol</label>

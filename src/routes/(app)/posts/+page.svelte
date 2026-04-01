@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { FileText, Plus, Calendar, Edit3, Eye, Search } from 'lucide-svelte';
+	import { FileText, Plus, Calendar, Edit3, Search, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Badge } from "$lib/components/ui/badge";
@@ -23,6 +23,12 @@
 			params.delete('search');
 		}
 		params.set('page', '1');
+		goto(`?${params.toString()}`);
+	}
+
+	function goToPage(p: number) {
+		const params = new URLSearchParams($page.url.searchParams);
+		params.set('page', String(p));
 		goto(`?${params.toString()}`);
 	}
 </script>
@@ -177,6 +183,23 @@
 					</div>
 				{/each}
 			</div>
+
+			<!-- Pagination -->
+			{#if data.pagination && data.pagination.totalPages > 1}
+				<div class="flex items-center justify-between mt-4 pt-4 border-t px-4 md:px-0">
+					<p class="text-sm text-muted-foreground">
+						Page {data.pagination.page} of {data.pagination.totalPages} ({data.pagination.total} total)
+					</p>
+					<div class="flex items-center gap-2">
+						<Button variant="outline" size="icon" disabled={data.pagination.page <= 1} onclick={() => goToPage(data.pagination.page - 1)}>
+							<ChevronLeft size={16} />
+						</Button>
+						<Button variant="outline" size="icon" disabled={data.pagination.page >= data.pagination.totalPages} onclick={() => goToPage(data.pagination.page + 1)}>
+							<ChevronRight size={16} />
+						</Button>
+					</div>
+				</div>
+			{/if}
 		</CardContent>
 	</Card>
 </div>

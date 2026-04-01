@@ -9,7 +9,8 @@
 		{ label: 'Total Tokens', value: data.tokenCount.toLocaleString(), change: 'Tokens tracked', icon: TrendingUp, accent: 'orange' },
 		{ label: 'Total Users', value: data.userCount.toLocaleString(), change: 'Registered users', icon: Users, accent: 'blue' },
 		{ label: 'Total Posts', value: data.postCount.toLocaleString(), change: 'Content published', icon: FileText, accent: 'emerald' },
-		{ label: 'System Health', value: '100%', change: 'All systems operational', icon: ShieldCheck, accent: 'purple' }
+		{ label: 'Messages', value: data.messageCount.toLocaleString(), change: 'Contact submissions', icon: Activity, accent: 'yellow' },
+		{ label: 'Tags', value: data.tagCount.toLocaleString(), change: 'Taxonomy tags', icon: ShieldCheck, accent: 'purple' }
 	]);
 </script>
 
@@ -21,7 +22,7 @@
 			<p class="text-muted-foreground mt-1">Real-time metrics from the ecosystem.</p>
 		</div>
 
-		<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+		<div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-5">
 			{#each stats as stat, i}
 				<div in:fly={{ y: 20, duration: 400, delay: i * 80 }}>
 					<Card class="h-full hover:border-orange-500/40 transition-all duration-300 group cursor-default">

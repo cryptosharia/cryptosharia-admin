@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { ArrowLeft, Save, Calendar, Image as ImageIcon, Trash2, CheckCircle2 } from 'lucide-svelte';
+	import { ArrowLeft, Save, Calendar, Image as ImageIcon, Trash2, CheckCircle2, X } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
@@ -17,22 +17,31 @@
 
 	let title = $state('');
 	let slug = $state('');
+	let selectedTags = $state<string[]>([]);
 
 	let editorContainer: HTMLElement;
 	let editor: any;
 	let content = $state('');
 
-	// Keep updated when navigation changes
 	$effect(() => {
 		if (data.post) {
 			title = data.post.title || '';
 			slug = data.post.slug || '';
+			selectedTags = data.post.tags?.map((t: any) => t.slug) ?? [];
 			if (editor && content !== data.post.content) {
 				content = data.post.content || '';
 				editor.setMarkdown(content);
 			}
 		}
 	});
+
+	function toggleTag(tagSlug: string) {
+		if (selectedTags.includes(tagSlug)) {
+			selectedTags = selectedTags.filter(t => t !== tagSlug);
+		} else {
+			selectedTags = [...selectedTags, tagSlug];
+		}
+	}
 
 	$effect(() => {
 		const initEditor = async () => {
@@ -149,15 +158,23 @@
 
 						<div class="space-y-4">
 							<div class="space-y-2">
-								<label for="tags" class="text-sm font-medium leading-none">Tags (comma separated)</label>
-								<Input
-									type="text"
-									id="tags"
-									name="tags"
-									placeholder="e.g. news, crypto, sharia"
-									value={data.post?.tags?.map((t: any) => t.slug).join(', ') || ''}
-								/>
+							<label class="text-sm font-medium leading-none">Tags</label>
+							<div class="flex flex-wrap gap-2 p-3 rounded-md border border-input bg-background min-h-[42px]">
+								{#each data.tags as tag}
+									<button
+										type="button"
+										onclick={() => toggleTag(tag.slug)}
+										class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors {selectedTags.includes(tag.slug) ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}"
+									>
+										{tag.name}
+										{#if selectedTags.includes(tag.slug)}<X size={10} />{/if}
+									</button>
+								{:else}
+									<span class="text-xs text-muted-foreground">No tags available</span>
+								{/each}
 							</div>
+							<input type="hidden" name="tags" value={selectedTags.join(',')} />
+						</div>
 							<div class="space-y-2">
 								<label for="excerpt" class="text-sm font-medium leading-none">Excerpt</label>
 								<Textarea

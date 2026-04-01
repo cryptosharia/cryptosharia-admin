@@ -1,7 +1,13 @@
 import { createApiClient } from '$lib/api';
 import { fail, redirect } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { env } from '$env/dynamic/public';
+
+export const load: PageServerLoad = async ({ fetch, locals }) => {
+	const client = createApiClient({ fetch, accessToken: locals.user?.accessToken });
+	const { data } = await client.GET('/tags', { params: { query: { limit: 100 } } });
+	return { tags: data?.data?.items ?? [] };
+};
 
 // A helper to perform raw fetch to /assets if openapi-fetch struggles with FormData
 async function uploadAsset(fetchFn: typeof fetch, file: File, accessToken: string) {

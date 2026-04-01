@@ -3,8 +3,10 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { env } from '$env/dynamic/public';
 
-export const load: PageServerLoad = async () => {
-    return {};
+export const load: PageServerLoad = async ({ fetch, locals }) => {
+	const client = createApiClient({ fetch, accessToken: locals.user?.accessToken });
+	const { data } = await client.GET('/tags', { params: { query: { limit: 100 } } });
+	return { tags: data?.data?.items ?? [] };
 };
 
 async function uploadAsset(fetchFn: typeof fetch, file: File, accessToken: string) {
