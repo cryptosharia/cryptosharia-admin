@@ -76,7 +76,7 @@
 									bind:value={name}
 									required
 									minlength={1}
-									maxlength={100}
+									maxlength={50}
 									oninput={handleNameInput}
 									placeholder="e.g. Education, DeFi, Halal"
 									class="text-lg font-bold h-12"
@@ -95,7 +95,7 @@
 										bind:value={slug}
 										required
 										minlength={1}
-										maxlength={100}
+										maxlength={50}
 										placeholder="auto-generated-slug"
 										class="rounded-l-none font-mono text-sm h-10 flex-1 group-focus-within:border-primary transition-colors"
 									/>
