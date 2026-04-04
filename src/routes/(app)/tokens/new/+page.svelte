@@ -197,11 +197,12 @@
 
 							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div class="space-y-2">
-									<label for="website" class="text-sm font-medium leading-none">Website</label>
+									<label for="website" class="text-sm font-medium leading-none">Website *</label>
 									<Input
 										type="url"
 										id="website"
 										name="website"
+										required
 										placeholder="https://..."
 									/>
 								</div>

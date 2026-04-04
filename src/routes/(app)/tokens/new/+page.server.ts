@@ -56,6 +56,9 @@ export const actions = {
             return fail(400, { missing: true, message: 'Name and Ticker are required.' });
         }
 
+        if (!website) {
+            return fail(400, { missing: true, message: 'Website is required.' });
+        }
         let logoId: string;
 
         try {

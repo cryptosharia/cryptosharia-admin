@@ -1,6 +1,7 @@
 import { createApiClient } from '$lib/api';
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
+import { env } from '$env/dynamic/public';
 
 // Role definitions from API spec - enum values with display labels
 export const _ROLES = [
@@ -56,11 +57,33 @@ export const actions = {
         }
 
         try {
-            // 1. Update profile name
-            if (name) {
+            // 1. Update profile name (and optionally avatarId)
+            const avatarFile = formData.get('avatar') as File | null;
+            let avatarId: string | null | undefined = undefined;
+
+            if (avatarFile && avatarFile.size > 0) {
+                const apiUrl = env.PUBLIC_CS_API_URL || 'http://localhost:5173';
+                const uploadForm = new FormData();
+                uploadForm.append('file', avatarFile);
+                const uploadRes = await fetch(`${apiUrl}/assets`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${locals.user?.accessToken || ''}` },
+                    body: uploadForm
+                });
+                if (uploadRes.ok) {
+                    const uploadData = await uploadRes.json();
+                    avatarId = uploadData.data?.id;
+                }
+            }
+
+            if (name || avatarId !== undefined) {
+                const patchBody: any = {};
+                if (name) patchBody.name = name;
+                if (avatarId !== undefined) patchBody.avatarId = avatarId;
+
                 const { error: patchError } = await client.PATCH('/users/{id}', {
                     params: { path: { id: params.id } },
-                    body: { name }
+                    body: patchBody
                 });
 
                 if (patchError) {

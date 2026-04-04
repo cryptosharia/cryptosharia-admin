@@ -33,7 +33,8 @@
 
 	<form 
 		method="POST" 
-		action="?/update" 
+		action="?/update"
+		enctype="multipart/form-data"
 		use:enhance={() => {
 			loading = true;
 			return async ({ update }) => {
@@ -76,6 +77,16 @@
 						</div>
 
 						<div class="space-y-4 pt-4">
+							<div class="space-y-2">
+								<label for="avatar" class="text-sm font-medium leading-none">Avatar Image (Optional)</label>
+								<Input
+									type="file"
+									id="avatar"
+									name="avatar"
+									accept="image/*"
+									class="bg-background/50"
+								/>
+							</div>
 							<div class="space-y-2">
 								<label for="name" class="text-sm font-medium leading-none flex items-center gap-2">
 									Full Name
