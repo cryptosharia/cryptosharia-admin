@@ -56,8 +56,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const isAuthRoute = 
 		event.url.pathname.startsWith('/login') || 
 		event.url.pathname.startsWith('/signup') || 
-		event.url.pathname.startsWith('/reset-password') || 
-		event.url.pathname.startsWith('/request-access');
+		event.url.pathname.startsWith('/reset-password');
 	
 	// Protect app routes
 	if (!event.locals.user && !isAuthRoute) {

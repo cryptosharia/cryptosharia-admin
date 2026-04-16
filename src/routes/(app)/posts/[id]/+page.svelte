@@ -64,7 +64,8 @@
 				hooks: {
 					addImageBlobHook: async (blob: Blob, callback: (url: string, altText: string) => void) => {
 						const formData = new FormData();
-						formData.append('image', blob);
+						const fileName = (blob as File).name || 'upload.png';
+						formData.append('image', blob, fileName);
 						try {
 							const response = await fetch('/api/imgbb', {
 								method: 'POST',
@@ -158,23 +159,25 @@
 
 						<div class="space-y-4">
 							<div class="space-y-2">
-							<label class="text-sm font-medium leading-none">Tags</label>
-							<div class="flex flex-wrap gap-2 p-3 rounded-md border border-input bg-background min-h-[42px]">
-								{#each data.tags as tag}
-									<button
-										type="button"
-										onclick={() => toggleTag(tag.slug)}
-										class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors {selectedTags.includes(tag.slug) ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}"
-									>
-										{tag.name}
-										{#if selectedTags.includes(tag.slug)}<X size={10} />{/if}
-									</button>
-								{:else}
-									<span class="text-xs text-muted-foreground">No tags available</span>
-								{/each}
+								<label class="text-sm font-medium leading-none">Tags</label>
+								<select
+									multiple
+									class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+									name="tags_multiple"
+									onchange={(e) => {
+										const options = Array.from(e.currentTarget.selectedOptions);
+										selectedTags = options.map(o => o.value);
+									}}
+								>
+									{#each data.tags as tag}
+										<option value={tag.slug} selected={selectedTags.includes(tag.slug)}>
+											{tag.name}
+										</option>
+									{/each}
+								</select>
+								<p class="text-xs text-muted-foreground">Select multiple tags by holding Ctrl/Cmd.</p>
+								<input type="hidden" name="tags" value={selectedTags.join(',')} />
 							</div>
-							<input type="hidden" name="tags" value={selectedTags.join(',')} />
-						</div>
 							<div class="space-y-2">
 								<label for="excerpt" class="text-sm font-medium leading-none">Excerpt</label>
 								<Textarea

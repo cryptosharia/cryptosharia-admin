@@ -33,10 +33,7 @@
 			<h1 class="text-3xl font-bold tracking-tight text-foreground">Users</h1>
 			<p class="text-muted-foreground mt-1 text-sm sm:text-base">Manage all registered users and administrators.</p>
 		</div>
-		<Button href="/users/new" class="w-full sm:w-auto">
-			<Plus class="mr-2 h-4 w-4" />
-			Add User
-		</Button>
+		</div>
 	</div>
 
 	<!-- Search Bar -->
