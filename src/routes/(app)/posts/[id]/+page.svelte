@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { ArrowLeft, Save, Calendar, Image as ImageIcon, Trash2, CheckCircle2, X } from 'lucide-svelte';
+	import { ArrowLeft, Save, Calendar, Image as ImageIcon, Trash2, CheckCircle2, X, Loader2 } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
 	import { Textarea } from "$lib/components/ui/textarea";
 	import { Separator } from "$lib/components/ui/separator";
+	import TagSelector from '$lib/components/TagSelector.svelte';
+	import { toast } from 'svelte-sonner';
 
 	let { data, form } = $props();
 
@@ -63,6 +65,7 @@
 				},
 				hooks: {
 					addImageBlobHook: async (blob: Blob, callback: (url: string, altText: string) => void) => {
+						const toastId = toast.loading('Uploading image...');
 						const formData = new FormData();
 						const fileName = (blob as File).name || 'upload.png';
 						formData.append('image', blob, fileName);
@@ -74,11 +77,14 @@
 							const res = await response.json();
 							if (res.success && res.url) {
 								callback(res.url, 'uploaded image');
+								toast.success('Image uploaded successfully', { id: toastId });
 							} else {
 								console.error('Failed to upload image', res);
+								toast.error(res.message || 'Failed to upload image', { id: toastId });
 							}
 						} catch (err) {
 							console.error(err);
+							toast.error('Network error during upload', { id: toastId });
 						}
 					}
 				}
@@ -159,24 +165,9 @@
 
 						<div class="space-y-4">
 							<div class="space-y-2">
-								<label class="text-sm font-medium leading-none">Tags</label>
-								<select
-									multiple
-									class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-									name="tags_multiple"
-									onchange={(e) => {
-										const options = Array.from(e.currentTarget.selectedOptions);
-										selectedTags = options.map(o => o.value);
-									}}
-								>
-									{#each data.tags as tag}
-										<option value={tag.slug} selected={selectedTags.includes(tag.slug)}>
-											{tag.name}
-										</option>
-									{/each}
-								</select>
-								<p class="text-xs text-muted-foreground">Select multiple tags by holding Ctrl/Cmd.</p>
-								<input type="hidden" name="tags" value={selectedTags.join(',')} />
+								<label for="tags-selector" class="text-sm font-medium leading-none">Tags</label>
+								<TagSelector id="tags-selector" tags={data.tags} bind:selectedTags={selectedTags} />
+								<p class="text-xs text-muted-foreground">Select relevant tags for this post.</p>
 							</div>
 							<div class="space-y-2">
 								<label for="excerpt" class="text-sm font-medium leading-none">Excerpt</label>

@@ -1,0 +1,86 @@
+
+> cryptosharia-admin@0.0.1 check
+> svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+
+Loading svelte-check in workspace: c:\Misi-NUS\cryptosharia-admin
+Getting Svelte diagnostics...
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\lib\components\ui\separator\separator.svelte[39m:17:24
+[31mError[39m: Expression produces a union type that is too complex to represent. (ts)
+[36m
+<SeparatorPrimitive.Roo[35mt
+	{orientation}
+	{decorative}
+	class={cn(
+		"shrink-0 bg-border",
+		orientation === "horizontal" ? "h-[1px] w-full" : "h-full w-[1px]",
+		className
+	)}
+	{...rest[36m}
+/>[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\lib\components\ui\separator\separator.svelte[39m:17:24
+[31mError[39m: Type '{ accesskey?: string | undefined | null; autocapitalize?: "characters" | "off" | "on" | "none" | "sentences" | "words" | undefined | null; autofocus?: boolean | undefined | null; ... 435 more ...; class: string; }' is not assignable to type 'Omit<{ orientation?: Orientation | undefined; decorative?: boolean | undefined; }, "children" | "child"> & { child?: Snippet<[{ props: Record<string, unknown>; }]> | undefined; children?: Snippet<...> | undefined; style?: any; ref?: HTMLElement | ... 1 more ... | undefined; } & Without<...>'.
+  Type '{ accesskey?: string | undefined | null; autocapitalize?: "characters" | "off" | "on" | "none" | "sentences" | "words" | undefined | null; autofocus?: boolean | undefined | null; ... 435 more ...; class: string; }' is not assignable to type 'Without<BitsPrimitiveDivAttributes, SeparatorRootPropsWithoutHTML>'.
+    Types of property 'id' are incompatible.
+      Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+        Type 'null' is not assignable to type 'string | undefined'. (ts)
+[36m
+<SeparatorPrimitive.Roo[35m[36mt
+	{orientation}[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\lib\components\ui\table\table-caption.svelte[39m:8:8
+[31mError[39m: Argument of type '{ accesskey?: string | undefined | null; autocapitalize?: "characters" | "off" | "on" | "none" | "sentences" | "words" | undefined | null; autofocus?: boolean | undefined | null; ... 432 more ...; class: string; }' is not assignable to parameter of type 'HTMLProps<"caption", HTMLAttributes<any>>'.
+  Type '{ accesskey?: string | undefined | null; autocapitalize?: "characters" | "off" | "on" | "none" | "sentences" | "words" | undefined | null; autofocus?: boolean | undefined | null; ... 432 more ...; class: string; }' is not assignable to type 'Omit<HTMLAttributes<HTMLElement>, never>'.
+    Types of property ''on:copy'' are incompatible.
+      Type 'ClipboardEventHandler<HTMLTableCaptionElement> | null | undefined' is not assignable to type 'ClipboardEventHandler<HTMLElement> | null | undefined'.
+        Type 'ClipboardEventHandler<HTMLTableCaptionElement>' is not assignable to type 'ClipboardEventHandler<HTMLElement>'.
+          Property 'align' is missing in type 'HTMLElement' but required in type 'HTMLTableCaptionElement'. (ts)
+[36m
+<captio[35mn
+	class={cn("mt-4 text-sm text-muted-foreground", className)}
+	{...props[36m}
+>[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\routes\(app)\tags\[slug]\+page.svelte[39m:16:20
+[33mWarn[39m: This reference only captures the initial value of `data`. Did you mean to reference it inside a derived instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+[36m
+	let name = $state([35mdata[36m.tag.name);
+	let slug = $state(data.tag.slug);[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\routes\(app)\tags\[slug]\+page.svelte[39m:17:20
+[33mWarn[39m: This reference only captures the initial value of `data`. Did you mean to reference it inside a derived instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+[36m	let name = $state(data.tag.name);
+	let slug = $state([35mdata[36m.tag.slug);[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\routes\(app)\tokens\[slug]\+page.svelte[39m:175:10
+[33mWarn[39m: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+[36m								<div class="space-y-2">
+									[35m<label class="text-sm font-medium leading-none">Tags</label>[36m
+									<select[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\routes\(app)\tokens\new\+page.svelte[39m:170:10
+[33mWarn[39m: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+[36m								<div class="space-y-2">
+									[35m<label class="text-sm font-medium leading-none">Tags</label>[36m
+									<select[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\routes\(app)\users\+page.svelte[39m:188:1
+[31mError[39m: `</div>` attempted to close an element that was not open
+https://svelte.dev/e/element_invalid_closing_tag (svelte)
+[36m	</Card>
+[35m[36m</div>[39m
+
+c:\Misi-NUS\cryptosharia-admin\[32msrc\routes\(app)\users\+page.svelte[39m:188:1
+[31mError[39m: `</div>` attempted to close an element that was not open
+https://svelte.dev/e/element_invalid_closing_tag (ts)
+[36m	</Card>
+[35m[36m</div>[39m
+
+====================================
+[31msvelte-check found 5 errors and 4 warnings in 6 files
+[39m

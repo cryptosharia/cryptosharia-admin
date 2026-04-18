@@ -4,6 +4,7 @@
 	import { onNavigate } from '$app/navigation';
 	import NProgress from 'nprogress';
 	import 'nprogress/nprogress.css';
+	import { Toaster } from 'svelte-sonner';
 
 	let { children } = $props();
 
@@ -39,6 +40,7 @@
 </script>
 
 <ModeWatcher defaultMode="dark" />
+<Toaster position="top-right" richColors closeButton />
 <div class="antialiased text-foreground bg-background min-h-screen font-sans selection:bg-primary/30">
 	{@render children()}
 </div>
