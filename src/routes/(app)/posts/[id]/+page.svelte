@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { ArrowLeft, Save, Calendar, Image as ImageIcon, Trash2, CheckCircle2 } from 'lucide-svelte';
+	import { ArrowLeft, Save, Calendar, Image as ImageIcon, Trash2, CheckCircle2, X, Loader2 } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
 	import { Textarea } from "$lib/components/ui/textarea";
 	import { Separator } from "$lib/components/ui/separator";
+	import TagSelector from '$lib/components/TagSelector.svelte';
+	import { toast } from 'svelte-sonner';
 
 	let { data, form } = $props();
 
@@ -17,22 +19,31 @@
 
 	let title = $state('');
 	let slug = $state('');
+	let selectedTags = $state<string[]>([]);
 
 	let editorContainer: HTMLElement;
 	let editor: any;
 	let content = $state('');
 
-	// Keep updated when navigation changes
 	$effect(() => {
 		if (data.post) {
 			title = data.post.title || '';
 			slug = data.post.slug || '';
+			selectedTags = data.post.tags?.map((t: any) => t.slug) ?? [];
 			if (editor && content !== data.post.content) {
 				content = data.post.content || '';
 				editor.setMarkdown(content);
 			}
 		}
 	});
+
+	function toggleTag(tagSlug: string) {
+		if (selectedTags.includes(tagSlug)) {
+			selectedTags = selectedTags.filter(t => t !== tagSlug);
+		} else {
+			selectedTags = [...selectedTags, tagSlug];
+		}
+	}
 
 	$effect(() => {
 		const initEditor = async () => {
@@ -54,8 +65,10 @@
 				},
 				hooks: {
 					addImageBlobHook: async (blob: Blob, callback: (url: string, altText: string) => void) => {
+						const toastId = toast.loading('Uploading image...');
 						const formData = new FormData();
-						formData.append('image', blob);
+						const fileName = (blob as File).name || 'upload.png';
+						formData.append('image', blob, fileName);
 						try {
 							const response = await fetch('/api/imgbb', {
 								method: 'POST',
@@ -64,11 +77,14 @@
 							const res = await response.json();
 							if (res.success && res.url) {
 								callback(res.url, 'uploaded image');
+								toast.success('Image uploaded successfully', { id: toastId });
 							} else {
 								console.error('Failed to upload image', res);
+								toast.error(res.message || 'Failed to upload image', { id: toastId });
 							}
 						} catch (err) {
 							console.error(err);
+							toast.error('Network error during upload', { id: toastId });
 						}
 					}
 				}
@@ -149,14 +165,9 @@
 
 						<div class="space-y-4">
 							<div class="space-y-2">
-								<label for="tags" class="text-sm font-medium leading-none">Tags (comma separated)</label>
-								<Input
-									type="text"
-									id="tags"
-									name="tags"
-									placeholder="e.g. news, crypto, sharia"
-									value={data.post?.tags?.map((t: any) => t.slug).join(', ') || ''}
-								/>
+								<label for="tags-selector" class="text-sm font-medium leading-none">Tags</label>
+								<TagSelector id="tags-selector" tags={data.tags} bind:selectedTags={selectedTags} />
+								<p class="text-xs text-muted-foreground">Select relevant tags for this post.</p>
 							</div>
 							<div class="space-y-2">
 								<label for="excerpt" class="text-sm font-medium leading-none">Excerpt</label>

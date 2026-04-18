@@ -1,38 +1,37 @@
 import { createApiClient } from '$lib/api';
 import { fail, redirect, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
+import { env } from '$env/dynamic/public';
 
-export const load: PageServerLoad = async ({ fetch, params }) => {
-	const client = createApiClient({ fetch });
+export const load: PageServerLoad = async ({ fetch, params, locals }) => {
+	const client = createApiClient({ 
+        fetch, 
+        accessToken: locals.user?.accessToken 
+    });
 
 	try {
-        // params.slug is the slug from URL. API parameter is named `id` but accepts slug.
-		const { data, error: apiError } = await client.GET('/tokens/{id}', {
-			params: {
-				path: { id: params.slug } 
-			}
-		});
+		const [tokenRes, tagsRes] = await Promise.all([
+			client.GET('/tokens/{id}', { params: { path: { id: params.slug } } }),
+			client.GET('/tags', { params: { query: { limit: 100 } } })
+		]);
 
-		if (apiError || !data?.success || !data?.data) {
+		if (tokenRes.error || !tokenRes.data?.success || !tokenRes.data?.data) {
 			throw error(404, 'Token not found');
 		}
 
 		return {
 			token: {
-                ...data.data,
-                logoUrl: data.data.logo?.url
-            }
+                ...tokenRes.data.data,
+                logoUrl: tokenRes.data.data.logo?.url
+            },
+			tags: tagsRes.data?.data?.items ?? []
 		};
 	} catch (err) {
-        // re-throw redirects or SvelteKit errors
         if ((err as any)?.status && (err as any)?.body) throw err; 
-        
 		console.error('API connection failed:', err);
 		throw error(500, 'API connection failed');
 	}
 };
-
-import { env } from '$env/dynamic/public';
 
 async function uploadAsset(fetchFn: typeof fetch, file: File, accessToken: string) {
 	const formData = new FormData();

@@ -1,44 +1,81 @@
 import { error, json } from '@sveltejs/kit';
 import { env } from '$env/dynamic/public';
+import { env as privateEnv } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const formData = await request.formData();
-	const image = formData.get('image');
+	const image = formData.get('image') as File;
 
 	if (!image) {
 		throw error(400, 'Image file is required');
 	}
 
-	const apiUrl = env.PUBLIC_CS_API_URL || 'http://localhost:5173';
+	const apiUrl = env.PUBLIC_CS_API_URL || 'https://preview.api.cryptosharia.id';
+	const imgbbKey = privateEnv.IMGBB_API_KEY;
+
+	console.log(`Starting image upload for: ${image.name} (${image.size} bytes)`);
 	
+	// 1. Try Internal API first
 	try {
-        // We forward to /imgbb since user specified this endpoint
-		const res = await fetch(`${apiUrl}/imgbb`, {
+		const uploadForm = new FormData();
+		uploadForm.append('file', image);
+
+		console.log(`Attempting upload to internal API: ${apiUrl}/assets`);
+		const res = await fetch(`${apiUrl}/assets`, {
 			method: 'POST',
 			headers: {
 				'Authorization': `Bearer ${locals.user?.accessToken || ''}`
 			},
-			body: formData
+			body: uploadForm
 		});
 
-		if (!res.ok) {
+		if (res.ok) {
+			const data = await res.json();
+			const assetData = data.data || data;
+			const url = assetData?.url || (assetData?.pathname ? `${apiUrl}${assetData.pathname}` : '');
+			
+			if (url) {
+				console.log('Internal upload successful:', url);
+				return json({ success: true, url });
+			}
+		} else {
 			const errText = await res.text();
-			console.error('ImgBB API error:', errText);
-			return json({ success: false, message: 'Upload failed' }, { status: res.status });
+			console.warn('Internal asset upload failed, status:', res.status, errText);
 		}
-
-		const data = await res.json();
-		// The API must return URL in response so that TUI Editor can use it.
-		// Usually data.data.url or data.url. We just return it directly.
-        // The user says "tampilin deh image-nya pakai URL dari field response-nya" 
-        // which means the frontend should read res.url
-		return json({
-			success: true,
-			url: data.data?.url || data.url || ''
-		});
 	} catch (err: any) {
-		console.error('Upload error:', err);
-		return json({ success: false, message: err.message }, { status: 500 });
+		console.warn('Internal upload caught error:', err.message);
 	}
+
+	// 2. Fallback to ImgBB if internal fails and we have a key
+	if (imgbbKey) {
+		try {
+			console.log('Attempting fallback upload to ImgBB');
+			const imgbbForm = new FormData();
+			imgbbForm.append('image', image);
+			
+			const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, {
+				method: 'POST',
+				body: imgbbForm
+			});
+
+			if (imgbbRes.ok) {
+				const imgbbData = await imgbbRes.json();
+				if (imgbbData.success) {
+					console.log('ImgBB fallback upload successful:', imgbbData.data.url);
+					return json({ success: true, url: imgbbData.data.url });
+				}
+			} else {
+				const errText = await imgbbRes.text();
+				console.error('ImgBB fallback failed:', errText);
+			}
+		} catch (err: any) {
+			console.error('ImgBB fallback caught error:', err.message);
+		}
+	}
+
+	return json({ 
+		success: false, 
+		message: 'All upload attempts failed. Check server logs for details.' 
+	}, { status: 500 });
 };

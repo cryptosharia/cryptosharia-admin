@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Trash2, Save, ArrowLeft, CheckCircle2, ImageIcon, Link as LinkIcon } from 'lucide-svelte';
+	import { Trash2, Save, ArrowLeft, CheckCircle2, ImageIcon, X } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
@@ -9,6 +9,21 @@
 
 	let { data, form } = $props();
 	let token = $derived(data.token);
+	let selectedTags = $state<string[]>([]);
+
+	$effect(() => {
+		if (data.token) {
+			selectedTags = data.token.tags?.map((t: any) => t.slug) ?? [];
+		}
+	});
+
+	function toggleTag(tagSlug: string) {
+		if (selectedTags.includes(tagSlug)) {
+			selectedTags = selectedTags.filter(t => t !== tagSlug);
+		} else {
+			selectedTags = [...selectedTags, tagSlug];
+		}
+	}
 
 	let editorContainer: HTMLElement;
 	let editor: any;
@@ -45,7 +60,8 @@
 				hooks: {
 					addImageBlobHook: async (blob: Blob, callback: (url: string, altText: string) => void) => {
 						const formData = new FormData();
-						formData.append('image', blob);
+						const fileName = (blob as File).name || 'upload.png';
+						formData.append('image', blob, fileName);
 						try {
 							const response = await fetch('/api/imgbb', {
 								method: 'POST',
@@ -156,14 +172,24 @@
 						<div class="space-y-4">
 							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div class="space-y-2">
-									<label for="tags" class="text-sm font-medium leading-none">Tags (comma separated)</label>
-									<Input
-										type="text"
-										id="tags"
-										name="tags"
-										placeholder="e.g. halal, bitcoin, web3"
-										value={token.tags?.map((t: any) => t.slug).join(', ') || ''}
-									/>
+									<label class="text-sm font-medium leading-none">Tags</label>
+									<select
+										multiple
+										class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+										name="tags_multiple"
+										onchange={(e) => {
+											const options = Array.from(e.currentTarget.selectedOptions);
+											selectedTags = options.map(o => o.value);
+										}}
+									>
+										{#each data.tags as tag}
+											<option value={tag.slug} selected={selectedTags.includes(tag.slug)}>
+												{tag.name}
+											</option>
+										{/each}
+									</select>
+									<p class="text-xs text-muted-foreground">Select multiple tags by holding Ctrl/Cmd.</p>
+									<input type="hidden" name="tags" value={selectedTags.join(',')} />
 								</div>
 								<div class="space-y-2">
 									<label for="tradingviewSymbol" class="text-sm font-medium leading-none">TradingView Symbol</label>

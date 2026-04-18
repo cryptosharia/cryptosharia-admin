@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ fetch, locals, url }) => {
 
 	try {
         const query: any = {
-            limit: 100,
+            limit: 20,
             page,
             statuses: ['draft', 'published', 'archived']
         };
@@ -24,6 +24,7 @@ export const load: PageServerLoad = async ({ fetch, locals, url }) => {
 
 		return {
             search: search || '',
+            pagination: data?.data?.pagination ?? { total: 0, page: 1, limit: 20, totalPages: 0 },
 			tokens: data?.data?.items?.map((token: any) => ({
 				id: token.id,
 				name: token.name,
@@ -40,6 +41,8 @@ export const load: PageServerLoad = async ({ fetch, locals, url }) => {
 		console.error('API connection failed:', error);
 		return {
 			tokens: [],
+			search: '',
+			pagination: { total: 0, page: 1, limit: 20, totalPages: 0 },
 			error: 'API connection failed'
 		};
 	}

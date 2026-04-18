@@ -5,12 +5,13 @@
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
 	import { Separator } from "$lib/components/ui/separator";
 	import { Textarea } from "$lib/components/ui/textarea";
-	import { ArrowLeft, Plus, ImageIcon, Save } from 'lucide-svelte';
+	import { ArrowLeft, Plus, ImageIcon, Save, X } from 'lucide-svelte';
 
 	let { data, form } = $props();
 
 	let name = $state('');
 	let slug = $state('');
+	let selectedTags = $state<string[]>([]);
 
 	function generateSlug(str: string) {
 		return str
@@ -23,6 +24,14 @@
 		const target = e.target as HTMLInputElement;
 		name = target.value;
 		slug = generateSlug(name);
+	}
+
+	function toggleTag(slug: string) {
+		if (selectedTags.includes(slug)) {
+			selectedTags = selectedTags.filter(t => t !== slug);
+		} else {
+			selectedTags = [...selectedTags, slug];
+		}
 	}
 
 	let editorContainer: HTMLElement;
@@ -50,7 +59,8 @@
 				hooks: {
 					addImageBlobHook: async (blob: Blob, callback: (url: string, altText: string) => void) => {
 						const formData = new FormData();
-						formData.append('image', blob);
+						const fileName = (blob as File).name || 'upload.png';
+						formData.append('image', blob, fileName);
 						try {
 							const response = await fetch('/api/imgbb', {
 								method: 'POST',
@@ -157,13 +167,24 @@
 						<div class="space-y-4">
 							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div class="space-y-2">
-									<label for="tags" class="text-sm font-medium leading-none">Tags (comma separated)</label>
-									<Input
-										type="text"
-										id="tags"
-										name="tags"
-										placeholder="e.g. halal, bitcoin, web3"
-									/>
+									<label class="text-sm font-medium leading-none">Tags</label>
+									<select
+										multiple
+										class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+										name="tags_multiple"
+										onchange={(e) => {
+											const options = Array.from(e.currentTarget.selectedOptions);
+											selectedTags = options.map(o => o.value);
+										}}
+									>
+										{#each data.tags as tag}
+											<option value={tag.slug} selected={selectedTags.includes(tag.slug)}>
+												{tag.name}
+											</option>
+										{/each}
+									</select>
+									<p class="text-xs text-muted-foreground">Select multiple tags by holding Ctrl/Cmd.</p>
+									<input type="hidden" name="tags" value={selectedTags.join(',')} />
 								</div>
 								<div class="space-y-2">
 									<label for="tradingviewSymbol" class="text-sm font-medium leading-none">TradingView Symbol</label>
@@ -179,11 +200,12 @@
 
 							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div class="space-y-2">
-									<label for="website" class="text-sm font-medium leading-none">Website</label>
+									<label for="website" class="text-sm font-medium leading-none">Website *</label>
 									<Input
 										type="url"
 										id="website"
 										name="website"
+										required
 										placeholder="https://..."
 									/>
 								</div>

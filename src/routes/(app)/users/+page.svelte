@@ -33,10 +33,7 @@
 			<h1 class="text-3xl font-bold tracking-tight text-foreground">Users</h1>
 			<p class="text-muted-foreground mt-1 text-sm sm:text-base">Manage all registered users and administrators.</p>
 		</div>
-		<Button href="/users/new" class="w-full sm:w-auto">
-			<Plus class="mr-2 h-4 w-4" />
-			Add User
-		</Button>
+		</div>
 	</div>
 
 	<!-- Search Bar -->
@@ -104,9 +101,16 @@
 								</Badge>
 							</Table.Cell>
 							<Table.Cell>
-								<Badge variant="outline" class={user.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-destructive/10 text-destructive border-destructive/20'}>
-									{user.status || 'Active'}
-								</Badge>
+								<div class="flex flex-col gap-1">
+									<Badge variant="outline" class={user.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-destructive/10 text-destructive border-destructive/20'}>
+										{user.status || 'Active'}
+									</Badge>
+									{#if user.role === 'member' && user.status === 'inactive'}
+										<Badge variant="outline" class="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px]">
+											Pending Role
+										</Badge>
+									{/if}
+								</div>
 							</Table.Cell>
 							<Table.Cell>
 								<div class="flex items-center gap-2 text-muted-foreground">

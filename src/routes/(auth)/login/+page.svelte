@@ -39,7 +39,7 @@
 			<div class="space-x-2 text-xs text-primary">
 				<a href="/reset-password" class="hover:underline">Forgot password?</a>
 				<span>|</span>
-				<a href="/request-access" class="hover:underline">Request Access?</a>
+				<a href="/signup" class="hover:underline">Sign Up</a>
 			</div>
 		</div>
 		<div class="relative">

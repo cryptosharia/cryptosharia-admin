@@ -1,16 +1,20 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { ArrowLeft, Save, Calendar, Image as ImageIcon } from 'lucide-svelte';
+	import { ArrowLeft, Save, Calendar, Image as ImageIcon, X, Loader2 } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
 	import { Textarea } from "$lib/components/ui/textarea";
 	import { Separator } from "$lib/components/ui/separator";
+	import { Badge } from "$lib/components/ui/badge";
+	import TagSelector from '$lib/components/TagSelector.svelte';
+	import { toast } from 'svelte-sonner';
 
-	let { form } = $props();
+	let { data, form } = $props();
 
 	let title = $state('');
 	let slug = $state('');
+	let selectedTags = $state<string[]>([]);
 
 	function generateSlug(str: string) {
 		return str
@@ -23,6 +27,14 @@
 		const target = e.target as HTMLInputElement;
 		title = target.value;
 		slug = generateSlug(title);
+	}
+
+	function toggleTag(slug: string) {
+		if (selectedTags.includes(slug)) {
+			selectedTags = selectedTags.filter(t => t !== slug);
+		} else {
+			selectedTags = [...selectedTags, slug];
+		}
 	}
 
 	let editorContainer: HTMLElement;
@@ -49,8 +61,10 @@
 				},
 				hooks: {
 					addImageBlobHook: async (blob: Blob, callback: (url: string, altText: string) => void) => {
+						const toastId = toast.loading('Uploading image...');
 						const formData = new FormData();
-						formData.append('image', blob);
+						const fileName = (blob as File).name || 'upload.png';
+						formData.append('image', blob, fileName);
 						try {
 							const response = await fetch('/api/imgbb', {
 								method: 'POST',
@@ -59,11 +73,14 @@
 							const res = await response.json();
 							if (res.success && res.url) {
 								callback(res.url, 'uploaded image');
+								toast.success('Image uploaded successfully', { id: toastId });
 							} else {
 								console.error('Failed to upload image', res);
+								toast.error(res.message || 'Failed to upload image', { id: toastId });
 							}
 						} catch (err) {
 							console.error(err);
+							toast.error('Network error while uploading image', { id: toastId });
 						}
 					}
 				}
@@ -138,13 +155,9 @@
 
 						<div class="space-y-4">
 							<div class="space-y-2">
-								<label for="tags" class="text-sm font-medium leading-none">Tags (comma separated)</label>
-								<Input
-									type="text"
-									id="tags"
-									name="tags"
-									placeholder="e.g. news, crypto, sharia"
-								/>
+								<label for="tags-selector" class="text-sm font-medium leading-none">Tags</label>
+								<TagSelector id="tags-selector" tags={data.tags} bind:selectedTags={selectedTags} />
+								<p class="text-xs text-muted-foreground">Select relevant tags for this post.</p>
 							</div>
 							<div class="space-y-2">
 								<label for="excerpt" class="text-sm font-medium leading-none">Excerpt</label>
