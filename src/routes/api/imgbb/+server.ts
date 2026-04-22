@@ -1,6 +1,6 @@
 import { error, json } from '@sveltejs/kit';
 import { env } from '$env/dynamic/public';
-import { env as privateEnv } from '$env/dynamic/private';
+import { CS_API_KEY, IMGBB_API_KEY } from '$env/static/private';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -12,7 +12,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	const apiUrl = env.PUBLIC_CS_API_URL || 'https://preview.api.cryptosharia.id';
-	const imgbbKey = privateEnv.IMGBB_API_KEY;
+	const imgbbKey = IMGBB_API_KEY;
 
 	console.log(`Starting image upload for: ${image.name} (${image.size} bytes)`);
 	
@@ -25,7 +25,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const res = await fetch(`${apiUrl}/assets`, {
 			method: 'POST',
 			headers: {
-				'Authorization': `Bearer ${locals.user?.accessToken || ''}`
+				'Authorization': `Bearer ${locals.user?.accessToken || ''}`,
+				'Api-Key': CS_API_KEY
 			},
 			body: uploadForm
 		});

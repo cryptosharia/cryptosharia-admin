@@ -133,7 +133,28 @@ export const actions = {
             return fail(500, { success: false, message: 'An unexpected internal error occurred.' });
         }
     },
-    delete: async () => {
-        return fail(405, { success: false, message: 'Delete operation is not supported by the API yet.' });
+    delete: async ({ params, fetch, locals }) => {
+        const client = createApiClient({ 
+            fetch, 
+            accessToken: locals.user?.accessToken 
+        });
+        
+        try {
+            // Soft-delete by setting status to inactive as per API requirements
+            const { data, error: statusError } = await (client as any).PUT('/users/{id}/status', {
+                params: { path: { id: params.id } },
+                body: { status: 'inactive' }
+            });
+
+            if (statusError || !data?.success) {
+                console.error('Soft-delete error:', statusError || data);
+                return fail(400, { success: false, message: 'Failed to deactivate user account.' });
+            }
+
+            return { success: true, message: 'User account has been deactivated.' };
+        } catch (error: any) {
+            console.error('Unexpected error deactivating user:', error);
+            return fail(500, { success: false, message: 'An unexpected internal error occurred.' });
+        }
     }
 } satisfies Actions;
