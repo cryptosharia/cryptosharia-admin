@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { ArrowLeft, Save, Trash2, CheckCircle2, User, Shield, Clock, Mail, Info } from 'lucide-svelte';
+	import { ArrowLeft, Save, Trash2, CheckCircle2, User, Shield, Clock, Mail, Info, ImageIcon } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Separator } from "$lib/components/ui/separator";
+	import ImageUpload from '$lib/components/ImageUpload.svelte';
 
 	let { data, form } = $props();
 	let loading = $state(false);
@@ -56,17 +57,21 @@
 						<CardDescription>Primary account information for this user.</CardDescription>
 					</CardHeader>
 					<CardContent class="space-y-6">
-						<div class="flex items-center gap-6 pb-6 border-b">
-							{#if data.user.avatar?.url}
-								<img src={data.user.avatar.url} alt={data.user.name} class="h-20 w-20 rounded-full object-cover ring-2 ring-primary/20" />
-							{:else}
-								<div class="h-20 w-20 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500 font-bold text-2xl ring-2 ring-orange-500/20">
-									{data.user.name?.[0]?.toUpperCase() ?? 'U'}
-								</div>
-							{/if}
-							<div>
-								<p class="text-xl font-bold">{data.user.name || 'Anonymous'}</p>
-								<p class="text-sm text-muted-foreground">{data.user.email}</p>
+						<!-- Avatar section -->
+						<div class="flex flex-col sm:flex-row gap-6 pb-6 border-b">
+							<!-- Current avatar display -->
+							<div class="flex flex-col items-center gap-2 shrink-0">
+								{#if data.user.avatar?.url}
+									<img src={data.user.avatar.url} alt={data.user.name ?? 'User'} class="h-20 w-20 rounded-full object-cover ring-2 ring-primary/20" />
+								{:else}
+									<div class="h-20 w-20 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500 font-bold text-2xl ring-2 ring-orange-500/20">
+										{data.user.name?.[0]?.toUpperCase() ?? 'U'}
+									</div>
+								{/if}
+							</div>
+							<div class="flex-1 min-w-0">
+								<p class="text-xl font-bold truncate">{data.user.name || 'Anonymous'}</p>
+								<p class="text-sm text-muted-foreground truncate">{data.user.email}</p>
 								<div class="flex items-center gap-2 mt-2">
 									<Badge variant="outline" class="capitalize">{data.user.role}</Badge>
 									<Badge variant="outline" class={data.user.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-destructive/10 text-destructive border-destructive/20'}>
@@ -76,17 +81,16 @@
 							</div>
 						</div>
 
-						<div class="space-y-4 pt-4">
-							<div class="space-y-2">
-								<label for="avatar" class="text-sm font-medium leading-none">Avatar Image (Optional)</label>
-								<Input
-									type="file"
-									id="avatar"
-									name="avatar"
-									accept="image/*"
-									class="bg-background/50"
-								/>
-							</div>
+						<!-- Avatar upload -->
+						<div class="space-y-2 pt-2">
+							<label class="text-sm font-medium leading-none flex items-center gap-2">
+								<ImageIcon size={14} />
+								Avatar Image (Optional)
+							</label>
+							<ImageUpload name="avatar" label="Avatar" currentUrl={data.user.avatar?.url ?? null} aspectRatio="square" />
+						</div>
+
+						<div class="space-y-4 pt-2">
 							<div class="space-y-2">
 								<label for="name" class="text-sm font-medium leading-none flex items-center gap-2">
 									Full Name

@@ -5,7 +5,9 @@
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
 	import { Separator } from "$lib/components/ui/separator";
 	import { Textarea } from "$lib/components/ui/textarea";
-	import { ArrowLeft, Plus, ImageIcon, Save, X } from 'lucide-svelte';
+	import { ArrowLeft, Plus, ImageIcon, Save } from 'lucide-svelte';
+	import TagSelector from '$lib/components/TagSelector.svelte';
+	import ImageUpload from '$lib/components/ImageUpload.svelte';
 
 	let { data, form } = $props();
 
@@ -24,14 +26,6 @@
 		const target = e.target as HTMLInputElement;
 		name = target.value;
 		slug = generateSlug(name);
-	}
-
-	function toggleTag(slug: string) {
-		if (selectedTags.includes(slug)) {
-			selectedTags = selectedTags.filter(t => t !== slug);
-		} else {
-			selectedTags = [...selectedTags, slug];
-		}
 	}
 
 	let editorContainer: HTMLElement;
@@ -168,22 +162,8 @@
 							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div class="space-y-2">
 									<label class="text-sm font-medium leading-none">Tags</label>
-									<select
-										multiple
-										class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-										name="tags_multiple"
-										onchange={(e) => {
-											const options = Array.from(e.currentTarget.selectedOptions);
-											selectedTags = options.map(o => o.value);
-										}}
-									>
-										{#each data.tags as tag}
-											<option value={tag.slug} selected={selectedTags.includes(tag.slug)}>
-												{tag.name}
-											</option>
-										{/each}
-									</select>
-									<p class="text-xs text-muted-foreground">Select multiple tags by holding Ctrl/Cmd.</p>
+									<TagSelector tags={data.tags} bind:selectedTags={selectedTags} />
+									<p class="text-xs text-muted-foreground">Select relevant tags for this token.</p>
 									<input type="hidden" name="tags" value={selectedTags.join(',')} />
 								</div>
 								<div class="space-y-2">
@@ -307,18 +287,8 @@
 							Media
 						</CardTitle>
 					</CardHeader>
-					<CardContent class="space-y-4">
-						<div class="space-y-2">
-							<label for="logoImage" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Logo Image Upload *</label>
-							<Input
-								type="file"
-								id="logoImage"
-								name="logoImage"
-								accept="image/*"
-								required
-								class="bg-background/50 focus:bg-background"
-							/>
-						</div>
+					<CardContent>
+						<ImageUpload name="logoImage" label="Logo" required={true} aspectRatio="square" />
 					</CardContent>
 				</Card>
 			</div>

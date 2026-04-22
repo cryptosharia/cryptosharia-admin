@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { ArrowLeft, Save, Calendar, Image as ImageIcon, X, Loader2 } from 'lucide-svelte';
+	import { ArrowLeft, Save, Calendar, Image as ImageIcon, Loader2 } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
@@ -8,6 +8,7 @@
 	import { Separator } from "$lib/components/ui/separator";
 	import { Badge } from "$lib/components/ui/badge";
 	import TagSelector from '$lib/components/TagSelector.svelte';
+	import ImageUpload from '$lib/components/ImageUpload.svelte';
 	import { toast } from 'svelte-sonner';
 
 	let { data, form } = $props();
@@ -27,14 +28,6 @@
 		const target = e.target as HTMLInputElement;
 		title = target.value;
 		slug = generateSlug(title);
-	}
-
-	function toggleTag(slug: string) {
-		if (selectedTags.includes(slug)) {
-			selectedTags = selectedTags.filter(t => t !== slug);
-		} else {
-			selectedTags = [...selectedTags, slug];
-		}
 	}
 
 	let editorContainer: HTMLElement;
@@ -256,25 +249,15 @@
 						</CardTitle>
 					</CardHeader>
 					<CardContent class="space-y-4">
-						<div class="space-y-2">
-							<label for="coverImage" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cover Image Upload *</label>
-							<Input
-								type="file"
-								id="coverImage"
-								name="coverImage"
-								accept="image/*"
-								required
-								class="bg-background/50 focus:bg-background"
-							/>
-						</div>
-						<div class="flex items-center space-x-2">
+						<ImageUpload name="coverImage" label="Cover Image" required={true} aspectRatio="video" />
+						<div class="flex items-center space-x-2 pt-1">
 							<input
 								type="checkbox"
 								id="isFeatured"
 								name="isFeatured"
 								class="h-4 w-4 rounded border-input text-primary focus:ring-ring"
 							/>
-							<label for="isFeatured" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Feature this post</label>
+							<label for="isFeatured" class="text-sm font-medium leading-none">Feature this post</label>
 						</div>
 					</CardContent>
 				</Card>

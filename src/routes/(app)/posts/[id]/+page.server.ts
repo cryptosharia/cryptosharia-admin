@@ -1,26 +1,37 @@
 import { createApiClient } from '$lib/api';
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { env } from '$env/dynamic/public';
+import { PUBLIC_CS_API_URL } from '$env/static/public';
+import { CS_API_KEY } from '$env/static/private';
+
+
 
 async function uploadAsset(fetchFn: typeof fetch, file: File, accessToken: string) {
 	const formData = new FormData();
 	formData.append('file', file);
-	const apiUrl = env.PUBLIC_CS_API_URL || 'http://localhost:5173';
+	const apiUrl = PUBLIC_CS_API_URL.replace(/\/$/, '');
+	
+	console.log(`Uploading asset to: ${apiUrl}/assets. API Key present: ${!!CS_API_KEY}, Token present: ${!!accessToken}`);
+	
 	const res = await fetchFn(`${apiUrl}/assets`, {
 		method: 'POST',
 		headers: {
-			'Authorization': `Bearer ${accessToken}`
+			'Authorization': `Bearer ${accessToken}`,
+			'Api-Key': CS_API_KEY
 		},
 		body: formData
 	});
+	
 	if (!res.ok) {
-        const errorText = await res.text();
-		throw new Error(errorText || 'File upload failed');
+		const errorText = await res.text();
+		console.error(`Upload failed with status ${res.status}:`, errorText);
+		throw new Error(errorText || `File upload failed with status ${res.status}`);
 	}
+	
 	const json = await res.json();
 	return json.data;
 }
+
 
 export const load: PageServerLoad = async ({ params, fetch, locals }) => {
     const client = createApiClient({ 
@@ -64,8 +75,8 @@ export const actions = {
 		const slug = formData.get('slug') as string;
 		const section = formData.get('section') as string;
 		const status = formData.get('status') as 'draft' | 'published' | 'archived';
-		const excerpt = formData.get('excerpt') as string;
-		const content = formData.get('content') as string;
+		const excerpt = (formData.get('excerpt') as string) || undefined;
+		const content = (formData.get('content') as string) || undefined;
 		const isFeatured = formData.get('isFeatured') === 'on';
 		const type = formData.get('type') as string;
 		const eventDateStr = formData.get('eventDate') as string;
@@ -76,7 +87,8 @@ export const actions = {
         const tags = tagsStr ? tagsStr.split(',').map(s => s.trim()).filter(Boolean) : undefined;
         
         const coverImageFile = formData.get('coverImage') as File | null;
-        let coverImageId: string | undefined = undefined;
+        const removeCoverImage = formData.get('remove_coverImage') === 'true';
+        let coverImageId: string | null | undefined = undefined;
 
 		if (!title || !slug || !section) {
 			return fail(400, { missing: true, message: 'Title, Slug and Section are required.' });
@@ -85,7 +97,9 @@ export const actions = {
 		try {
             if (coverImageFile && coverImageFile.size > 0) {
                 const uploadedAsset = await uploadAsset(fetch, coverImageFile, locals.user?.accessToken || '');
-                coverImageId = uploadedAsset.id;
+                coverImageId = uploadedAsset?.id ?? undefined;
+            } else if (removeCoverImage) {
+                coverImageId = null;
             }
 
             // Using PATCH usually for updates
@@ -97,13 +111,13 @@ export const actions = {
 					section,
 					type,
 					status: status || 'draft',
-					excerpt,
-					content,
 					isFeatured,
 					eventDate,
 					externalLink,
                     tags,
-                    coverImageId
+                    coverImageId,
+                    ...(excerpt ? { excerpt } : {}),
+                    ...(content ? { content } : {})
                 }
             });
 
@@ -113,11 +127,12 @@ export const actions = {
             }
 			
 			return { success: true, message: 'Post updated successfully' };
-		} catch (error: any) {
-			console.error('Error updating post:', error);
-			if (error instanceof Response) throw error;
-			return fail(500, { message: 'Failed to update post.' });
+		} catch (err: any) {
+			console.error('Error updating post:', err);
+			if (err instanceof Response) throw err;
+			return fail(500, { message: err.message || 'Failed to update post.' });
 		}
+
 	},
 	delete: async ({ params, fetch, locals }) => {
         const client = createApiClient({ 

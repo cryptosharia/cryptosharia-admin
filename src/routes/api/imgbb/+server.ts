@@ -51,8 +51,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (imgbbKey) {
 		try {
 			console.log('Attempting fallback upload to ImgBB');
+			// ImgBB requires base64-encoded image, not raw file
+			const arrayBuffer = await image.arrayBuffer();
+			const base64 = Buffer.from(arrayBuffer).toString('base64');
+
 			const imgbbForm = new FormData();
-			imgbbForm.append('image', image);
+			imgbbForm.append('image', base64);
 			
 			const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, {
 				method: 'POST',

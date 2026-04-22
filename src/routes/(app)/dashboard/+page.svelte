@@ -5,13 +5,8 @@
 
 	let { data } = $props();
 
-	let stats = $derived([
-		{ label: 'Total Tokens', value: data.tokenCount.toLocaleString(), change: 'Tokens tracked', icon: TrendingUp, accent: 'orange' },
-		{ label: 'Total Users', value: data.userCount.toLocaleString(), change: 'Registered users', icon: Users, accent: 'blue' },
-		{ label: 'Total Posts', value: data.postCount.toLocaleString(), change: 'Content published', icon: FileText, accent: 'emerald' },
-		{ label: 'Messages', value: data.messageCount.toLocaleString(), change: 'Contact submissions', icon: Activity, accent: 'yellow' },
-		{ label: 'Tags', value: data.tagCount.toLocaleString(), change: 'Taxonomy tags', icon: ShieldCheck, accent: 'purple' }
-	]);
+	// Skeleton placeholder while streaming
+	const skeleton = { tokenCount: 0, userCount: 0, postCount: 0, messageCount: 0, tagCount: 0 };
 </script>
 
 <div class="space-y-8">
@@ -22,26 +17,51 @@
 			<p class="text-muted-foreground mt-1">Real-time metrics from the ecosystem.</p>
 		</div>
 
-		<div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-5">
-			{#each stats as stat, i}
-				<div in:fly={{ y: 20, duration: 400, delay: i * 80 }}>
-					<Card class="h-full hover:border-orange-500/40 transition-all duration-300 group cursor-default">
+		{#await data.counts}
+			<!-- Skeleton while loading -->
+			<div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-5">
+				{#each Array(5) as _}
+					<Card class="h-full">
 						<CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-							<CardTitle class="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-								{stat.label}
-							</CardTitle>
-							<div class="p-2 rounded-lg bg-muted/60 group-hover:scale-110 transition-transform duration-200">
-								<stat.icon class="h-5 w-5 text-muted-foreground group-hover:text-orange-500 transition-colors" />
-							</div>
+							<div class="h-4 w-20 bg-muted animate-pulse rounded"></div>
+							<div class="h-9 w-9 bg-muted animate-pulse rounded-lg"></div>
 						</CardHeader>
 						<CardContent>
-							<div class="text-3xl font-bold tracking-tight mb-1">{stat.value}</div>
-							<p class="text-xs text-muted-foreground font-medium">{stat.change}</p>
+							<div class="h-8 w-16 bg-muted animate-pulse rounded mb-2"></div>
+							<div class="h-3 w-24 bg-muted animate-pulse rounded"></div>
 						</CardContent>
 					</Card>
-				</div>
-			{/each}
-		</div>
+				{/each}
+			</div>
+		{:then counts}
+			{@const stats = [
+				{ label: 'Total Tokens', value: counts.tokenCount.toLocaleString(), change: 'Tokens tracked', icon: TrendingUp },
+				{ label: 'Total Users', value: counts.userCount.toLocaleString(), change: 'Registered users', icon: Users },
+				{ label: 'Total Posts', value: counts.postCount.toLocaleString(), change: 'Content published', icon: FileText },
+				{ label: 'Messages', value: counts.messageCount.toLocaleString(), change: 'Contact submissions', icon: Activity },
+				{ label: 'Tags', value: counts.tagCount.toLocaleString(), change: 'Taxonomy tags', icon: ShieldCheck }
+			]}
+			<div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-5">
+				{#each stats as stat, i}
+					<div in:fly={{ y: 20, duration: 400, delay: i * 80 }}>
+						<Card class="h-full hover:border-orange-500/40 transition-all duration-300 group cursor-default">
+							<CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+								<CardTitle class="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+									{stat.label}
+								</CardTitle>
+								<div class="p-2 rounded-lg bg-muted/60 group-hover:scale-110 transition-transform duration-200">
+									<stat.icon class="h-5 w-5 text-muted-foreground group-hover:text-orange-500 transition-colors" />
+								</div>
+							</CardHeader>
+							<CardContent>
+								<div class="text-3xl font-bold tracking-tight mb-1">{stat.value}</div>
+								<p class="text-xs text-muted-foreground font-medium">{stat.change}</p>
+							</CardContent>
+						</Card>
+					</div>
+				{/each}
+			</div>
+		{/await}
 	</section>
 
 	<!-- Bottom Row -->
