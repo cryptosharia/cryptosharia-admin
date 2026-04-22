@@ -222,10 +222,10 @@
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<p class="text-xs text-muted-foreground mb-4">Deleting a user is permanent and will remove all their data from the platform.</p>
-						<form action="?/delete" method="POST" use:enhance onsubmit={(e) => !confirm('Delete this user? This cannot be undone!') && e.preventDefault()}>
+						<p class="text-xs text-muted-foreground mb-4">Deactivating a user will set their status to inactive. They will no longer be able to access the platform.</p>
+						<form action="?/delete" method="POST" use:enhance onsubmit={(e) => !confirm('Deactivate this user account?') && e.preventDefault()}>
 							<Button type="submit" variant="ghost" class="w-full text-destructive hover:bg-destructive/10 hover:text-destructive border border-transparent hover:border-destructive/20 transition-all font-medium">
-								Delete Account
+								Deactivate Account
 							</Button>
 						</form>
 					</CardContent>

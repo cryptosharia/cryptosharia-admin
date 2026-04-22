@@ -2,8 +2,8 @@ import { createApiClient } from '$lib/api';
 import type { PageServerLoad, Actions } from './$types';
 import { fail } from '@sveltejs/kit';
 
-export const load: PageServerLoad = async ({ url }) => {
-	const token = url.searchParams.get('token') || '';
+export const load: PageServerLoad = async ({ url, params }) => {
+	const token = params.token || url.searchParams.get('token') || '';
 	return { token };
 };
 
