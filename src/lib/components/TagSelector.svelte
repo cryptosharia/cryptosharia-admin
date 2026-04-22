@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Badge } from "$lib/components/ui/badge";
-	import { Input } from "$lib/components/ui/input";
-	import { X, Plus, Search } from 'lucide-svelte';
+	import { X, ChevronDown, Check, Search } from 'lucide-svelte';
 
 	let { 
 		tags, 
@@ -10,100 +9,140 @@
 		class: className = ""
 	} = $props();
 
-	let searchQuery = $state('');
-
-	// Ensure selectedTags is always an array
 	if (!Array.isArray(selectedTags)) {
 		selectedTags = [];
 	}
 
+	let open = $state(false);
+	let searchQuery = $state('');
+	let dropdownRef: HTMLDivElement;
+	let searchInput: HTMLInputElement;
+
 	const filteredTags = $derived(
-		tags.filter((tag: { name: string; slug: string }) => 
-			tag.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
-			!selectedTags.includes(tag.slug)
-		)
+		searchQuery
+			? tags.filter((t: { name: string }) => t.name.toLowerCase().includes(searchQuery.toLowerCase()))
+			: tags
 	);
 
 	const selectedTagsObjects = $derived(
 		selectedTags.map(slug => tags.find((t: { slug: string }) => t.slug === slug)).filter(Boolean)
 	);
 
-	function addTag(slug: string) {
-		if (!selectedTags.includes(slug)) {
+	function toggleTag(slug: string) {
+		if (selectedTags.includes(slug)) {
+			selectedTags = selectedTags.filter((t: string) => t !== slug);
+		} else {
 			selectedTags = [...selectedTags, slug];
 		}
-		searchQuery = '';
 	}
 
 	function removeTag(slug: string) {
-		selectedTags = selectedTags.filter(t => t !== slug);
+		selectedTags = selectedTags.filter((t: string) => t !== slug);
 	}
+
+	function handleOpen() {
+		open = !open;
+		if (!open) searchQuery = '';
+	}
+
+	function handleClickOutside(e: MouseEvent) {
+		if (dropdownRef && !dropdownRef.contains(e.target as Node)) {
+			open = false;
+			searchQuery = '';
+		}
+	}
+
+	$effect(() => {
+		if (open) {
+			document.addEventListener('mousedown', handleClickOutside);
+			// focus search input when dropdown opens
+			setTimeout(() => searchInput?.focus(), 10);
+		} else {
+			document.removeEventListener('mousedown', handleClickOutside);
+		}
+		return () => document.removeEventListener('mousedown', handleClickOutside);
+	});
 </script>
 
-<div class="space-y-3">
-	<div class="flex flex-wrap gap-2 min-h-10 p-2 rounded-md border border-input bg-background/50">
-		{#if selectedTagsObjects.length === 0}
-			<span class="text-muted-foreground text-sm py-1 px-2">No tags selected</span>
-		{/if}
-		{#each selectedTagsObjects as tag}
-			<Badge variant="secondary" class="pl-2 pr-1 py-1 gap-1 flex items-center group">
-				{tag.name}
-				<button 
-					type="button" 
-					class="p-0.5 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors"
-					onclick={() => removeTag(tag.slug)}
-				>
-					<X size={12} />
-				</button>
-			</Badge>
-		{/each}
-	</div>
-
-	<div class="relative">
-		<div class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-			<Search size={16} />
-		</div>
-		<Input
-			{id}
-			type="text"
-			placeholder="Search tags..."
-			bind:value={searchQuery}
-			class="pl-10"
-		/>
-	</div>
-
-	{#if searchQuery && filteredTags.length > 0}
-		<div class="flex flex-wrap gap-2 mt-2 p-2 rounded-md bg-muted/30 border border-dashed border-muted-foreground/30 animate-in fade-in slide-in-from-top-1">
-			{#each filteredTags as tag}
-				<button
-					type="button"
-					class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-background border border-input text-xs font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
-					onclick={() => addTag(tag.slug)}
-				>
-					<Plus size={12} />
-					{tag.name}
-				</button>
-			{/each}
-		</div>
-	{:else if searchQuery}
-		<p class="text-xs text-muted-foreground italic">No further tags matching "{searchQuery}"</p>
-	{/if}
-	
-	{#if !searchQuery && filteredTags.length > 0}
-		<div class="pt-2">
-			<p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Available Tags</p>
-			<div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto pr-2 scrollbar-thin">
-				{#each filteredTags.slice(0, 15) as tag}
-					<button
-						type="button"
-						class="px-2 py-1 rounded-md text-xs border border-transparent bg-muted/50 hover:bg-muted hover:border-muted-foreground/20 transition-all"
-						onclick={() => addTag(tag.slug)}
-					>
+<div class="relative {className}" bind:this={dropdownRef}>
+	<!-- Trigger button -->
+	<button
+		{id}
+		type="button"
+		class="flex min-h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+		onclick={handleOpen}
+		aria-haspopup="listbox"
+		aria-expanded={open}
+	>
+		<div class="flex flex-wrap gap-1.5 flex-1">
+			{#if selectedTagsObjects.length === 0}
+				<span class="text-muted-foreground">Select tags...</span>
+			{:else}
+				{#each selectedTagsObjects as tag}
+					<Badge variant="secondary" class="pl-2 pr-1 py-0.5 gap-1 flex items-center text-xs">
 						{tag.name}
-					</button>
+						<button
+							type="button"
+							class="rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors p-0.5"
+							onclick={(e) => { e.stopPropagation(); removeTag(tag.slug); }}
+							aria-label="Remove {tag.name}"
+						>
+							<X size={10} />
+						</button>
+					</Badge>
 				{/each}
-				{#if filteredTags.length > 15}
-					<span class="text-xs text-muted-foreground self-center">...and {filteredTags.length - 15} more</span>
+			{/if}
+		</div>
+		<ChevronDown size={16} class="ml-2 shrink-0 text-muted-foreground transition-transform {open ? 'rotate-180' : ''}" />
+	</button>
+
+	<!-- Dropdown -->
+	{#if open}
+		<div
+			class="absolute z-50 mt-1 w-full rounded-md border border-input bg-popover shadow-md animate-in fade-in slide-in-from-top-2"
+			role="listbox"
+			aria-multiselectable="true"
+		>
+			<!-- Search input -->
+			<div class="flex items-center gap-2 border-b border-input px-3 py-2">
+				<Search size={14} class="shrink-0 text-muted-foreground" />
+				<input
+					bind:this={searchInput}
+					type="text"
+					placeholder="Search tags..."
+					bind:value={searchQuery}
+					class="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+					onkeydown={(e) => e.key === 'Escape' && (open = false, searchQuery = '')}
+				/>
+				{#if searchQuery}
+					<button type="button" onclick={() => searchQuery = ''} class="text-muted-foreground hover:text-foreground">
+						<X size={12} />
+					</button>
+				{/if}
+			</div>
+
+			<!-- Options list -->
+			<div class="max-h-52 overflow-y-auto p-1">
+				{#if filteredTags.length === 0}
+					<p class="py-3 px-3 text-sm text-muted-foreground text-center">No tags found.</p>
+				{:else}
+					{#each filteredTags as tag}
+						{@const isSelected = selectedTags.includes(tag.slug)}
+						<button
+							type="button"
+							role="option"
+							aria-selected={isSelected}
+							class="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors {isSelected ? 'bg-accent/50' : ''}"
+							onclick={() => toggleTag(tag.slug)}
+						>
+							<div class="flex h-4 w-4 shrink-0 items-center justify-center rounded border border-input {isSelected ? 'bg-primary border-primary text-primary-foreground' : ''}">
+								{#if isSelected}
+									<Check size={10} />
+								{/if}
+							</div>
+							{tag.name}
+						</button>
+					{/each}
 				{/if}
 			</div>
 		</div>

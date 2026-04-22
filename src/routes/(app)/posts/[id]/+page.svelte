@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { ArrowLeft, Save, Calendar, Image as ImageIcon, Trash2, CheckCircle2, X, Loader2 } from 'lucide-svelte';
+	import { ArrowLeft, Save, Calendar, Image as ImageIcon, Trash2, CheckCircle2, Loader2 } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
 	import { Textarea } from "$lib/components/ui/textarea";
 	import { Separator } from "$lib/components/ui/separator";
 	import TagSelector from '$lib/components/TagSelector.svelte';
+	import ImageUpload from '$lib/components/ImageUpload.svelte';
 	import { toast } from 'svelte-sonner';
 
 	let { data, form } = $props();
@@ -45,8 +46,7 @@
 		}
 	}
 
-	$effect(() => {
-		const initEditor = async () => {
+	$effect(() => {		const initEditor = async () => {
 			const Editor = (await import('@toast-ui/editor')).default;
 			await import('@toast-ui/editor/dist/toastui-editor.css');
 			await import('@toast-ui/editor/dist/theme/toastui-editor-dark.css');
@@ -276,20 +276,8 @@
 						</CardTitle>
 					</CardHeader>
 					<CardContent class="space-y-4">
-						<div class="space-y-2">
-							<label for="coverImage" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cover Image Upload (Optional to update)</label>
-							<Input
-								type="file"
-								id="coverImage"
-								name="coverImage"
-								accept="image/*"
-								class="bg-background/50 focus:bg-background"
-							/>
-                            {#if data.post.coverImage}
-                                <p class="text-xs text-muted-foreground mt-2">Current cover: <a href={data.post.coverImage} target="_blank" class="underline">View</a></p>
-                            {/if}
-						</div>
-						<div class="flex items-center space-x-2">
+						<ImageUpload name="coverImage" label="Cover Image" currentUrl={data.post.coverImage ?? null} aspectRatio="video" />
+						<div class="flex items-center space-x-2 pt-1">
 							<input
 								type="checkbox"
 								id="isFeatured"
@@ -297,7 +285,7 @@
 								checked={data.post.isFeatured}
 								class="h-4 w-4 rounded border-input text-primary focus:ring-ring"
 							/>
-							<label for="isFeatured" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Feature this post</label>
+							<label for="isFeatured" class="text-sm font-medium leading-none">Feature this post</label>
 						</div>
 					</CardContent>
 				</Card>

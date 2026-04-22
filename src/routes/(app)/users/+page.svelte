@@ -33,7 +33,6 @@
 			<h1 class="text-3xl font-bold tracking-tight text-foreground">Users</h1>
 			<p class="text-muted-foreground mt-1 text-sm sm:text-base">Manage all registered users and administrators.</p>
 		</div>
-		</div>
 	</div>
 
 	<!-- Search Bar -->

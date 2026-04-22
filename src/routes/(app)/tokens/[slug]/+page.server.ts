@@ -1,7 +1,9 @@
 import { createApiClient } from '$lib/api';
 import { fail, redirect, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { env } from '$env/dynamic/public';
+import { PUBLIC_CS_API_URL } from '$env/static/public';
+import { CS_API_KEY } from '$env/static/private';
+
 
 export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 	const client = createApiClient({ 
@@ -36,21 +38,29 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 async function uploadAsset(fetchFn: typeof fetch, file: File, accessToken: string) {
 	const formData = new FormData();
 	formData.append('file', file);
-	const apiUrl = env.PUBLIC_CS_API_URL || 'http://localhost:5173';
+	const apiUrl = PUBLIC_CS_API_URL.replace(/\/$/, '');
+	
+	console.log(`Uploading asset to: ${apiUrl}/assets. API Key present: ${!!CS_API_KEY}, Token present: ${!!accessToken}`);
+	
 	const res = await fetchFn(`${apiUrl}/assets`, {
 		method: 'POST',
 		headers: {
-			'Authorization': `Bearer ${accessToken}`
+			'Authorization': `Bearer ${accessToken}`,
+			'Api-Key': CS_API_KEY
 		},
 		body: formData
 	});
+	
 	if (!res.ok) {
         const errorText = await res.text();
-		throw new Error(errorText || 'File upload failed');
+		console.error(`Upload failed with status ${res.status}:`, errorText);
+		throw new Error(errorText || `File upload failed with status ${res.status}`);
 	}
+	
 	const json = await res.json();
 	return json.data;
 }
+
 
 export const actions = {
     update: async ({ request, params, fetch, locals }) => {
@@ -77,12 +87,15 @@ export const actions = {
         const tags = tagsStr ? tagsStr.split(',').map(s => s.trim()).filter(Boolean) : undefined;
         
         const logoFile = formData.get('logoImage') as File | null;
-        let logoId: string | undefined = undefined;
+        const removeLogo = formData.get('remove_logoImage') === 'true';
+        let logoId: string | null | undefined = undefined;
 
         try {
             if (logoFile && logoFile.size > 0) {
                 const uploadedAsset = await uploadAsset(fetch, logoFile, locals.user?.accessToken || '');
                 logoId = uploadedAsset.id;
+            } else if (removeLogo) {
+                logoId = null;
             }
 
             const { data, error } = await client.PATCH(`/tokens/${params.slug}`, {
@@ -92,13 +105,13 @@ export const actions = {
                     slug,
                     rank,
                     website,
-                    excerpt,
-                    content,
                     shariaStatus,
                     status,
                     tradingviewSymbol,
                     tags,
-                    logoId
+                    logoId,
+                    ...(excerpt ? { excerpt } : {}),
+                    ...(content ? { content } : {})
                 }
             });
 
@@ -108,10 +121,11 @@ export const actions = {
             }
 
             return { success: true, message: 'Token updated successfully!' };
-        } catch (err) {
+        } catch (err: any) {
             console.error('Update token exception:', err);
-            return fail(500, { success: false, message: 'Internal server error' });
+            return fail(500, { success: false, message: err.message || 'Internal server error' });
         }
+
     },
     delete: async ({ params, fetch }) => {
         const client = createApiClient({ fetch }) as any;

@@ -1,7 +1,9 @@
 import { createApiClient } from '$lib/api';
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { env } from '$env/dynamic/public';
+import { PUBLIC_CS_API_URL } from '$env/static/public';
+import { CS_API_KEY } from '$env/static/private';
+
 
 export const load: PageServerLoad = async ({ fetch, locals }) => {
 	const client = createApiClient({ fetch, accessToken: locals.user?.accessToken });
@@ -12,21 +14,29 @@ export const load: PageServerLoad = async ({ fetch, locals }) => {
 async function uploadAsset(fetchFn: typeof fetch, file: File, accessToken: string) {
 	const formData = new FormData();
 	formData.append('file', file);
-	const apiUrl = env.PUBLIC_CS_API_URL || 'http://localhost:5173';
+	const apiUrl = PUBLIC_CS_API_URL.replace(/\/$/, '');
+	
+	console.log(`Uploading asset to: ${apiUrl}/assets. API Key present: ${!!CS_API_KEY}, Token present: ${!!accessToken}`);
+	
 	const res = await fetchFn(`${apiUrl}/assets`, {
 		method: 'POST',
 		headers: {
-			'Authorization': `Bearer ${accessToken}`
+			'Authorization': `Bearer ${accessToken}`,
+			'Api-Key': CS_API_KEY
 		},
 		body: formData
 	});
+	
 	if (!res.ok) {
         const errorText = await res.text();
-		throw new Error(errorText || 'File upload failed');
+		console.error(`Upload failed with status ${res.status}:`, errorText);
+		throw new Error(errorText || `File upload failed with status ${res.status}`);
 	}
+	
 	const json = await res.json();
 	return json.data;
 }
+
 
 export const actions = {
     create: async ({ request, fetch, locals }) => {
@@ -77,12 +87,12 @@ export const actions = {
                     rank,
                     shariaStatus,
                     status,
-                    excerpt,
-                    content,
                     website,
                     tradingviewSymbol,
                     tags,
-                    logoId
+                    logoId,
+                    ...(excerpt ? { excerpt } : {}),
+                    ...(content ? { content } : {})
                 }
             });
 
