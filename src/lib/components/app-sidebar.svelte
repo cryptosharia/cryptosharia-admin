@@ -1,11 +1,23 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { LayoutDashboard, Coins, Users, MessageSquare, Newspaper, Tag, ChevronLeft, ChevronRight } from 'lucide-svelte';
+	import {
+		LayoutDashboard,
+		Coins,
+		Users,
+		MessageSquare,
+		Newspaper,
+		Tag,
+		ChevronLeft,
+		ChevronRight,
+		BookOpen
+	} from 'lucide-svelte';
 	import { cn } from '$lib/utils';
 	import LogoutButton from '$lib/components/LogoutButton.svelte';
 	import ThemeToggle from '$lib/components/theme-toggle.svelte';
 
 	let { user, collapsed = $bindable(false), class: className } = $props();
+
+	const ADMIN_GUIDE_URL = 'https://anything.mdaffailhami.my.id/cryptosharia-admin-guide';
 
 	const navItems = [
 		{ label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -13,26 +25,36 @@
 		{ label: 'Tokens', href: '/tokens', icon: Coins },
 		{ label: 'Tags', href: '/tags', icon: Tag },
 		{ label: 'Users', href: '/users', icon: Users },
-		{ label: 'Messages', href: '/messages', icon: MessageSquare },
+		{ label: 'Messages', href: '/messages', icon: MessageSquare }
 	];
+
+	const helpItems = [{ label: 'Panduan', href: ADMIN_GUIDE_URL, icon: BookOpen, external: true }];
 </script>
 
-<aside class={cn(
-	"fixed inset-y-0 left-0 z-50 border-r border-sidebar-border bg-sidebar text-sidebar-foreground flex flex-col transition-all duration-300 ease-in-out",
-	collapsed ? "w-16" : "w-72",
-	className
-)}>
+<aside
+	class={cn(
+		'fixed inset-y-0 left-0 z-50 flex flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out',
+		collapsed ? 'w-16' : 'w-72',
+		className
+	)}
+>
 	<!-- Header -->
-	<div class="flex h-16 items-center border-b border-sidebar-border px-3 shrink-0 relative">
+	<div class="relative flex h-16 shrink-0 items-center border-b border-sidebar-border px-3">
 		{#if !collapsed}
-			<a href="/dashboard" class="flex items-center gap-2 font-bold text-xl hover:opacity-80 transition-opacity overflow-hidden">
+			<a
+				href="/dashboard"
+				class="flex items-center gap-2 overflow-hidden text-xl font-bold transition-opacity hover:opacity-80"
+			>
 				<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-500/10">
 					<img src="/logo.png" alt="CryptoSharia" class="h-6 w-6 object-contain" />
 				</div>
 				<span class="truncate">CryptoSharia Admin</span>
 			</a>
 		{:else}
-			<a href="/dashboard" class="flex items-center justify-center w-full hover:opacity-80 transition-opacity">
+			<a
+				href="/dashboard"
+				class="flex w-full items-center justify-center transition-opacity hover:opacity-80"
+			>
 				<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-500/10">
 					<img src="/logo.png" alt="CryptoSharia" class="h-6 w-6 object-contain" />
 				</div>
@@ -41,8 +63,8 @@
 
 		<!-- Collapse toggle button -->
 		<button
-			onclick={() => collapsed = !collapsed}
-			class="absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full border border-sidebar-border bg-sidebar flex items-center justify-center hover:bg-sidebar-accent transition-colors shadow-sm z-10"
+			onclick={() => (collapsed = !collapsed)}
+			class="absolute top-1/2 -right-3 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-sidebar-border bg-sidebar shadow-sm transition-colors hover:bg-sidebar-accent"
 			title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
 		>
 			{#if collapsed}
@@ -54,19 +76,41 @@
 	</div>
 
 	<!-- Nav -->
-	<div class="flex-1 overflow-y-auto overflow-x-hidden px-2 py-4 custom-scrollbar">
+	<div class="custom-scrollbar flex-1 overflow-x-hidden overflow-y-auto px-2 py-4">
 		<nav class="flex flex-col gap-1" data-sveltekit-preload-data="tap">
 			{#each navItems as item}
-				{@const active = $page.url.pathname === item.href || $page.url.pathname.startsWith(item.href + '/')}
+				{@const active =
+					$page.url.pathname === item.href || $page.url.pathname.startsWith(item.href + '/')}
 				<a
 					href={item.href}
 					title={collapsed ? item.label : undefined}
 					class={cn(
-						"flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all duration-150",
-						collapsed ? "justify-center px-2" : "",
+						'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150',
+						collapsed ? 'justify-center px-2' : '',
 						active
-							? "bg-orange-500 text-white shadow-md shadow-orange-500/20 font-semibold"
-							: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-muted-foreground"
+							? 'bg-orange-500 font-semibold text-white shadow-md shadow-orange-500/20'
+							: 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+					)}
+				>
+					<item.icon class="size-4 shrink-0" />
+					{#if !collapsed}
+						<span class="truncate">{item.label}</span>
+					{/if}
+				</a>
+			{/each}
+
+			<div class="my-3 border-t border-sidebar-border/60"></div>
+
+			{#each helpItems as item}
+				<a
+					href={item.href}
+					target={item.external ? '_blank' : undefined}
+					rel={item.external ? 'noopener noreferrer' : undefined}
+					title={collapsed ? item.label : undefined}
+					class={cn(
+						'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150',
+						collapsed ? 'justify-center px-2' : '',
+						'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
 					)}
 				>
 					<item.icon class="size-4 shrink-0" />
@@ -79,16 +123,20 @@
 	</div>
 
 	<!-- Footer -->
-	<div class="border-t border-sidebar-border p-3 shrink-0">
+	<div class="shrink-0 border-t border-sidebar-border p-3">
 		{#if !collapsed}
-			<div class="flex items-center justify-between p-2 rounded-lg bg-sidebar-accent/50 mb-2">
-				<div class="flex items-center gap-3 min-w-0">
-					<div class="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+			<div class="mb-2 flex items-center justify-between rounded-lg bg-sidebar-accent/50 p-2">
+				<div class="flex min-w-0 items-center gap-3">
+					<div
+						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 font-bold text-primary"
+					>
 						{user?.name?.[0] ?? 'A'}
 					</div>
-					<div class="flex-1 min-w-0">
-						<p class="text-sm font-medium leading-none truncate">{user?.name ?? 'Admin'}</p>
-						<p class="text-xs text-muted-foreground truncate">{user?.email ?? 'admin@example.com'}</p>
+					<div class="min-w-0 flex-1">
+						<p class="truncate text-sm leading-none font-medium">{user?.name ?? 'Admin'}</p>
+						<p class="truncate text-xs text-muted-foreground">
+							{user?.email ?? 'admin@example.com'}
+						</p>
 					</div>
 				</div>
 				<ThemeToggle />
@@ -96,7 +144,10 @@
 			<LogoutButton />
 		{:else}
 			<div class="flex flex-col items-center gap-2">
-				<div class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold" title={user?.name ?? 'Admin'}>
+				<div
+					class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 font-bold text-primary"
+					title={user?.name ?? 'Admin'}
+				>
 					{user?.name?.[0] ?? 'A'}
 				</div>
 				<ThemeToggle />
