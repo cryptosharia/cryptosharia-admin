@@ -1,10 +1,16 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Button } from "$lib/components/ui/button";
-	import { Input } from "$lib/components/ui/input";
-	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
-	import { Separator } from "$lib/components/ui/separator";
-	import { Textarea } from "$lib/components/ui/textarea";
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import {
+		Card,
+		CardContent,
+		CardHeader,
+		CardTitle,
+		CardDescription
+	} from '$lib/components/ui/card';
+	import { Separator } from '$lib/components/ui/separator';
+	import { Textarea } from '$lib/components/ui/textarea';
 	import { ArrowLeft, Plus, ImageIcon, Save } from 'lucide-svelte';
 	import TagSelector from '$lib/components/TagSelector.svelte';
 	import ImageUpload from '$lib/components/ImageUpload.svelte';
@@ -51,7 +57,10 @@
 					}
 				},
 				hooks: {
-					addImageBlobHook: async (blob: Blob, callback: (url: string, altText: string) => void) => {
+					addImageBlobHook: async (
+						blob: Blob,
+						callback: (url: string, altText: string) => void
+					) => {
 						const formData = new FormData();
 						const fileName = (blob as File).name || 'upload.png';
 						formData.append('image', blob, fileName);
@@ -62,7 +71,8 @@
 							});
 							const res = await response.json();
 							if (res.success && res.url) {
-								callback(res.url, 'uploaded image');
+								const altText = document.getElementById('toastuiAltTextInput')?.value || '';
+								callback(res.url, altText);
 							} else {
 								console.error('Failed to upload image', res);
 							}
@@ -84,7 +94,7 @@
 	});
 </script>
 
-<div class="space-y-6 max-w-5xl mx-auto">
+<div class="mx-auto max-w-5xl space-y-6">
 	<div class="flex items-center justify-between">
 		<div class="flex items-center gap-4">
 			<Button href="/tokens" variant="outline" size="icon" class="rounded-full">
@@ -92,24 +102,26 @@
 			</Button>
 			<div>
 				<h1 class="text-3xl font-bold tracking-tight text-foreground">Add New Token</h1>
-				<p class="text-muted-foreground">Register a new crypto asset for Sharia compliance review.</p>
+				<p class="text-muted-foreground">
+					Register a new crypto asset for Sharia compliance review.
+				</p>
 			</div>
 		</div>
 	</div>
 
 	<form action="?/create" method="POST" enctype="multipart/form-data" use:enhance class="space-y-8">
-		<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+		<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
 			<!-- Main Editor -->
-			<div class="lg:col-span-2 space-y-6">
+			<div class="space-y-6 lg:col-span-2">
 				<Card>
 					<CardHeader>
 						<CardTitle>Token Information</CardTitle>
 						<CardDescription>Enter the token details and content.</CardDescription>
 					</CardHeader>
 					<CardContent class="space-y-6">
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 							<div class="space-y-2">
-								<label for="name" class="text-sm font-medium leading-none">Token Name</label>
+								<label for="name" class="text-sm leading-none font-medium">Token Name</label>
 								<Input
 									type="text"
 									id="name"
@@ -118,13 +130,13 @@
 									minlength={1}
 									maxlength={100}
 									placeholder="e.g. Bitcoin"
-									class="text-lg font-bold h-12"
+									class="h-12 text-lg font-bold"
 									oninput={handleNameInput}
 								/>
 							</div>
 
 							<div class="space-y-2">
-								<label for="ticker" class="text-sm font-medium leading-none">Ticker Symbol</label>
+								<label for="ticker" class="text-sm leading-none font-medium">Ticker Symbol</label>
 								<Input
 									type="text"
 									id="ticker"
@@ -133,15 +145,19 @@
 									minlength={1}
 									maxlength={20}
 									placeholder="e.g. BTC"
-									class="text-lg font-bold h-12"
+									class="h-12 text-lg font-bold"
 								/>
 							</div>
 						</div>
 
 						<div class="space-y-2">
-							<label for="slug" class="text-sm font-medium leading-none">URL Slug</label>
+							<label for="slug" class="text-sm leading-none font-medium">URL Slug</label>
 							<div class="flex items-center">
-								<div class="px-3 py-2 bg-muted border border-r-0 rounded-l-md text-muted-foreground text-sm h-10">/tokens/</div>
+								<div
+									class="h-10 rounded-l-md border border-r-0 bg-muted px-3 py-2 text-sm text-muted-foreground"
+								>
+									/tokens/
+								</div>
 								<Input
 									type="text"
 									id="slug"
@@ -151,7 +167,7 @@
 									minlength={1}
 									maxlength={100}
 									placeholder="e.g. bitcoin"
-									class="rounded-l-none h-10"
+									class="h-10 rounded-l-none"
 								/>
 							</div>
 						</div>
@@ -159,15 +175,17 @@
 						<Separator />
 
 						<div class="space-y-4">
-							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 								<div class="space-y-2">
-									<label class="text-sm font-medium leading-none">Tags</label>
-									<TagSelector tags={data.tags} bind:selectedTags={selectedTags} />
+									<label class="text-sm leading-none font-medium">Tags</label>
+									<TagSelector tags={data.tags} bind:selectedTags />
 									<p class="text-xs text-muted-foreground">Select relevant tags for this token.</p>
 									<input type="hidden" name="tags" value={selectedTags.join(',')} />
 								</div>
 								<div class="space-y-2">
-									<label for="tradingviewSymbol" class="text-sm font-medium leading-none">TradingView Symbol</label>
+									<label for="tradingviewSymbol" class="text-sm leading-none font-medium"
+										>TradingView Symbol</label
+									>
 									<Input
 										type="text"
 										id="tradingviewSymbol"
@@ -178,9 +196,9 @@
 								</div>
 							</div>
 
-							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 								<div class="space-y-2">
-									<label for="website" class="text-sm font-medium leading-none">Website *</label>
+									<label for="website" class="text-sm leading-none font-medium">Website *</label>
 									<Input
 										type="url"
 										id="website"
@@ -190,7 +208,7 @@
 									/>
 								</div>
 								<div class="space-y-2">
-									<label for="rank" class="text-sm font-medium leading-none">Rank</label>
+									<label for="rank" class="text-sm leading-none font-medium">Rank</label>
 									<Input
 										type="number"
 										id="rank"
@@ -203,7 +221,7 @@
 							</div>
 
 							<div class="space-y-2">
-								<label for="excerpt" class="text-sm font-medium leading-none">Excerpt</label>
+								<label for="excerpt" class="text-sm leading-none font-medium">Excerpt</label>
 								<Textarea
 									id="excerpt"
 									name="excerpt"
@@ -216,7 +234,9 @@
 							</div>
 
 							<div class="space-y-2">
-								<label for="content" class="text-sm font-medium leading-none">Body Content (Markdown)</label>
+								<label for="content" class="text-sm leading-none font-medium"
+									>Body Content (Markdown)</label
+								>
 								<div bind:this={editorContainer}></div>
 								<input type="hidden" name="content" bind:value={content} />
 							</div>
@@ -237,12 +257,16 @@
 					<CardContent class="space-y-6">
 						<div class="space-y-4">
 							<div class="space-y-2">
-								<label for="status" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</label>
+								<label
+									for="status"
+									class="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
+									>Status</label
+								>
 								<select
 									id="status"
 									name="status"
 									required
-									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 								>
 									<option value="draft">Draft</option>
 									<option value="published">Published</option>
@@ -251,12 +275,16 @@
 							</div>
 
 							<div class="space-y-2">
-								<label for="shariaStatus" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sharia Status</label>
+								<label
+									for="shariaStatus"
+									class="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
+									>Sharia Status</label
+								>
 								<select
 									id="shariaStatus"
 									name="shariaStatus"
 									required
-									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 								>
 									<option value="halal">Halal</option>
 									<option value="haram">Haram</option>
@@ -267,13 +295,15 @@
 
 						<Separator />
 
-						<Button type="submit" class="w-full gap-2 font-bold h-12">
+						<Button type="submit" class="h-12 w-full gap-2 font-bold">
 							<Plus size={20} />
 							Create Token
 						</Button>
 
 						{#if form?.message}
-							<div class="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium animate-in fade-in slide-in-from-top-2">
+							<div
+								class="animate-in fade-in slide-in-from-top-2 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm font-medium text-destructive"
+							>
 								{form.message}
 							</div>
 						{/if}
@@ -295,4 +325,3 @@
 		</div>
 	</form>
 </div>
-

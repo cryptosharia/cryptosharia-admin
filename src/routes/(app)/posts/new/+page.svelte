@@ -1,12 +1,18 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { ArrowLeft, Save, Calendar, Image as ImageIcon, Loader2 } from 'lucide-svelte';
-	import { Button } from "$lib/components/ui/button";
-	import { Input } from "$lib/components/ui/input";
-	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
-	import { Textarea } from "$lib/components/ui/textarea";
-	import { Separator } from "$lib/components/ui/separator";
-	import { Badge } from "$lib/components/ui/badge";
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import {
+		Card,
+		CardContent,
+		CardHeader,
+		CardTitle,
+		CardDescription
+	} from '$lib/components/ui/card';
+	import { Textarea } from '$lib/components/ui/textarea';
+	import { Separator } from '$lib/components/ui/separator';
+	import { Badge } from '$lib/components/ui/badge';
 	import TagSelector from '$lib/components/TagSelector.svelte';
 	import ImageUpload from '$lib/components/ImageUpload.svelte';
 	import { toast } from 'svelte-sonner';
@@ -53,7 +59,10 @@
 					}
 				},
 				hooks: {
-					addImageBlobHook: async (blob: Blob, callback: (url: string, altText: string) => void) => {
+					addImageBlobHook: async (
+						blob: Blob,
+						callback: (url: string, altText: string) => void
+					) => {
 						const toastId = toast.loading('Uploading image...');
 						const formData = new FormData();
 						const fileName = (blob as File).name || 'upload.png';
@@ -65,7 +74,8 @@
 							});
 							const res = await response.json();
 							if (res.success && res.url) {
-								callback(res.url, 'uploaded image');
+								const altText = document.getElementById('toastuiAltTextInput')?.value || '';
+								callback(res.url, altText);
 								toast.success('Image uploaded successfully', { id: toastId });
 							} else {
 								console.error('Failed to upload image', res);
@@ -90,7 +100,7 @@
 	});
 </script>
 
-<div class="space-y-6 max-w-5xl mx-auto">
+<div class="mx-auto max-w-5xl space-y-6">
 	<div class="flex items-center gap-4">
 		<Button href="/posts" variant="outline" size="icon" class="rounded-full">
 			<ArrowLeft size={18} />
@@ -102,9 +112,9 @@
 	</div>
 
 	<form method="POST" enctype="multipart/form-data" use:enhance class="space-y-8">
-		<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+		<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
 			<!-- Main Editor -->
-			<div class="lg:col-span-2 space-y-6">
+			<div class="space-y-6 lg:col-span-2">
 				<Card>
 					<CardHeader>
 						<CardTitle>Content Editor</CardTitle>
@@ -113,7 +123,7 @@
 					<CardContent class="space-y-6">
 						<div class="space-y-4">
 							<div class="space-y-2">
-								<label for="title" class="text-sm font-medium leading-none">Title</label>
+								<label for="title" class="text-sm leading-none font-medium">Title</label>
 								<Input
 									type="text"
 									id="title"
@@ -123,13 +133,17 @@
 									maxlength={255}
 									oninput={handleTitleInput}
 									placeholder="Enter post title..."
-									class="text-lg font-bold h-12"
+									class="h-12 text-lg font-bold"
 								/>
 							</div>
 							<div class="space-y-2">
-								<label for="slug" class="text-sm font-medium leading-none">URL Slug</label>
+								<label for="slug" class="text-sm leading-none font-medium">URL Slug</label>
 								<div class="flex items-center">
-									<div class="px-3 py-2 bg-muted border border-r-0 rounded-l-md text-muted-foreground text-sm h-10">/posts/</div>
+									<div
+										class="h-10 rounded-l-md border border-r-0 bg-muted px-3 py-2 text-sm text-muted-foreground"
+									>
+										/posts/
+									</div>
 									<Input
 										type="text"
 										id="slug"
@@ -138,7 +152,7 @@
 										required
 										minlength={1}
 										maxlength={255}
-										class="rounded-l-none h-10"
+										class="h-10 rounded-l-none"
 									/>
 								</div>
 							</div>
@@ -148,12 +162,12 @@
 
 						<div class="space-y-4">
 							<div class="space-y-2">
-								<label for="tags-selector" class="text-sm font-medium leading-none">Tags</label>
-								<TagSelector id="tags-selector" tags={data.tags} bind:selectedTags={selectedTags} />
+								<label for="tags-selector" class="text-sm leading-none font-medium">Tags</label>
+								<TagSelector id="tags-selector" tags={data.tags} bind:selectedTags />
 								<p class="text-xs text-muted-foreground">Select relevant tags for this post.</p>
 							</div>
 							<div class="space-y-2">
-								<label for="excerpt" class="text-sm font-medium leading-none">Excerpt</label>
+								<label for="excerpt" class="text-sm leading-none font-medium">Excerpt</label>
 								<Textarea
 									id="excerpt"
 									name="excerpt"
@@ -164,7 +178,9 @@
 								/>
 							</div>
 							<div class="space-y-2">
-								<label for="content" class="text-sm font-medium leading-none">Body Content (Markdown)</label>
+								<label for="content" class="text-sm leading-none font-medium"
+									>Body Content (Markdown)</label
+								>
 								<div bind:this={editorContainer}></div>
 								<input type="hidden" name="content" bind:value={content} />
 							</div>
@@ -185,11 +201,15 @@
 					<CardContent class="space-y-6">
 						<div class="space-y-4">
 							<div class="space-y-2">
-								<label for="status" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</label>
+								<label
+									for="status"
+									class="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
+									>Status</label
+								>
 								<select
 									id="status"
 									name="status"
-									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 								>
 									<option value="draft">Draft</option>
 									<option value="published">Published</option>
@@ -198,11 +218,15 @@
 							</div>
 
 							<div class="space-y-2">
-								<label for="section" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Section</label>
+								<label
+									for="section"
+									class="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
+									>Section</label
+								>
 								<select
 									id="section"
 									name="section"
-									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 								>
 									<option value="news">News</option>
 									<option value="education">Education</option>
@@ -212,11 +236,15 @@
 							</div>
 
 							<div class="space-y-2">
-								<label for="type" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Type</label>
+								<label
+									for="type"
+									class="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
+									>Type</label
+								>
 								<select
 									id="type"
 									name="type"
-									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+									class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 								>
 									<option value="article">Article</option>
 									<option value="webinar">Webinar</option>
@@ -228,13 +256,15 @@
 
 						<Separator />
 
-						<Button type="submit" class="w-full gap-2 font-bold h-12">
+						<Button type="submit" class="h-12 w-full gap-2 font-bold">
 							<Save size={20} />
 							Save Post
 						</Button>
 
 						{#if form?.message}
-							<div class="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium animate-in fade-in slide-in-from-top-2">
+							<div
+								class="animate-in fade-in slide-in-from-top-2 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm font-medium text-destructive"
+							>
 								{form.message}
 							</div>
 						{/if}
@@ -249,7 +279,12 @@
 						</CardTitle>
 					</CardHeader>
 					<CardContent class="space-y-4">
-						<ImageUpload name="coverImage" label="Cover Image" required={true} aspectRatio="video" />
+						<ImageUpload
+							name="coverImage"
+							label="Cover Image"
+							required={true}
+							aspectRatio="video"
+						/>
 						<div class="flex items-center space-x-2 pt-1">
 							<input
 								type="checkbox"
@@ -257,7 +292,9 @@
 								name="isFeatured"
 								class="h-4 w-4 rounded border-input text-primary focus:ring-ring"
 							/>
-							<label for="isFeatured" class="text-sm font-medium leading-none">Feature this post</label>
+							<label for="isFeatured" class="text-sm leading-none font-medium"
+								>Feature this post</label
+							>
 						</div>
 					</CardContent>
 				</Card>
@@ -271,21 +308,20 @@
 					</CardHeader>
 					<CardContent>
 						<div class="space-y-2">
-							<label for="eventDate" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Event Date (Optional)</label>
-							<Input
-								type="datetime-local"
-								id="eventDate"
-								name="eventDate"
-							/>
+							<label
+								for="eventDate"
+								class="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
+								>Event Date (Optional)</label
+							>
+							<Input type="datetime-local" id="eventDate" name="eventDate" />
 						</div>
-						<div class="space-y-2 mt-4">
-							<label for="externalLink" class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">External Link (Optional)</label>
-							<Input
-								type="url"
-								id="externalLink"
-								name="externalLink"
-								placeholder="https://..."
-							/>
+						<div class="mt-4 space-y-2">
+							<label
+								for="externalLink"
+								class="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
+								>External Link (Optional)</label
+							>
+							<Input type="url" id="externalLink" name="externalLink" placeholder="https://..." />
 						</div>
 					</CardContent>
 				</Card>
@@ -293,4 +329,3 @@
 		</div>
 	</form>
 </div>
-
