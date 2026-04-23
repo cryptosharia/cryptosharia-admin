@@ -35,6 +35,7 @@
 	let title = $state('');
 	let slug = $state('');
 	let selectedTags = $state<string[]>([]);
+	let excerpt = $state('');
 
 	let editorContainer: HTMLElement;
 	let editor: any;
@@ -44,9 +45,10 @@
 		if (data.post) {
 			title = data.post.title || '';
 			slug = data.post.slug || '';
+			excerpt = data.post.excerpt || '';
 			selectedTags = data.post.tags?.map((t: any) => t.slug) ?? [];
-			if (editor && content !== data.post.content) {
-				content = data.post.content || '';
+			content = data.post.content || '';
+			if (editor) {
 				editor.setMarkdown(content);
 			}
 		}
@@ -206,9 +208,14 @@
 							</div>
 							<div class="space-y-2">
 								<label for="excerpt" class="text-sm leading-none font-medium">Excerpt</label>
-								<Textarea id="excerpt" name="excerpt" rows={3} minlength={1} class="resize-none"
-									>{data.post.excerpt || ''}</Textarea
-								>
+								<Textarea
+									id="excerpt"
+									name="excerpt"
+									rows={3}
+									minlength={1}
+									class="resize-none"
+									bind:value={excerpt}
+								/>
 							</div>
 							<div class="space-y-2">
 								<label for="content" class="text-sm leading-none font-medium"

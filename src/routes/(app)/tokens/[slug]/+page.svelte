@@ -28,12 +28,14 @@
 	let editorContainer: HTMLElement;
 	let editor: any;
 	let content = $state('');
+	let excerpt = $state('');
 
 	// Keep updated when navigation changes
 	$effect(() => {
 		if (data.token) {
-			if (editor && content !== data.token.content) {
-				content = data.token.content || '';
+			excerpt = data.token.excerpt || '';
+			content = data.token.content || '';
+			if (editor) {
 				editor.setMarkdown(content);
 			}
 		}
@@ -237,8 +239,9 @@
 									rows={3}
 									required
 									minlength={1}
-									class="resize-none">{token.excerpt || ''}</Textarea
-								>
+									class="resize-none"
+									bind:value={excerpt}
+								/>
 							</div>
 
 							<div class="space-y-2">
