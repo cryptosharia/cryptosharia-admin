@@ -39,6 +39,10 @@
 	});
 </script>
 
+<svelte:head>
+	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+</svelte:head>
+
 <ModeWatcher defaultMode="dark" />
 <Toaster position="top-right" richColors closeButton />
 <div class="antialiased text-foreground bg-background min-h-screen font-sans selection:bg-primary/30">
