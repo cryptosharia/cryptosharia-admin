@@ -66,8 +66,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	// Redirect logged in users away from auth routes
-	if (event.locals.user && isAuthRoute) {
+	// Redirect member role users away from app routes (pending approval)
+	if (event.locals.user?.role === 'member' && !isAuthRoute) {
+		throw redirect(303, '/login?pending=true');
+	}
+
+	// Redirect logged in non-member users away from auth routes
+	if (event.locals.user && isAuthRoute && event.locals.user.role !== 'member') {
 		throw redirect(303, '/dashboard');
 	}
 
