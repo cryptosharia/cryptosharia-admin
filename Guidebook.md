@@ -172,7 +172,7 @@ A: Pastikan file berformat .png atau .jpg dan ukurannya tidak melebihi 2MB. Cek 
 A: Pastikan status token sudah diatur ke `Published`. Jika masih `Draft`, koin hanya akan terlihat oleh tim admin.
 
 **Q: Bagaimana cara reset password jika lupa?**
-A: Anda tidak dapat mereset sendiri. Hubungi **Superadmin** untuk memberikan password sementara atau mengirimkan link pembaruan.
+A: Anda dapat mereset sendiri, buka link untuk reset password, masukkan email yang terdaftar, lalu otomatis di inbox email anda ada link untuk update password.
 
 ---
 *Dokumen ini adalah gabungan resmi dari Manual Operasional & Guide Book CryptoSharia Admin.*
