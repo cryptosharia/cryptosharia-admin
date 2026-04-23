@@ -7,7 +7,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	if (accessToken) {
 		// Try to read cached user data from cookie first (avoids API call on every request)
 		const cachedUserRaw = event.cookies.get('user_session');
-		
+
 		if (cachedUserRaw) {
 			try {
 				const cachedUser = JSON.parse(cachedUserRaw);
@@ -31,7 +31,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 					name: data.data.name,
 					email: data.data.email,
 					role: data.data.role,
-					permissions: data.data.permissions,
+					permissions: data.data.permissions
 				};
 
 				event.locals.user = { ...userData, accessToken };
@@ -53,11 +53,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	const isAuthRoute = 
-		event.url.pathname.startsWith('/login') || 
-		event.url.pathname.startsWith('/signup') || 
-		event.url.pathname.startsWith('/reset-password');
-	
+	const isAuthRoute =
+		event.url.pathname.startsWith('/login') ||
+		event.url.pathname.startsWith('/signup') ||
+		event.url.pathname.startsWith('/reset-password') ||
+		event.url.pathname.startsWith('/verify');
+
 	// Protect app routes
 	if (!event.locals.user && !isAuthRoute) {
 		if (!event.url.pathname.startsWith('/api')) {
