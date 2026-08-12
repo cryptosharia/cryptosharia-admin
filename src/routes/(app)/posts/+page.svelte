@@ -2,7 +2,19 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { FileText, Plus, Calendar, Edit3, Search, ChevronLeft, ChevronRight } from 'lucide-svelte';
+	import {
+		FileText,
+		Plus,
+		Calendar,
+		Edit3,
+		Search,
+		ChevronLeft,
+		ChevronRight,
+		ArrowDown,
+		ArrowUp,
+		ArrowUpDown,
+		SlidersHorizontal
+	} from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Badge } from "$lib/components/ui/badge";
@@ -12,7 +24,13 @@
 	let { data } = $props();
 
 	let searchValue = $state('');
+	let statusFilter = $state('');
+	let sectionFilter = $state('');
+	let publishedFilter = $state('');
 	$effect(() => { searchValue = data.search || ''; });
+	$effect(() => { statusFilter = data.status || ''; });
+	$effect(() => { sectionFilter = data.section || ''; });
+	$effect(() => { publishedFilter = data.published || ''; });
 
 	function handleSearch(e: Event) {
 		e.preventDefault();
@@ -31,6 +49,33 @@
 		params.set('page', String(p));
 		goto(`?${params.toString()}`);
 	}
+
+	function applyFilters() {
+		const params = new URLSearchParams($page.url.searchParams);
+		for (const [key, value] of Object.entries({
+			status: statusFilter,
+			section: sectionFilter,
+			published: publishedFilter
+		})) {
+			if (value) params.set(key, value);
+			else params.delete(key);
+		}
+		params.set('page', '1');
+		goto(`?${params.toString()}`);
+	}
+
+	function sortBy(column: 'title' | 'status' | 'section' | 'publishedAt') {
+		const params = new URLSearchParams($page.url.searchParams);
+		const isCurrentColumn = data.sort === column;
+		params.set('sort', column);
+		params.set('direction', isCurrentColumn && data.direction === 'asc' ? 'desc' : 'asc');
+		params.set('page', '1');
+		goto(`?${params.toString()}`);
+	}
+
+	function hasActiveFilters() {
+		return Boolean(data.search || data.status || data.section || data.published);
+	}
 </script>
 
 <div class="space-y-6">
@@ -45,9 +90,9 @@
 		</Button>
 	</div>
 
-	<!-- Search Bar -->
+	<!-- Search and filters -->
 	<Card>
-		<CardContent class="pt-4 pb-4">
+		<CardContent class="space-y-3 pt-4 pb-4">
 			<form onsubmit={handleSearch} class="flex flex-col sm:flex-row gap-3">
 				<div class="relative flex-1">
 					<Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -60,11 +105,37 @@
 				</div>
 				<div class="flex items-center gap-2">
 					<Button type="submit" variant="outline" class="flex-1 sm:flex-none">Search</Button>
-					{#if data.search}
+					{#if hasActiveFilters()}
 						<Button href="/posts" variant="ghost">Clear</Button>
 					{/if}
 				</div>
 			</form>
+			<div class="flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center">
+				<div class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+					<SlidersHorizontal size={16} />
+					Filters
+				</div>
+				<div class="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-3">
+					<select bind:value={statusFilter} onchange={applyFilters} aria-label="Filter status" class="h-10 rounded-md border border-input bg-background px-3 text-sm">
+						<option value="">All statuses</option>
+						<option value="draft">Draft</option>
+						<option value="published">Published</option>
+						<option value="archived">Archived</option>
+					</select>
+					<select bind:value={sectionFilter} onchange={applyFilters} aria-label="Filter section" class="h-10 rounded-md border border-input bg-background px-3 text-sm">
+						<option value="">All sections</option>
+						<option value="news">News</option>
+						<option value="education">Education</option>
+						<option value="research">Research</option>
+						<option value="activity">Activity</option>
+					</select>
+					<select bind:value={publishedFilter} onchange={applyFilters} aria-label="Filter published date" class="h-10 rounded-md border border-input bg-background px-3 text-sm">
+						<option value="">Any publication state</option>
+						<option value="published">Has publication date</option>
+						<option value="unpublished">No publication date</option>
+					</select>
+				</div>
+			</div>
 		</CardContent>
 	</Card>
 
@@ -78,10 +149,10 @@
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
-						<Table.Head>Title</Table.Head>
-						<Table.Head>Status</Table.Head>
-						<Table.Head>Section</Table.Head>
-						<Table.Head>Published</Table.Head>
+						<Table.Head><button type="button" class="flex items-center gap-1 hover:text-foreground" onclick={() => sortBy('title')}>Title {#if data.sort === 'title'}{#if data.direction === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}{:else}<ArrowUpDown size={14} />{/if}</button></Table.Head>
+						<Table.Head><button type="button" class="flex items-center gap-1 hover:text-foreground" onclick={() => sortBy('status')}>Status {#if data.sort === 'status'}{#if data.direction === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}{:else}<ArrowUpDown size={14} />{/if}</button></Table.Head>
+						<Table.Head><button type="button" class="flex items-center gap-1 hover:text-foreground" onclick={() => sortBy('section')}>Section {#if data.sort === 'section'}{#if data.direction === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}{:else}<ArrowUpDown size={14} />{/if}</button></Table.Head>
+						<Table.Head><button type="button" class="flex items-center gap-1 hover:text-foreground" onclick={() => sortBy('publishedAt')}>Published {#if data.sort === 'publishedAt'}{#if data.direction === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}{:else}<ArrowUpDown size={14} />{/if}</button></Table.Head>
 						<Table.Head class="text-right">Actions</Table.Head>
 					</Table.Row>
 				</Table.Header>

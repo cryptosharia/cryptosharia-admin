@@ -1068,6 +1068,8 @@ export interface paths {
                     /** @description List of tag slugs to filter by.<br>Example: education,halal */
                     tags?: string[];
                     search?: string;
+                    sortBy?: "createdAt" | "title" | "status" | "section" | "publishedAt";
+                    sortDirection?: "asc" | "desc";
                     limit?: number;
                     page?: number;
                 };
