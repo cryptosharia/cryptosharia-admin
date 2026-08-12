@@ -152,6 +152,7 @@
 						<Table.Head><button type="button" class="flex items-center gap-1 hover:text-foreground" onclick={() => sortBy('title')}>Title {#if data.sort === 'title'}{#if data.direction === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}{:else}<ArrowUpDown size={14} />{/if}</button></Table.Head>
 						<Table.Head><button type="button" class="flex items-center gap-1 hover:text-foreground" onclick={() => sortBy('status')}>Status {#if data.sort === 'status'}{#if data.direction === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}{:else}<ArrowUpDown size={14} />{/if}</button></Table.Head>
 						<Table.Head><button type="button" class="flex items-center gap-1 hover:text-foreground" onclick={() => sortBy('section')}>Section {#if data.sort === 'section'}{#if data.direction === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}{:else}<ArrowUpDown size={14} />{/if}</button></Table.Head>
+						<Table.Head>Tags</Table.Head>
 						<Table.Head><button type="button" class="flex items-center gap-1 hover:text-foreground" onclick={() => sortBy('publishedAt')}>Published {#if data.sort === 'publishedAt'}{#if data.direction === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}{:else}<ArrowUpDown size={14} />{/if}</button></Table.Head>
 						<Table.Head class="text-right">Actions</Table.Head>
 					</Table.Row>
@@ -182,6 +183,17 @@
 								</span>
 							</Table.Cell>
 							<Table.Cell>
+								{#if post.tags.length}
+									<div class="flex max-w-56 flex-wrap gap-1">
+										{#each post.tags as tag}
+											<Badge variant="secondary" class="max-w-32 truncate text-xs" title={tag.slug}>{tag.name}</Badge>
+										{/each}
+									</div>
+								{:else}
+									<span class="text-sm text-muted-foreground">—</span>
+								{/if}
+							</Table.Cell>
+							<Table.Cell>
 								<div class="flex items-center gap-2 text-sm text-muted-foreground">
 									<Calendar size={14} />
 									<span>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : '—'}</span>
@@ -197,7 +209,7 @@
 						</Table.Row>
 					{:else}
 						<Table.Row>
-							<Table.Cell colspan={5} class="h-24 text-center">
+							<Table.Cell colspan={6} class="h-24 text-center">
 								<div class="flex flex-col items-center gap-2">
 									<div class="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
 										<FileText size={20} />
@@ -238,6 +250,9 @@
 							<span class="text-[10px] uppercase font-medium bg-secondary text-secondary-foreground px-2 py-0.5 rounded-md">
 								{post.section}
 							</span>
+							{#each post.tags as tag}
+								<Badge variant="secondary" class="max-w-28 truncate text-[10px]" title={tag.slug}>{tag.name}</Badge>
+							{/each}
 							<div class="flex items-center gap-1 text-[10px] text-muted-foreground ml-auto">
 								<Calendar size={12} />
 								<span>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : '—'}</span>

@@ -68,7 +68,12 @@ export const load: PageServerLoad = async ({ fetch, locals, url }) => {
         section: post.section,
         publishedAt: post.publishedAt,
         updatedAt: post.updatedAt,
-        authorName: post.createdBy?.name || 'Unknown'
+        authorName: post.createdBy?.name || 'Unknown',
+        tags: post.tags.map((tag) => ({
+            id: tag.id,
+            name: tag.name,
+            slug: tag.slug
+        }))
     })) ?? [];
 
 	return {
