@@ -1,4 +1,5 @@
 import { createApiClient } from '$lib/api';
+import { loadAllTags } from '$lib/server/tags';
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { PUBLIC_CS_API_URL } from '$env/static/public';
@@ -40,9 +41,9 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
     });
 
     try {
-        const [postRes, tagsRes] = await Promise.all([
+        const [postRes, tags] = await Promise.all([
             client.GET('/posts/{id}', { params: { path: { id: params.id } } }),
-            client.GET('/tags', { params: { query: { limit: 100 } } })
+            loadAllTags(fetch, locals.user?.accessToken)
         ]);
 
         if (postRes.error || !postRes.data?.success || !postRes.data?.data) {
@@ -54,7 +55,7 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
                 ...postRes.data.data,
                 coverImage: postRes.data.data.coverImage?.url || ''
             },
-            tags: tagsRes.data?.data?.items ?? []
+            tags
         };
     } catch (err: any) {
         if (err?.status) throw err; // re-throw SvelteKit errors (404, etc.)
