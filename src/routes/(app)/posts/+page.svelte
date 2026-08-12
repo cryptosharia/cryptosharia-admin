@@ -26,10 +26,12 @@
 	let searchValue = $state('');
 	let statusFilter = $state('');
 	let sectionFilter = $state('');
+	let tagFilter = $state('');
 	let publishedFilter = $state('');
 	$effect(() => { searchValue = data.search || ''; });
 	$effect(() => { statusFilter = data.status || ''; });
 	$effect(() => { sectionFilter = data.section || ''; });
+	$effect(() => { tagFilter = data.tag || ''; });
 	$effect(() => { publishedFilter = data.published || ''; });
 
 	function handleSearch(e: Event) {
@@ -55,6 +57,7 @@
 		for (const [key, value] of Object.entries({
 			status: statusFilter,
 			section: sectionFilter,
+			tag: tagFilter,
 			published: publishedFilter
 		})) {
 			if (value) params.set(key, value);
@@ -74,7 +77,7 @@
 	}
 
 	function hasActiveFilters() {
-		return Boolean(data.search || data.status || data.section || data.published);
+		return Boolean(data.search || data.status || data.section || data.tag || data.published);
 	}
 </script>
 
@@ -115,7 +118,7 @@
 					<SlidersHorizontal size={16} />
 					Filters
 				</div>
-				<div class="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-3">
+				<div class="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
 					<select bind:value={statusFilter} onchange={applyFilters} aria-label="Filter status" class="h-10 rounded-md border border-input bg-background px-3 text-sm">
 						<option value="">All statuses</option>
 						<option value="draft">Draft</option>
@@ -128,6 +131,12 @@
 						<option value="education">Education</option>
 						<option value="research">Research</option>
 						<option value="activity">Activity</option>
+					</select>
+					<select bind:value={tagFilter} onchange={applyFilters} aria-label="Filter tag" class="h-10 rounded-md border border-input bg-background px-3 text-sm">
+						<option value="">All tags</option>
+						{#each data.availableTags as tag}
+							<option value={tag.slug}>{tag.name}</option>
+						{/each}
 					</select>
 					<select bind:value={publishedFilter} onchange={applyFilters} aria-label="Filter published date" class="h-10 rounded-md border border-input bg-background px-3 text-sm">
 						<option value="">Any publication state</option>
@@ -152,7 +161,7 @@
 						<Table.Head><button type="button" class="flex items-center gap-1 hover:text-foreground" onclick={() => sortBy('title')}>Title {#if data.sort === 'title'}{#if data.direction === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}{:else}<ArrowUpDown size={14} />{/if}</button></Table.Head>
 						<Table.Head><button type="button" class="flex items-center gap-1 hover:text-foreground" onclick={() => sortBy('status')}>Status {#if data.sort === 'status'}{#if data.direction === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}{:else}<ArrowUpDown size={14} />{/if}</button></Table.Head>
 						<Table.Head><button type="button" class="flex items-center gap-1 hover:text-foreground" onclick={() => sortBy('section')}>Section {#if data.sort === 'section'}{#if data.direction === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}{:else}<ArrowUpDown size={14} />{/if}</button></Table.Head>
-						<Table.Head>Tags</Table.Head>
+						<Table.Head><button type="button" class="flex items-center gap-1 hover:text-foreground" onclick={() => sortBy('tags')}>Tags {#if data.sort === 'tags'}{#if data.direction === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}{:else}<ArrowUpDown size={14} />{/if}</button></Table.Head>
 						<Table.Head><button type="button" class="flex items-center gap-1 hover:text-foreground" onclick={() => sortBy('publishedAt')}>Published {#if data.sort === 'publishedAt'}{#if data.direction === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}{:else}<ArrowUpDown size={14} />{/if}</button></Table.Head>
 						<Table.Head class="text-right">Actions</Table.Head>
 					</Table.Row>

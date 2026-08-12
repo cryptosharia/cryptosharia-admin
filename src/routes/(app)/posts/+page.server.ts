@@ -1,9 +1,10 @@
 import { createApiClient } from '$lib/api';
+import { loadAllTags } from '$lib/server/tags';
 import type { PageServerLoad } from './$types';
 
 const statusValues = ['draft', 'published', 'archived'] as const;
 const sectionValues = ['news', 'education', 'research', 'activity'] as const;
-const sortValues = ['title', 'status', 'section', 'publishedAt'] as const;
+const sortValues = ['title', 'status', 'section', 'tags', 'publishedAt'] as const;
 
 type SortKey = (typeof sortValues)[number];
 
@@ -25,6 +26,7 @@ export const load: PageServerLoad = async ({ fetch, locals, url }) => {
     const section = isValueIn(url.searchParams.get('section'), sectionValues)
         ? url.searchParams.get('section')
         : '';
+	const tag = url.searchParams.get('tag') || '';
     const published = ['published', 'unpublished'].includes(url.searchParams.get('published') || '')
         ? url.searchParams.get('published')!
         : '';
@@ -55,10 +57,14 @@ export const load: PageServerLoad = async ({ fetch, locals, url }) => {
     };
     if (search) query.search = search;
     if (section) query.sections = [section];
+	if (tag) query.tags = [tag];
 
-    const { data } = hasConflictingFilters
+    const [{ data }, availableTags] = await Promise.all([
+        hasConflictingFilters
         ? { data: undefined }
-        : await client.GET('/posts', { params: { query } });
+        : client.GET('/posts', { params: { query } }),
+        loadAllTags(fetch, locals.user?.accessToken)
+	]);
 
     const posts = data?.data?.items.map(post => ({
         id: post.id,
@@ -80,9 +86,11 @@ export const load: PageServerLoad = async ({ fetch, locals, url }) => {
         search: search || '',
         status,
         section,
+		tag,
         published,
         sort,
         direction,
+		availableTags: availableTags.map((item) => ({ name: item.name, slug: item.slug })),
         pagination: data?.data?.pagination ?? { total: 0, page: 1, limit: 20, totalPages: 0 },
         posts
     };
