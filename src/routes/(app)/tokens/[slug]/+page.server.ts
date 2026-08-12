@@ -1,4 +1,5 @@
 import { createApiClient } from '$lib/api';
+import { loadAllTags } from '$lib/server/tags';
 import { fail, redirect, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { PUBLIC_CS_API_URL } from '$env/static/public';
@@ -12,9 +13,9 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
     });
 
 	try {
-		const [tokenRes, tagsRes] = await Promise.all([
+		const [tokenRes, tags] = await Promise.all([
 			client.GET('/tokens/{id}', { params: { path: { id: params.slug } } }),
-			client.GET('/tags', { params: { query: { limit: 100 } } })
+			loadAllTags(fetch, locals.user?.accessToken)
 		]);
 
 		if (tokenRes.error || !tokenRes.data?.success || !tokenRes.data?.data) {
@@ -26,7 +27,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
                 ...tokenRes.data.data,
                 logoUrl: tokenRes.data.data.logo?.url
             },
-			tags: tagsRes.data?.data?.items ?? []
+			tags
 		};
 	} catch (err) {
         if ((err as any)?.status && (err as any)?.body) throw err; 

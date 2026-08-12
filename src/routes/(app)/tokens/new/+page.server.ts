@@ -1,4 +1,5 @@
 import { createApiClient } from '$lib/api';
+import { loadAllTags } from '$lib/server/tags';
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { PUBLIC_CS_API_URL } from '$env/static/public';
@@ -6,9 +7,7 @@ import { CS_API_KEY } from '$env/static/private';
 
 
 export const load: PageServerLoad = async ({ fetch, locals }) => {
-	const client = createApiClient({ fetch, accessToken: locals.user?.accessToken });
-	const { data } = await client.GET('/tags', { params: { query: { limit: 100 } } });
-	return { tags: data?.data?.items ?? [] };
+	return { tags: await loadAllTags(fetch, locals.user?.accessToken) };
 };
 
 async function uploadAsset(fetchFn: typeof fetch, file: File, accessToken: string) {
