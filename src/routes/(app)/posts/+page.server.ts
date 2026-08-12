@@ -1,6 +1,7 @@
 import { createApiClient } from '$lib/api';
 import { loadAllTags } from '$lib/server/tags';
-import type { PageServerLoad } from './$types';
+import { fail } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
 
 const statusValues = ['draft', 'published', 'archived'] as const;
 const sectionValues = ['news', 'education', 'research', 'activity'] as const;
@@ -95,3 +96,26 @@ export const load: PageServerLoad = async ({ fetch, locals, url }) => {
         posts
     };
 };
+
+export const actions = {
+	publish: async ({ request, fetch, locals }) => {
+		const formData = await request.formData();
+		const postId = formData.get('postId');
+
+		if (typeof postId !== 'string' || !postId) {
+			return fail(400, { message: 'Post tidak valid.' });
+		}
+
+		const client = createApiClient({ fetch, accessToken: locals.user?.accessToken });
+		const { data, error } = await (client as any).PATCH('/posts/{id}', {
+			params: { path: { id: postId } },
+			body: { status: 'published' }
+		});
+
+		if (error || !data?.success) {
+			return fail(400, { message: data?.message || 'Gagal mempublikasikan post.' });
+		}
+
+		return { success: true, message: 'Post telah dipublikasikan.' };
+	}
+} satisfies Actions;

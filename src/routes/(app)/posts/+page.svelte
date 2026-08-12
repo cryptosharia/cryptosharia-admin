@@ -28,6 +28,7 @@
 	let sectionFilter = $state('');
 	let tagFilter = $state('');
 	let publishedFilter = $state('');
+	let publishingPostId = $state<string | null>(null);
 	$effect(() => { searchValue = data.search || ''; });
 	$effect(() => { statusFilter = data.status || ''; });
 	$effect(() => { sectionFilter = data.section || ''; });
@@ -78,6 +79,21 @@
 
 	function hasActiveFilters() {
 		return Boolean(data.search || data.status || data.section || data.tag || data.published);
+	}
+
+	function enhancePublish(post: { id: string; title: string }) {
+		return async ({ cancel }: { cancel: () => void }) => {
+			if (!confirm(`Publikasikan “${post.title}”? Artikel akan langsung tampil di website publik.`)) {
+				cancel();
+				return;
+			}
+
+			publishingPostId = post.id;
+			return async ({ update }: { update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void> }) => {
+				await update({ reset: false, invalidateAll: true });
+				publishingPostId = null;
+			};
+		};
 	}
 </script>
 
@@ -210,6 +226,14 @@
 							</Table.Cell>
 							<Table.Cell class="text-right">
 								<div class="flex items-center justify-end gap-2">
+									{#if post.status === 'draft'}
+										<form method="POST" action="?/publish" use:enhance={enhancePublish(post)}>
+											<input type="hidden" name="postId" value={post.id} />
+											<Button type="submit" size="sm" disabled={publishingPostId === post.id}>
+												{publishingPostId === post.id ? 'Publishing…' : 'Publish'}
+											</Button>
+										</form>
+									{/if}
 									<Button variant="ghost" size="icon" href={`/posts/${post.id}`}>
 										<Edit3 size={16} />
 									</Button>
@@ -267,6 +291,14 @@
 								<span>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : '—'}</span>
 							</div>
 						</div>
+						{#if post.status === 'draft'}
+							<form method="POST" action="?/publish" use:enhance={enhancePublish(post)}>
+								<input type="hidden" name="postId" value={post.id} />
+								<Button type="submit" size="sm" class="w-full" disabled={publishingPostId === post.id}>
+									{publishingPostId === post.id ? 'Publishing…' : 'Publish'}
+								</Button>
+							</form>
+						{/if}
 					</div>
 				{:else}
 					<div class="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
