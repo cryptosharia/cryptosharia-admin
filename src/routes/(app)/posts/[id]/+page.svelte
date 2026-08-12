@@ -22,6 +22,7 @@
 	import { Separator } from '$lib/components/ui/separator';
 	import TagSelector from '$lib/components/TagSelector.svelte';
 	import ImageUpload from '$lib/components/ImageUpload.svelte';
+	import SaveProgress from '$lib/components/SaveProgress.svelte';
 	import { toast } from 'svelte-sonner';
 
 	let { data, form } = $props();
@@ -36,6 +37,47 @@
 	let slug = $state('');
 	let selectedTags = $state<string[]>([]);
 	let excerpt = $state('');
+	let isSaving = $state(false);
+	let saveProgress = $state(0);
+	let saveLabel = $state('');
+	let saveTimers: ReturnType<typeof setTimeout>[] = [];
+
+	function clearSaveTimers() {
+		saveTimers.forEach(clearTimeout);
+		saveTimers = [];
+	}
+
+	function beginSave() {
+		clearSaveTimers();
+		isSaving = true;
+		saveProgress = 18;
+		saveLabel = 'Menyiapkan perubahan…';
+		saveTimers = [
+			setTimeout(() => {
+				saveProgress = 48;
+				saveLabel = 'Mengunggah cover bila diubah…';
+			}, 250),
+			setTimeout(() => {
+				saveProgress = 82;
+				saveLabel = 'Menyimpan perubahan…';
+			}, 900)
+		];
+	}
+
+	function finishSave() {
+		clearSaveTimers();
+		isSaving = false;
+		saveProgress = 0;
+		saveLabel = '';
+	}
+
+	function enhanceSave() {
+		beginSave();
+		return async ({ update }: { update: () => Promise<void> }) => {
+			await update();
+			finishSave();
+		};
+	}
 
 	let editorContainer: HTMLElement;
 	let editor: any;
@@ -152,7 +194,7 @@
 		</form>
 	</div>
 
-	<form action="?/update" method="POST" enctype="multipart/form-data" use:enhance class="space-y-8">
+	<form action="?/update" method="POST" enctype="multipart/form-data" use:enhance={enhanceSave} class="space-y-8">
 		<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
 			<!-- Main Editor -->
 			<div class="space-y-6 lg:col-span-2">
@@ -299,10 +341,17 @@
 
 						<Separator />
 
-						<Button type="submit" class="h-12 w-full gap-2 font-bold">
-							<Save size={20} />
-							Update Post
+						<Button type="submit" disabled={isSaving} class="h-12 w-full gap-2 font-bold">
+							{#if isSaving}
+								<Loader2 size={20} class="animate-spin" />
+								Menyimpan…
+							{:else}
+								<Save size={20} />
+								Update Post
+							{/if}
 						</Button>
+
+						<SaveProgress active={isSaving} progress={saveProgress} label={saveLabel} />
 
 						{#if form?.message && !(form as any).success}
 							<div
