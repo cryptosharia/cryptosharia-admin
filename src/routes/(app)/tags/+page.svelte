@@ -4,6 +4,8 @@
 	import { Input } from '$lib/components/ui/input';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { enhance } from '$app/forms';
+	import { toast } from 'svelte-sonner';
 
 	let { data } = $props();
 
@@ -26,6 +28,24 @@
 		const params = new URLSearchParams($page.url.searchParams);
 		params.set('page', String(p));
 		goto(`?${params.toString()}`);
+	}
+
+	function enhancePublicToggle({ formData, cancel }: { formData: FormData; cancel: () => void }) {
+		const isPublic = formData.get('showInNavigation') === 'on';
+		if (isPublic && !formData.get('contentSection')) {
+			cancel();
+			toast.error('Pilih bagian Berita atau Edukasi terlebih dahulu.');
+			return;
+		}
+
+		return async ({ result, update }: { result: { type: string; data?: { message?: string } }; update: () => Promise<void> }) => {
+			if (result.type === 'success') {
+				toast.success(result.data?.message || 'Status kategori diperbarui.');
+				await update();
+			} else {
+				toast.error(result.data?.message || 'Status kategori gagal diperbarui.');
+			}
+		};
 	}
 </script>
 
@@ -95,22 +115,33 @@
 								{tag.description || '-'}
 							</td>
 							<td class="px-6 py-3 hidden lg:table-cell">
-								<div class="flex items-center gap-2">
+								<form method="POST" action="?/togglePublic" use:enhance={enhancePublicToggle} class="flex items-center gap-2">
+									<input type="hidden" name="slug" value={tag.slug} />
+									<input type="hidden" name="displayOrder" value={categoryTag.displayOrder ?? 99} />
+									<select
+										name="contentSection"
+										value={categoryTag.contentSection ?? ''}
+										aria-label={`Bagian publik untuk ${tag.name}`}
+										class="h-8 max-w-24 rounded border bg-background px-1 text-xs"
+									>
+										<option value="">Bagian</option>
+										<option value="news">Berita</option>
+										<option value="education">Edukasi</option>
+									</select>
 									<input
 										type="checkbox"
+										name="showInNavigation"
 										checked={categoryTag.showInNavigation ?? false}
-										disabled
+										onchange={(event) => (event.currentTarget.form?.requestSubmit())}
 										aria-label={`${tag.name} tampil di navigasi publik`}
-										class="h-4 w-4 accent-primary disabled:opacity-100"
+										class="h-4 w-4 accent-primary"
 									/>
 									{#if categoryTag.showInNavigation}
-										<span class="text-xs text-emerald-600 dark:text-emerald-400">
-											{categoryTag.contentSection === 'news' ? 'Berita' : 'Edukasi'} · #{categoryTag.displayOrder ?? '-'}
-										</span>
+										<span class="text-xs text-emerald-600 dark:text-emerald-400">Tampil · #{categoryTag.displayOrder ?? '-'}</span>
 									{:else}
 										<span class="text-xs text-muted-foreground">Disembunyikan</span>
 									{/if}
-								</div>
+								</form>
 							</td>
 							<td class="px-6 py-3 text-right">
 								<Button
