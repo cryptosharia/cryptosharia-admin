@@ -68,11 +68,11 @@
 		goto(`?${params.toString()}`);
 	}
 
-	function sortBy(column: 'title' | 'status' | 'section' | 'publishedAt') {
+	function sortBy(column: 'title' | 'status' | 'section' | 'tags' | 'publishedAt') {
 		const params = new URLSearchParams($page.url.searchParams);
-		const isCurrentColumn = data.sort === column;
+		const isCurrentColumn = params.get('sort') === column;
 		params.set('sort', column);
-		params.set('direction', isCurrentColumn && data.direction === 'asc' ? 'desc' : 'asc');
+		params.set('direction', isCurrentColumn && params.get('direction') === 'asc' ? 'desc' : 'asc');
 		params.set('page', '1');
 		goto(`?${params.toString()}`);
 	}
