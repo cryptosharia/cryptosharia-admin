@@ -70,11 +70,13 @@
 						<th class="px-6 py-4 font-medium">Name</th>
 						<th class="px-6 py-4 font-medium">Slug</th>
 						<th class="px-6 py-4 font-medium hidden md:table-cell">Description</th>
+						<th class="px-6 py-4 font-medium hidden lg:table-cell">Kategori Publik</th>
 						<th class="px-6 py-4 font-medium text-right">Actions</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-white/5 dark:divide-gray-800/50">
 					{#each data.tags as tag}
+						{@const categoryTag = tag as typeof tag & { showInNavigation?: boolean; contentSection?: string | null; displayOrder?: number | null }}
 						<tr class="hover:bg-muted/30 transition-colors group">
 							<td class="px-6 py-3">
 								<div class="flex items-center gap-3">
@@ -92,6 +94,9 @@
 							<td class="px-6 py-3 text-muted-foreground hidden md:table-cell max-w-xs xl:max-w-md truncate">
 								{tag.description || '-'}
 							</td>
+							<td class="px-6 py-3 hidden lg:table-cell text-muted-foreground">
+								{#if categoryTag.showInNavigation}<span class="text-emerald-600 dark:text-emerald-400">{categoryTag.contentSection === 'news' ? 'Berita' : 'Edukasi'} · #{categoryTag.displayOrder ?? '-'}</span>{:else}-{/if}
+							</td>
 							<td class="px-6 py-3 text-right">
 								<Button
 									href={`/tags/${tag.slug}`}
@@ -105,7 +110,7 @@
 						</tr>
 					{:else}
 						<tr>
-							<td colspan="4" class="px-6 py-12 text-center text-muted-foreground">
+							<td colspan="5" class="px-6 py-12 text-center text-muted-foreground">
 								<div class="flex flex-col items-center gap-2">
 									<Tag class="h-8 w-8 text-muted-foreground/50" />
 									<p>No tags found.</p>

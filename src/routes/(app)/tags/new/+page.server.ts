@@ -13,9 +13,16 @@ export const actions = {
         const name = formData.get('name') as string;
         const slug = formData.get('slug') as string;
         const description = formData.get('description') as string;
+        const showInNavigation = formData.get('showInNavigation') === 'on';
+        const contentSection = (formData.get('contentSection') as string) || undefined;
+        const displayOrderValue = formData.get('displayOrder') as string;
+        const displayOrder = displayOrderValue === '' ? undefined : Number(displayOrderValue);
 
         if (!name || !slug) {
             return fail(400, { missing: true, message: 'Name and Slug are required.' });
+        }
+        if (showInNavigation && !contentSection) {
+            return fail(400, { message: 'Pilih section untuk kategori publik.' });
         }
 
         try {
@@ -23,7 +30,10 @@ export const actions = {
                 body: {
                     name,
                     slug,
-                    description: description || undefined
+                    description: description || undefined,
+                    contentSection,
+                    showInNavigation,
+                    displayOrder
                 }
             });
 

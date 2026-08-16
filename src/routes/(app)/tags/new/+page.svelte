@@ -12,6 +12,8 @@
 
 	let name = $state('');
 	let slug = $state('');
+	let showInNavigation = $state(false);
+	let contentSection = $state('');
 
 	function generateSlug(str: string) {
 		return str
@@ -119,6 +121,29 @@
 								<Info size={14} class="mt-0.5 text-primary" />
 								<p>Descriptions help other admin managers understand the purpose of this tag.</p>
 							</div>
+						</div>
+					</CardContent>
+				</Card>
+
+				<Card>
+					<CardHeader>
+						<CardTitle>Public Content Category</CardTitle>
+						<CardDescription>Show this tag as a category in the public Berita or Edukasi menu.</CardDescription>
+					</CardHeader>
+					<CardContent class="space-y-4">
+						<label class="flex items-center gap-3 text-sm font-medium">
+							<input type="checkbox" name="showInNavigation" bind:checked={showInNavigation} class="h-4 w-4" />
+							Tampilkan di navigasi publik
+						</label>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<label class="space-y-2 text-sm font-medium">Section
+								<select name="contentSection" bind:value={contentSection} disabled={!showInNavigation} class="h-10 w-full rounded-md border bg-background px-3">
+									<option value="">Pilih section</option><option value="news">Berita</option><option value="education">Edukasi</option>
+								</select>
+							</label>
+							<label class="space-y-2 text-sm font-medium">Urutan
+								<Input name="displayOrder" type="number" min="0" placeholder="Contoh: 1" disabled={!showInNavigation} />
+							</label>
 						</div>
 					</CardContent>
 				</Card>

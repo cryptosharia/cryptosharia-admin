@@ -15,6 +15,9 @@
 
 	let name = $state(data.tag.name);
 	let slug = $state(data.tag.slug);
+	let showInNavigation = $state(Boolean((data.tag as { showInNavigation?: boolean }).showInNavigation));
+	let contentSection = $state((data.tag as { contentSection?: string | null }).contentSection ?? '');
+	let displayOrder = $state((data.tag as { displayOrder?: number | null }).displayOrder?.toString() ?? '');
 
 	function generateSlug(str: string) {
 		return str
@@ -123,6 +126,17 @@
 								placeholder="What is this tag used for? (Optional)"
 								class="min-h-[120px] resize-none focus:ring-1 focus:ring-primary/20 transition-all text-base"
 							/>
+						</div>
+					</CardContent>
+				</Card>
+
+				<Card>
+					<CardHeader><CardTitle>Public Content Category</CardTitle><CardDescription>Control whether this tag appears in the public category menu.</CardDescription></CardHeader>
+					<CardContent class="space-y-4">
+						<label class="flex items-center gap-3 text-sm font-medium"><input type="checkbox" name="showInNavigation" bind:checked={showInNavigation} class="h-4 w-4" /> Tampilkan di navigasi publik</label>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<label class="space-y-2 text-sm font-medium">Section<select name="contentSection" bind:value={contentSection} disabled={!showInNavigation} class="h-10 w-full rounded-md border bg-background px-3"><option value="">Pilih section</option><option value="news">Berita</option><option value="education">Edukasi</option></select></label>
+							<label class="space-y-2 text-sm font-medium">Urutan<Input name="displayOrder" type="number" min="0" bind:value={displayOrder} disabled={!showInNavigation} /></label>
 						</div>
 					</CardContent>
 				</Card>

@@ -41,13 +41,24 @@ export const actions = {
         const name = formData.get('name') as string;
         const slug = formData.get('slug') as string;
         const description = formData.get('description') as string;
+        const showInNavigation = formData.get('showInNavigation') === 'on';
+        const contentSection = (formData.get('contentSection') as string) || null;
+        const displayOrderValue = formData.get('displayOrder') as string;
+        const displayOrder = displayOrderValue === '' ? null : Number(displayOrderValue);
+
+        if (showInNavigation && !contentSection) {
+            return fail(400, { success: false, message: 'Pilih section untuk kategori publik.' });
+        }
 
         try {
             const { data, error } = await client.PATCH(`/tags/${params.slug}`, {
                 body: {
                     name,
                     slug,
-                    description: description || undefined
+                    description: description || undefined,
+                    contentSection,
+                    showInNavigation,
+                    displayOrder
                 }
             });
 
