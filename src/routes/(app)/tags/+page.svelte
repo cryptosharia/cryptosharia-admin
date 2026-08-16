@@ -70,7 +70,7 @@
 						<th class="px-6 py-4 font-medium">Name</th>
 						<th class="px-6 py-4 font-medium">Slug</th>
 						<th class="px-6 py-4 font-medium hidden md:table-cell">Description</th>
-						<th class="px-6 py-4 font-medium hidden lg:table-cell">Kategori Publik</th>
+						<th class="px-6 py-4 font-medium hidden lg:table-cell">Tampil Publik</th>
 						<th class="px-6 py-4 font-medium text-right">Actions</th>
 					</tr>
 				</thead>
@@ -94,8 +94,23 @@
 							<td class="px-6 py-3 text-muted-foreground hidden md:table-cell max-w-xs xl:max-w-md truncate">
 								{tag.description || '-'}
 							</td>
-							<td class="px-6 py-3 hidden lg:table-cell text-muted-foreground">
-								{#if categoryTag.showInNavigation}<span class="text-emerald-600 dark:text-emerald-400">{categoryTag.contentSection === 'news' ? 'Berita' : 'Edukasi'} · #{categoryTag.displayOrder ?? '-'}</span>{:else}-{/if}
+							<td class="px-6 py-3 hidden lg:table-cell">
+								<div class="flex items-center gap-2">
+									<input
+										type="checkbox"
+										checked={categoryTag.showInNavigation ?? false}
+										disabled
+										aria-label={`${tag.name} tampil di navigasi publik`}
+										class="h-4 w-4 accent-primary disabled:opacity-100"
+									/>
+									{#if categoryTag.showInNavigation}
+										<span class="text-xs text-emerald-600 dark:text-emerald-400">
+											{categoryTag.contentSection === 'news' ? 'Berita' : 'Edukasi'} · #{categoryTag.displayOrder ?? '-'}
+										</span>
+									{:else}
+										<span class="text-xs text-muted-foreground">Disembunyikan</span>
+									{/if}
+								</div>
 							</td>
 							<td class="px-6 py-3 text-right">
 								<Button
