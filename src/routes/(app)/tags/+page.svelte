@@ -138,8 +138,6 @@
 									/>
 									{#if categoryTag.showInNavigation}
 										<span class="text-xs text-emerald-600 dark:text-emerald-400">Tampil · #{categoryTag.displayOrder ?? '-'}</span>
-									{:else}
-										<span class="text-xs text-muted-foreground">Disembunyikan</span>
 									{/if}
 								</form>
 							</td>
