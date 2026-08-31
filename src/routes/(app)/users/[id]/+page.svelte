@@ -180,9 +180,11 @@
 									</p>
 								</div>
 								<div class="space-y-1 rounded-lg border bg-muted/30 p-4">
-									<p class="text-[10px] font-bold text-muted-foreground uppercase">Email Status</p>
+									<p class="text-[10px] font-bold text-muted-foreground uppercase">
+										Account Status
+									</p>
 									<p class="text-sm font-medium">
-										{data.user.isEmailVerified ? '✅ Verified' : '❌ Unverified'}
+										{data.user.status}
 									</p>
 								</div>
 							</div>

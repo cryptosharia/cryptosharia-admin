@@ -1,7 +1,7 @@
 import createClient from 'openapi-fetch';
 import type { paths } from '$lib/api-types';
-import { PUBLIC_CS_API_URL } from '$env/static/public';
-import { CS_API_KEY } from '$env/static/private';
+import { env as publicEnv } from '$env/dynamic/public';
+import { env as privateEnv } from '$env/dynamic/private';
 
 /**
  * Factory untuk membuat API Client.
@@ -14,15 +14,15 @@ export const createApiClient = (
 	} = {}
 ) => {
 	const headers: Record<string, string> = {};
-	
+
 	// Gunakan apiKey dari options, atau fallback ke CS_API_KEY dari .env
-	const apiKey = options.apiKey || CS_API_KEY;
+	const apiKey = options.apiKey || privateEnv.CS_API_KEY;
 	if (apiKey) headers['Api-Key'] = apiKey;
-	
+
 	if (options.accessToken) headers['Authorization'] = `Bearer ${options.accessToken}`;
 
 	return createClient<paths>({
-		baseUrl: PUBLIC_CS_API_URL,
+		baseUrl: publicEnv.PUBLIC_CS_API_URL,
 		fetch: options.fetch,
 		headers
 	});

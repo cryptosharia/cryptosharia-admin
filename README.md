@@ -19,9 +19,8 @@ Dibangun dengan stack modern untuk performa dan keamanan maksimal:
 
 - **Framework**: [SvelteKit](https://kit.svelte.dev) + [Svelte 5](https://svelte.dev) Runes
 - **Styling**: [Tailwind CSS](https://tailwindcss.com) + [Shadcn-Svelte](https://next.shadcn-svelte.com/)
-- **Database**: PostgreSQL
-- **ORM**: [Drizzle ORM](https://orm.drizzle.team)
-- **Auth**: Custom Session & Role-Based Auth
+- **API**: CryptoSharia API v2 melalui OpenAPI
+- **Auth**: Email OTP dan role-based access control
 - **Icons**: Lucide Svelte
 
 ## Instalasi & Menjalankan
@@ -29,34 +28,32 @@ Dibangun dengan stack modern untuk performa dan keamanan maksimal:
 ### Persyaratan
 
 - Node.js versi 20+
-- PostgreSQL database
+- Akses ke deployment CryptoSharia API v2
 
 ### Langkah-langkah
 
 1.  **Clone repository ini**:
+
     ```bash
     git clone https://github.com/cryptosharia/cryptosharia-admin.git
     cd cryptosharia-admin
     ```
 
 2.  **Install dependencies**:
+
     ```bash
     npm install
     ```
 
 3.  **Setup Environment Variables**:
-    Buat file `.env` berdasarkan contoh dan isi kredensial database Anda:
+    Buat file `.env` berdasarkan `.env.example` dan isi konfigurasi API:
+
     ```env
-    DATABASE_URL=postgresql://user:password@localhost:5432/cryptosharia_db
+    PUBLIC_CS_API_URL=https://preview.api.cryptosharia.id
+    CS_API_KEY=your-api-key
     ```
 
-4.  **Setup Database**:
-    Jalankan migrasi atau push schema ke database lokal:
-    ```bash
-    npx drizzle-kit push
-    ```
-
-5.  **Jalankan Development Server**:
+4.  **Jalankan Development Server**:
     ```bash
     npm run dev
     ```
@@ -65,14 +62,14 @@ Dibangun dengan stack modern untuk performa dan keamanan maksimal:
 ## Struktur Direktori
 
 - `src/routes`: Halaman dan API endpoints (File-based routing).
-    - `(app)`: Halaman yang membutuhkan login (Dashboard, Users, Tokens, etc).
-    - `(auth)`: Halaman autentikasi (Login, Register).
+  - `(app)`: Halaman yang membutuhkan login (Dashboard, Users, Tokens, etc).
+  - `(auth)`: Halaman autentikasi (Login, Register).
 - `src/lib/server/db`: Konfigurasi Database dan Schema Drizzle.
 - `src/lib/components`: Komponen UI reusable (Button, Input, Sidebar, etc).
 
 ## Kontribusi
 
-Silakan buat *Pull Request* untuk fitur baru atau perbaikan bug. Pastikan kode Anda mengikuti standar coding convention yang telah ditetapkan.
+Silakan buat _Pull Request_ untuk fitur baru atau perbaikan bug. Pastikan kode Anda mengikuti standar coding convention yang telah ditetapkan.
 
 ## Lisensi
 

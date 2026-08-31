@@ -13,8 +13,9 @@ export async function loadAllTags(fetchFn: typeof fetch, accessToken?: string) {
 		params: { query: { page: 1, limit: PAGE_SIZE } }
 	});
 
-	const firstItems = firstPage.data?.data?.items ?? [];
-	const totalPages = firstPage.data?.data?.pagination?.totalPages ?? 0;
+	const firstItems = firstPage.data ?? [];
+	const totalItems = Number(firstPage.response.headers.get('total-items') ?? firstItems.length);
+	const totalPages = Math.ceil(totalItems / PAGE_SIZE);
 
 	if (firstPage.error || totalPages === 0) return firstItems;
 
@@ -25,5 +26,5 @@ export async function loadAllTags(fetchFn: typeof fetch, accessToken?: string) {
 	);
 	const remainingResults = await Promise.all(remainingPages);
 
-	return [...firstItems, ...remainingResults.flatMap((result) => result.data?.data?.items ?? [])];
+	return [...firstItems, ...remainingResults.flatMap((result) => result.data ?? [])];
 }

@@ -74,7 +74,9 @@
 							});
 							const res = await response.json();
 							if (res.success && res.url) {
-								const altText = document.getElementById('toastuiAltTextInput')?.value || '';
+								const altText =
+									(document.getElementById('toastuiAltTextInput') as HTMLInputElement | null)
+										?.value || '';
 								callback(res.url, altText);
 							} else {
 								console.error('Failed to upload image', res);
@@ -117,6 +119,7 @@
 				!confirm('Are you sure you want to delete this token? This cannot be undone.') &&
 				e.preventDefault()}
 		>
+			<input type="hidden" name="id" value={token.id} />
 			<Button
 				type="submit"
 				variant="ghost"
@@ -129,6 +132,7 @@
 	</div>
 
 	<form action="?/update" method="POST" enctype="multipart/form-data" use:enhance class="space-y-8">
+		<input type="hidden" name="id" value={token.id} />
 		<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
 			<!-- Main Editor -->
 			<div class="space-y-6 lg:col-span-2">
@@ -192,9 +196,9 @@
 						<Separator />
 
 						<div class="space-y-4">
-							<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+							<div>
 								<div class="space-y-2">
-									<label class="text-sm leading-none font-medium">Tags</label>
+									<p class="text-sm leading-none font-medium">Tags</p>
 									<TagSelector tags={data.tags} bind:selectedTags />
 									<p class="text-xs text-muted-foreground">Select relevant tags for this token.</p>
 									<input type="hidden" name="tags" value={selectedTags.join(',')} />
@@ -224,10 +228,6 @@
 										placeholder="https://..."
 										value={token.website || ''}
 									/>
-								</div>
-								<div class="space-y-2">
-									<label for="rank" class="text-sm leading-none font-medium">Rank</label>
-									<Input type="number" id="rank" name="rank" required min={1} value={token.rank} />
 								</div>
 							</div>
 

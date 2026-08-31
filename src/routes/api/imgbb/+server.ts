@@ -3,6 +3,7 @@ import { createApiClient } from '$lib/api';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
+	if (!locals.user) throw error(401, 'Authentication required');
 	const formData = await request.formData();
 	const image = formData.get('image') as File;
 
@@ -26,5 +27,5 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		);
 	}
 
-	return json({ success: true, url: res.data?.data?.url });
+	return json({ success: true, url: res.data?.url });
 };

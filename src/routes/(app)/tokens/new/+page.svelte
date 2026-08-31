@@ -71,7 +71,9 @@
 							});
 							const res = await response.json();
 							if (res.success && res.url) {
-								const altText = document.getElementById('toastuiAltTextInput')?.value || '';
+								const altText =
+									(document.getElementById('toastuiAltTextInput') as HTMLInputElement | null)
+										?.value || '';
 								callback(res.url, altText);
 							} else {
 								console.error('Failed to upload image', res);
@@ -175,9 +177,9 @@
 						<Separator />
 
 						<div class="space-y-4">
-							<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+							<div>
 								<div class="space-y-2">
-									<label class="text-sm leading-none font-medium">Tags</label>
+									<p class="text-sm leading-none font-medium">Tags</p>
 									<TagSelector tags={data.tags} bind:selectedTags />
 									<p class="text-xs text-muted-foreground">Select relevant tags for this token.</p>
 									<input type="hidden" name="tags" value={selectedTags.join(',')} />
@@ -205,17 +207,6 @@
 										name="website"
 										required
 										placeholder="https://..."
-									/>
-								</div>
-								<div class="space-y-2">
-									<label for="rank" class="text-sm leading-none font-medium">Rank</label>
-									<Input
-										type="number"
-										id="rank"
-										name="rank"
-										required
-										min={1}
-										placeholder="e.g. 1"
 									/>
 								</div>
 							</div>

@@ -3,7 +3,13 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
-	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '$lib/components/ui/card';
+	import {
+		Card,
+		CardContent,
+		CardHeader,
+		CardTitle,
+		CardDescription
+	} from '$lib/components/ui/card';
 	import { Separator } from '$lib/components/ui/separator';
 	import { enhance } from '$app/forms';
 
@@ -31,15 +37,22 @@
 	}
 </script>
 
-<div class="space-y-6 max-w-5xl mx-auto">
+<div class="mx-auto max-w-5xl space-y-6">
 	<div class="flex items-center justify-between">
 		<div class="flex items-center gap-4">
-			<Button href="/tags" variant="outline" size="icon" class="rounded-full shadow-sm hover:shadow-md transition-all">
+			<Button
+				href="/tags"
+				variant="outline"
+				size="icon"
+				class="rounded-full shadow-sm transition-all hover:shadow-md"
+			>
 				<ArrowLeft size={18} />
 			</Button>
 			<div>
 				<h1 class="text-3xl font-bold tracking-tight text-foreground">Create Tag</h1>
-				<p class="text-muted-foreground mt-1 text-sm">Add a new tag for categorizing items across the platform.</p>
+				<p class="mt-1 text-sm text-muted-foreground">
+					Add a new tag for categorizing items across the platform.
+				</p>
 			</div>
 		</div>
 	</div>
@@ -55,21 +68,23 @@
 		}}
 		class="space-y-8"
 	>
-		<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+		<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
 			<!-- Main Info -->
-			<div class="lg:col-span-2 space-y-6">
+			<div class="space-y-6 lg:col-span-2">
 				<Card>
 					<CardHeader>
 						<CardTitle class="flex items-center gap-2">
 							<Tag size={18} class="text-primary" />
 							Tag Information
 						</CardTitle>
-						<CardDescription>Primary identification and classification for filtering.</CardDescription>
+						<CardDescription
+							>Primary identification and classification for filtering.</CardDescription
+						>
 					</CardHeader>
 					<CardContent class="active-grid space-y-6">
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 							<div class="space-y-2">
-								<label for="name" class="text-sm font-medium leading-none flex items-center gap-2">
+								<label for="name" class="flex items-center gap-2 text-sm leading-none font-medium">
 									Tag Name *
 								</label>
 								<Input
@@ -81,16 +96,20 @@
 									maxlength={50}
 									oninput={handleNameInput}
 									placeholder="e.g. Education, DeFi, Halal"
-									class="text-lg font-bold h-12"
+									class="h-12 text-lg font-bold"
 								/>
 							</div>
 
 							<div class="space-y-2">
-								<label for="slug" class="text-sm font-medium leading-none flex items-center gap-2">
+								<label for="slug" class="flex items-center gap-2 text-sm leading-none font-medium">
 									URL Slug *
 								</label>
-								<div class="flex items-center group">
-									<div class="px-3 py-2 bg-muted border border-r-0 rounded-l-md text-muted-foreground text-xs font-mono h-10 flex items-center">/tags/</div>
+								<div class="group flex items-center">
+									<div
+										class="flex h-10 items-center rounded-l-md border border-r-0 bg-muted px-3 py-2 font-mono text-xs text-muted-foreground"
+									>
+										/tags/
+									</div>
 									<Input
 										id="slug"
 										name="slug"
@@ -99,7 +118,7 @@
 										minlength={1}
 										maxlength={50}
 										placeholder="auto-generated-slug"
-										class="rounded-l-none font-mono text-sm h-10 flex-1 group-focus-within:border-primary transition-colors"
+										class="h-10 flex-1 rounded-l-none font-mono text-sm transition-colors group-focus-within:border-primary"
 									/>
 								</div>
 							</div>
@@ -108,16 +127,21 @@
 						<Separator />
 
 						<div class="space-y-2">
-							<label for="description" class="text-sm font-medium leading-none flex items-center gap-2 text-foreground/80">
+							<label
+								for="description"
+								class="flex items-center gap-2 text-sm leading-none font-medium text-foreground/80"
+							>
 								Description
 							</label>
 							<Textarea
 								id="description"
 								name="description"
 								placeholder="What is this tag used for? (Optional)"
-								class="min-h-[120px] resize-none focus:ring-1 focus:ring-primary/20 transition-all text-base"
+								class="min-h-[120px] resize-none text-base transition-all focus:ring-1 focus:ring-primary/20"
 							/>
-							<div class="flex items-start gap-2 text-[11px] text-muted-foreground mt-2 bg-muted/50 p-2 rounded border border-border/50">
+							<div
+								class="mt-2 flex items-start gap-2 rounded border border-border/50 bg-muted/50 p-2 text-[11px] text-muted-foreground"
+							>
 								<Info size={14} class="mt-0.5 text-primary" />
 								<p>Descriptions help other admin managers understand the purpose of this tag.</p>
 							</div>
@@ -128,21 +152,33 @@
 				<Card>
 					<CardHeader>
 						<CardTitle>Public Content Category</CardTitle>
-						<CardDescription>Show this tag as a category in the public Berita or Edukasi menu.</CardDescription>
+						<CardDescription
+							>Show this tag as a category in the public Berita or Edukasi menu.</CardDescription
+						>
 					</CardHeader>
 					<CardContent class="space-y-4">
 						<label class="flex items-center gap-3 text-sm font-medium">
-							<input type="checkbox" name="showInNavigation" bind:checked={showInNavigation} class="h-4 w-4" />
+							<input
+								type="checkbox"
+								name="showInNavigation"
+								bind:checked={showInNavigation}
+								class="h-4 w-4"
+							/>
 							Tampilkan di navigasi publik
 						</label>
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-							<label class="space-y-2 text-sm font-medium">Section
-								<select name="contentSection" bind:value={contentSection} disabled={!showInNavigation} class="h-10 w-full rounded-md border bg-background px-3">
-									<option value="">Pilih section</option><option value="news">Berita</option><option value="education">Edukasi</option>
+						<div>
+							<label class="space-y-2 text-sm font-medium"
+								>Section
+								<select
+									name="contentSection"
+									bind:value={contentSection}
+									disabled={!showInNavigation}
+									class="h-10 w-full rounded-md border bg-background px-3"
+								>
+									<option value="">Pilih section</option><option value="news">Berita</option><option
+										value="education">Edukasi</option
+									>
 								</select>
-							</label>
-							<label class="space-y-2 text-sm font-medium">Urutan
-								<Input name="displayOrder" type="number" min="0" placeholder="Contoh: 1" disabled={!showInNavigation} />
 							</label>
 						</div>
 					</CardContent>
@@ -159,7 +195,11 @@
 						</CardTitle>
 					</CardHeader>
 					<CardContent class="space-y-4">
-						<Button type="submit" disabled={isSubmitting} class="w-full gap-2 h-12 font-bold shadow-sm hover:shadow-primary/20 transition-all">
+						<Button
+							type="submit"
+							disabled={isSubmitting}
+							class="h-12 w-full gap-2 font-bold shadow-sm transition-all hover:shadow-primary/20"
+						>
 							{#if isSubmitting}
 								<Loader2 class="h-5 w-5 animate-spin" />
 								Saving...
@@ -170,29 +210,39 @@
 						</Button>
 
 						{#if form?.message}
-							<div class="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium animate-in fade-in slide-in-from-top-2">
+							<div
+								class="animate-in fade-in slide-in-from-top-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm font-medium text-destructive"
+							>
 								{form.message}
 							</div>
 						{/if}
 
 						<Separator />
-						
-						<Button href="/tags" variant="ghost" type="button" class="w-full text-muted-foreground hover:text-foreground">
+
+						<Button
+							href="/tags"
+							variant="ghost"
+							type="button"
+							class="w-full text-muted-foreground hover:text-foreground"
+						>
 							Cancel and Return
 						</Button>
 					</CardContent>
 				</Card>
 
-				<Card class="bg-primary/5 border-primary/10">
+				<Card class="border-primary/10 bg-primary/5">
 					<CardHeader class="pb-2">
-						<CardTitle class="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+						<CardTitle
+							class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-primary uppercase"
+						>
 							<Globe size={12} /> Public Impact
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<p class="text-[11px] text-muted-foreground leading-relaxed">
-							New tags are immediately available for use in <strong>Posts</strong> and <strong>Tokens</strong>. 
-							They will appear as filters on the public website once associated with published items.
+						<p class="text-[11px] leading-relaxed text-muted-foreground">
+							New tags are immediately available for use in <strong>Posts</strong> and
+							<strong>Tokens</strong>. They will appear as filters on the public website once
+							associated with published items.
 						</p>
 					</CardContent>
 				</Card>
@@ -200,4 +250,3 @@
 		</div>
 	</form>
 </div>
-

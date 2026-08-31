@@ -116,7 +116,9 @@
 							});
 							const res = await response.json();
 							if (res.success && res.url) {
-								const altText = document.getElementById('toastuiAltTextInput')?.value || '';
+								const altText =
+									(document.getElementById('toastuiAltTextInput') as HTMLInputElement | null)
+										?.value || '';
 								callback(res.url, altText);
 								toast.success('Image uploaded successfully', { id: toastId });
 							} else {

@@ -13,16 +13,15 @@ export const actions = {
 			return fail(400, { success: false, message: 'All fields are required.' });
 		}
 
-		const client = createApiClient({ fetch }) as any;
+		const client = createApiClient({ fetch });
 
 		try {
 			const { data: res, error } = await client.POST('/messages', {
-				query: { notify: true },
 				body: { name, email, message }
 			});
 
-			if (error || !res?.success) {
-				return fail(400, { success: false, message: res?.message || error?.message || 'Failed to send message.' });
+			if (error || !res) {
+				return fail(400, { success: false, message: 'Failed to send message.' });
 			}
 
 			return { success: true };

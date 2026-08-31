@@ -1,48 +1,62 @@
 <script lang="ts">
-	import { ArrowLeft, Save, Loader2, Trash2, Tag, Info, Calendar, Clock, Globe } from 'lucide-svelte';
+	import { ArrowLeft, Save, Loader2, Trash2, Tag, Info, Calendar, Clock } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
-	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '$lib/components/ui/card';
+	import {
+		Card,
+		CardContent,
+		CardHeader,
+		CardTitle,
+		CardDescription
+	} from '$lib/components/ui/card';
 	import { Separator } from '$lib/components/ui/separator';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 
 	let { data, form } = $props();
-	
+
 	let isUpdating = $state(false);
 	let isDeleting = $state(false);
 
-	let name = $state(data.tag.name);
-	let slug = $state(data.tag.slug);
-	let showInNavigation = $state(Boolean((data.tag as { showInNavigation?: boolean }).showInNavigation));
-	let contentSection = $state((data.tag as { contentSection?: string | null }).contentSection ?? '');
-	let displayOrder = $state((data.tag as { displayOrder?: number | null }).displayOrder?.toString() ?? '');
+	let name = $state('');
+	let slug = $state('');
+	let showInNavigation = $state(false);
+	let contentSection = $state('');
 
-	function generateSlug(str: string) {
-		return str
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, '-')
-			.replace(/(^-|-$)+/g, '');
-	}
+	$effect(() => {
+		name = data.tag.name;
+		slug = data.tag.slug;
+		showInNavigation = Boolean((data.tag as { showInNavigation?: boolean }).showInNavigation);
+		contentSection = (data.tag as { contentSection?: string | null }).contentSection ?? '';
+	});
 
 	function handleNameInput(e: Event) {
 		const target = e.target as HTMLInputElement;
 		name = target.value;
-		// Only auto-generate slug if the user hasn't manually edited it significantly 
+		// Only auto-generate slug if the user hasn't manually edited it significantly
 		// or if we're in a specific "link" mode, but here we just use it as a helper
 	}
 </script>
 
-<div class="space-y-6 max-w-5xl mx-auto">
+<div class="mx-auto max-w-5xl space-y-6">
 	<div class="flex items-center justify-between">
 		<div class="flex items-center gap-4">
-			<Button href="/tags" variant="outline" size="icon" class="rounded-full shadow-sm hover:shadow-md transition-all">
+			<Button
+				href="/tags"
+				variant="outline"
+				size="icon"
+				class="rounded-full shadow-sm transition-all hover:shadow-md"
+			>
 				<ArrowLeft size={18} />
 			</Button>
 			<div>
 				<h1 class="text-3xl font-bold tracking-tight text-foreground">Edit Tag</h1>
-				<p class="text-muted-foreground font-mono text-sm opacity-80 decoration-primary/30 underline-offset-4 underline">{data.tag.slug}</p>
+				<p
+					class="font-mono text-sm text-muted-foreground underline decoration-primary/30 underline-offset-4 opacity-80"
+				>
+					{data.tag.slug}
+				</p>
 			</div>
 		</div>
 	</div>
@@ -64,21 +78,24 @@
 		}}
 		class="space-y-8"
 	>
-		<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+		<input type="hidden" name="id" value={data.tag.id} />
+		<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
 			<!-- Main Info -->
-			<div class="lg:col-span-2 space-y-6">
+			<div class="space-y-6 lg:col-span-2">
 				<Card>
 					<CardHeader>
 						<CardTitle class="flex items-center gap-2">
 							<Tag size={18} class="text-primary" />
 							Tag Information
 						</CardTitle>
-						<CardDescription>Primary identification and classification for filtering.</CardDescription>
+						<CardDescription
+							>Primary identification and classification for filtering.</CardDescription
+						>
 					</CardHeader>
 					<CardContent class="active-grid space-y-6">
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 							<div class="space-y-2">
-								<label for="name" class="text-sm font-medium leading-none flex items-center gap-2">
+								<label for="name" class="flex items-center gap-2 text-sm leading-none font-medium">
 									Tag Name *
 								</label>
 								<Input
@@ -90,16 +107,20 @@
 									maxlength={50}
 									oninput={handleNameInput}
 									placeholder="e.g. DeFi"
-									class="text-lg font-bold h-12"
+									class="h-12 text-lg font-bold"
 								/>
 							</div>
 
 							<div class="space-y-2">
-								<label for="slug" class="text-sm font-medium leading-none flex items-center gap-2">
+								<label for="slug" class="flex items-center gap-2 text-sm leading-none font-medium">
 									URL Slug *
 								</label>
-								<div class="flex items-center group">
-									<div class="px-3 py-2 bg-muted border border-r-0 rounded-l-md text-muted-foreground text-xs font-mono h-10 flex items-center">/tags/</div>
+								<div class="group flex items-center">
+									<div
+										class="flex h-10 items-center rounded-l-md border border-r-0 bg-muted px-3 py-2 font-mono text-xs text-muted-foreground"
+									>
+										/tags/
+									</div>
 									<Input
 										id="slug"
 										name="slug"
@@ -107,7 +128,7 @@
 										required
 										minlength={1}
 										maxlength={50}
-										class="rounded-l-none font-mono text-sm h-10 flex-1 group-focus-within:border-primary transition-colors"
+										class="h-10 flex-1 rounded-l-none font-mono text-sm transition-colors group-focus-within:border-primary"
 									/>
 								</div>
 							</div>
@@ -116,7 +137,10 @@
 						<Separator />
 
 						<div class="space-y-2">
-							<label for="description" class="text-sm font-medium leading-none flex items-center gap-2 text-foreground/80">
+							<label
+								for="description"
+								class="flex items-center gap-2 text-sm leading-none font-medium text-foreground/80"
+							>
 								Description
 							</label>
 							<Textarea
@@ -124,19 +148,38 @@
 								name="description"
 								value={data.tag.description || ''}
 								placeholder="What is this tag used for? (Optional)"
-								class="min-h-[120px] resize-none focus:ring-1 focus:ring-primary/20 transition-all text-base"
+								class="min-h-[120px] resize-none text-base transition-all focus:ring-1 focus:ring-primary/20"
 							/>
 						</div>
 					</CardContent>
 				</Card>
 
 				<Card>
-					<CardHeader><CardTitle>Public Content Category</CardTitle><CardDescription>Control whether this tag appears in the public category menu.</CardDescription></CardHeader>
+					<CardHeader
+						><CardTitle>Public Content Category</CardTitle><CardDescription
+							>Control whether this tag appears in the public category menu.</CardDescription
+						></CardHeader
+					>
 					<CardContent class="space-y-4">
-						<label class="flex items-center gap-3 text-sm font-medium"><input type="checkbox" name="showInNavigation" bind:checked={showInNavigation} class="h-4 w-4" /> Tampilkan di navigasi publik</label>
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-							<label class="space-y-2 text-sm font-medium">Section<select name="contentSection" bind:value={contentSection} disabled={!showInNavigation} class="h-10 w-full rounded-md border bg-background px-3"><option value="">Pilih section</option><option value="news">Berita</option><option value="education">Edukasi</option></select></label>
-							<label class="space-y-2 text-sm font-medium">Urutan<Input name="displayOrder" type="number" min="0" bind:value={displayOrder} disabled={!showInNavigation} /></label>
+						<label class="flex items-center gap-3 text-sm font-medium"
+							><input
+								type="checkbox"
+								name="showInNavigation"
+								bind:checked={showInNavigation}
+								class="h-4 w-4"
+							/> Tampilkan di navigasi publik</label
+						>
+						<div>
+							<label class="space-y-2 text-sm font-medium"
+								>Section<select
+									name="contentSection"
+									bind:value={contentSection}
+									disabled={!showInNavigation}
+									class="h-10 w-full rounded-md border bg-background px-3"
+									><option value="">Pilih section</option><option value="news">Berita</option
+									><option value="education">Edukasi</option></select
+								></label
+							>
 						</div>
 					</CardContent>
 				</Card>
@@ -144,29 +187,51 @@
 				<div class="pt-2">
 					<Card>
 						<CardHeader>
-							<CardTitle class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+							<CardTitle
+								class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
+							>
 								<Info size={12} /> System History
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-								<div class="flex items-center gap-3 group">
-									<div class="h-9 w-9 bg-primary/10 rounded-full flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+							<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+								<div class="group flex items-center gap-3">
+									<div
+										class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform group-hover:scale-110"
+									>
 										<Calendar size={16} />
 									</div>
 									<div>
-										<p class="text-[10px] font-bold uppercase text-muted-foreground leading-none">Created</p>
-										<p class="text-sm font-medium mt-1">{new Date(data.tag.createdAt).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })}</p>
+										<p class="text-[10px] leading-none font-bold text-muted-foreground uppercase">
+											Created
+										</p>
+										<p class="mt-1 text-sm font-medium">
+											{new Date(data.tag.createdAt).toLocaleString('id-ID', {
+												dateStyle: 'long',
+												timeStyle: 'short'
+											})}
+										</p>
 									</div>
 								</div>
 
-								<div class="flex items-center gap-3 group">
-									<div class="h-9 w-9 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+								<div class="group flex items-center gap-3">
+									<div
+										class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500/10 text-blue-500 transition-transform group-hover:scale-110"
+									>
 										<Clock size={16} />
 									</div>
 									<div>
-										<p class="text-[10px] font-bold uppercase text-muted-foreground leading-none">Last Updated</p>
-										<p class="text-sm font-medium mt-1">{data.tag.updatedAt ? new Date(data.tag.updatedAt).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' }) : 'Never'}</p>
+										<p class="text-[10px] leading-none font-bold text-muted-foreground uppercase">
+											Last Updated
+										</p>
+										<p class="mt-1 text-sm font-medium">
+											{data.tag.updatedAt
+												? new Date(data.tag.updatedAt).toLocaleString('id-ID', {
+														dateStyle: 'long',
+														timeStyle: 'short'
+													})
+												: 'Never'}
+										</p>
 									</div>
 								</div>
 							</div>
@@ -185,7 +250,11 @@
 						</CardTitle>
 					</CardHeader>
 					<CardContent class="space-y-4">
-						<Button type="submit" disabled={isUpdating || isDeleting} class="w-full gap-2 h-12 font-bold shadow-sm hover:shadow-primary/20 transition-all">
+						<Button
+							type="submit"
+							disabled={isUpdating || isDeleting}
+							class="h-12 w-full gap-2 font-bold shadow-sm transition-all hover:shadow-primary/20"
+						>
 							{#if isUpdating}
 								<Loader2 class="h-5 w-5 animate-spin" />
 								Saving...
@@ -196,12 +265,16 @@
 						</Button>
 
 						{#if form?.message && !form.success}
-							<div class="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium animate-in fade-in slide-in-from-top-2">
+							<div
+								class="animate-in fade-in slide-in-from-top-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm font-medium text-destructive"
+							>
 								{form.message}
 							</div>
 						{/if}
 						{#if form?.success}
-							<div class="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-medium animate-in fade-in slide-in-from-top-2">
+							<div
+								class="animate-in fade-in slide-in-from-top-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm font-medium text-emerald-600 dark:text-emerald-400"
+							>
 								{form.message}
 							</div>
 						{/if}
@@ -210,31 +283,40 @@
 
 				<Card>
 					<CardHeader>
-						<CardTitle class="text-sm font-bold text-destructive flex items-center gap-2">
+						<CardTitle class="flex items-center gap-2 text-sm font-bold text-destructive">
 							<Trash2 size={16} /> Danger Zone
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<p class="text-xs text-muted-foreground mb-4 opacity-80">Deleting a tag may remove it from all associated posts and tokens. This action is irreversible.</p>
+						<p class="mb-4 text-xs text-muted-foreground opacity-80">
+							Deleting a tag may remove it from all associated posts and tokens. This action is
+							irreversible.
+						</p>
 						<form
 							method="POST"
 							action="?/delete"
 							use:enhance={() => {
-								if (!confirm('Are you sure you want to delete this tag? This action cannot be undone.')) return;
+								if (
+									!confirm(
+										'Are you sure you want to delete this tag? This action cannot be undone.'
+									)
+								)
+									return;
 								isDeleting = true;
 								return async ({ result }) => {
 									isDeleting = false;
 								};
 							}}
 						>
+							<input type="hidden" name="id" value={data.tag.id} />
 							<Button
 								variant="ghost"
 								type="submit"
 								disabled={isDeleting || isUpdating}
-								class="w-full text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20 transition-all font-medium"
+								class="w-full border border-transparent font-medium text-destructive transition-all hover:border-destructive/20 hover:bg-destructive/10"
 							>
 								{#if isDeleting}
-									<Loader2 class="h-4 w-4 animate-spin mr-2" />
+									<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 									Deleting...
 								{:else}
 									<Trash2 size={16} class="mr-2" />
@@ -248,4 +330,3 @@
 		</div>
 	</form>
 </div>
-

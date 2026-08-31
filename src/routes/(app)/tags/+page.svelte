@@ -19,13 +19,9 @@
 	let { data } = $props();
 
 	let searchValue = $state('');
-	let publicFilter = $state('');
 	let sectionFilter = $state('');
 	$effect(() => {
 		searchValue = data.search || '';
-	});
-	$effect(() => {
-		publicFilter = data.publicFilter || '';
 	});
 	$effect(() => {
 		sectionFilter = data.section || '';
@@ -51,7 +47,7 @@
 
 	function applyFilters() {
 		const params = new URLSearchParams($page.url.searchParams);
-		for (const [key, value] of Object.entries({ public: publicFilter, section: sectionFilter })) {
+		for (const [key, value] of Object.entries({ section: sectionFilter })) {
 			if (value) params.set(key, value);
 			else params.delete(key);
 		}
@@ -59,7 +55,7 @@
 		goto(`?${params.toString()}`);
 	}
 
-	function sortBy(column: 'name' | 'slug' | 'description' | 'showInNavigation') {
+	function sortBy(column: 'name' | 'slug' | 'description') {
 		const params = new URLSearchParams($page.url.searchParams);
 		const isCurrentColumn = params.get('sort') === column;
 		params.set('sort', column);
@@ -69,7 +65,7 @@
 	}
 
 	function hasActiveFilters() {
-		return Boolean(data.search || data.publicFilter || data.section);
+		return Boolean(data.search || data.section);
 	}
 
 	function enhancePublicToggle({ formData, cancel }: { formData: FormData; cancel: () => void }) {
@@ -128,17 +124,7 @@
 					<SlidersHorizontal size={16} />
 					Filters
 				</div>
-				<div class="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2">
-					<select
-						bind:value={publicFilter}
-						onchange={applyFilters}
-						aria-label="Filter tampil publik"
-						class="h-10 rounded-md border border-input bg-background px-3 text-sm"
-					>
-						<option value="">Semua status publik</option>
-						<option value="shown">Tampil publik</option>
-						<option value="hidden">Tidak tampil publik</option>
-					</select>
+				<div class="grid flex-1 grid-cols-1 gap-2">
 					<select
 						bind:value={sectionFilter}
 						onchange={applyFilters}
@@ -201,18 +187,7 @@
 									/>{/if}</button
 							></th
 						>
-						<th class="hidden px-6 py-4 font-medium lg:table-cell"
-							><button
-								type="button"
-								class="flex items-center gap-1 hover:text-foreground"
-								onclick={() => sortBy('showInNavigation')}
-								>Tampil Publik {#if data.sort === 'showInNavigation'}{#if data.direction === 'asc'}<ArrowUp
-											size={14}
-										/>{:else}<ArrowDown size={14} />{/if}{:else}<ArrowUpDown
-										size={14}
-									/>{/if}</button
-							></th
-						>
+						<th class="hidden px-6 py-4 font-medium lg:table-cell">Tampil Publik</th>
 						<th class="px-6 py-4 text-right font-medium">Actions</th>
 					</tr>
 				</thead>
@@ -221,7 +196,6 @@
 						{@const categoryTag = tag as typeof tag & {
 							showInNavigation?: boolean;
 							contentSection?: string | null;
-							displayOrder?: number | null;
 						}}
 						<tr class="group transition-colors hover:bg-muted/30">
 							<td class="px-6 py-3">
@@ -251,8 +225,7 @@
 									use:enhance={enhancePublicToggle}
 									class="flex items-center gap-2"
 								>
-									<input type="hidden" name="slug" value={tag.slug} />
-									<input type="hidden" name="displayOrder" value={categoryTag.displayOrder ?? 99} />
+									<input type="hidden" name="id" value={tag.id} />
 									<select
 										name="contentSection"
 										value={categoryTag.contentSection ?? ''}
@@ -272,9 +245,7 @@
 										class="h-4 w-4 accent-primary"
 									/>
 									{#if categoryTag.showInNavigation}
-										<span class="text-xs text-emerald-600 dark:text-emerald-400"
-											>Tampil · #{categoryTag.displayOrder ?? '-'}</span
-										>
+										<span class="text-xs text-emerald-600 dark:text-emerald-400">Tampil</span>
 									{/if}
 								</form>
 							</td>

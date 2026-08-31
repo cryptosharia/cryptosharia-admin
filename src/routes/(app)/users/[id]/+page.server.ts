@@ -1,15 +1,15 @@
 import { createApiClient } from '$lib/api';
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { env } from '$env/dynamic/public';
-import { CS_API_KEY } from '$env/static/private';
+import { env as publicEnv } from '$env/dynamic/public';
+import { env as privateEnv } from '$env/dynamic/private';
 
 // Role definitions from API spec - enum values with display labels
 export const _ROLES = [
 	{ value: 'super_admin', label: 'Super Admin' },
 	{ value: 'admin', label: 'Admin' },
 	{ value: 'posts_manager', label: 'Posts Manager' },
-	{ value: 'tokens_manager', label: 'Tokens Manager' },
+	{ value: 'cryptoassets_manager', label: 'Cryptoassets Manager' },
 	{ value: 'member', label: 'Member' }
 ] as const;
 
@@ -24,13 +24,13 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 			params: { path: { id: params.id } }
 		});
 
-		if (apiError || !data?.success) {
+		if (apiError || !data) {
 			console.error('User load error:', apiError);
 			throw error(404, 'User not found');
 		}
 
 		return {
-			user: data.data,
+			user: data,
 			roles: _ROLES
 		};
 	} catch (err: any) {
@@ -64,76 +64,46 @@ export const actions = {
 			let avatarId: string | null | undefined = undefined;
 
 			if (avatarFile && avatarFile.size > 0) {
-				const apiUrl = (env.PUBLIC_CS_API_URL || 'https://preview.api.cryptosharia.id').replace(
-					/\/$/,
-					''
-				);
+				const apiUrl = (
+					publicEnv.PUBLIC_CS_API_URL || 'https://preview.api.cryptosharia.id'
+				).replace(/\/$/, '');
 				const uploadForm = new FormData();
 				uploadForm.append('file', avatarFile);
 				const uploadRes = await fetch(`${apiUrl}/assets`, {
 					method: 'POST',
 					headers: {
 						Authorization: `Bearer ${locals.user?.accessToken || ''}`,
-						'Api-Key': CS_API_KEY
+						'Api-Key': privateEnv.CS_API_KEY
 					},
 					body: uploadForm
 				});
 				if (uploadRes.ok) {
 					const uploadData = await uploadRes.json();
-					avatarId = uploadData.data?.id;
+					avatarId = uploadData.id;
 				}
 			} else if (removeAvatar) {
 				avatarId = null;
 			}
 
-			if (name || avatarId !== undefined) {
-				const patchBody: any = {};
-				if (name) patchBody.name = name;
-				if (avatarId !== undefined) patchBody.avatarId = avatarId;
+			const patchBody = {
+				...(name ? { name } : {}),
+				...(avatarId !== undefined ? { avatarId } : {}),
+				...(role
+					? {
+							role: role as
+								'super_admin' | 'admin' | 'posts_manager' | 'cryptoassets_manager' | 'member'
+						}
+					: {}),
+				...(status ? { status: status as 'active' | 'inactive' | 'suspended' | 'banned' } : {})
+			};
+			const { error: patchError } = await client.PATCH('/users/{id}', {
+				params: { path: { id: params.id } },
+				body: patchBody
+			});
 
-				const { error: patchError } = await client.PATCH('/users/{id}', {
-					params: { path: { id: params.id } },
-					body: patchBody
-				});
-
-				if (patchError) {
-					console.error('Update profile error:', patchError);
-					return fail(400, { success: false, message: 'Failed to update user profile.' });
-				}
-			}
-
-			// 2. Update Role
-			if (role) {
-				const roleValue = role as any;
-				const { error: roleError } = await client.PUT('/users/{id}/role', {
-					params: { path: { id: params.id } },
-					body: { role: roleValue }
-				});
-
-				if (roleError) {
-					console.error('Update role error:', roleError);
-					return fail(400, {
-						success: false,
-						message: 'Profile updated, but failed to update role.'
-					});
-				}
-			}
-
-			// 3. Update Status
-			if (status) {
-				const statusValue = status as 'active' | 'inactive' | 'suspended' | 'banned';
-				const { error: statusError } = await client.PUT('/users/{id}/status', {
-					params: { path: { id: params.id } },
-					body: { status: statusValue }
-				});
-
-				if (statusError) {
-					console.error('Update status error:', statusError);
-					return fail(400, {
-						success: false,
-						message: 'Profile updated, but failed to update status.'
-					});
-				}
+			if (patchError) {
+				console.error('Update user error:', patchError);
+				return fail(400, { success: false, message: 'Failed to update user.' });
 			}
 
 			return { success: true, message: 'User updated successfully' };

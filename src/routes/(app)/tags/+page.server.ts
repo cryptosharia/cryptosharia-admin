@@ -1,10 +1,10 @@
 import { createApiClient } from '$lib/api';
 import { fail } from '@sveltejs/kit';
+import { paginationFromResponse } from '$lib/pagination';
 import type { Actions } from './$types';
 import type { PageServerLoad } from './$types';
 
-const sortValues = ['name', 'slug', 'description', 'showInNavigation'] as const;
-const publicValues = ['shown', 'hidden'] as const;
+const sortValues = ['name', 'slug', 'description'] as const;
 const sectionValues = ['news', 'education'] as const;
 
 function isValueIn<T extends readonly string[]>(
@@ -26,9 +26,6 @@ export const load: PageServerLoad = async ({ fetch, locals, url }) => {
 		? url.searchParams.get('sort')
 		: 'name';
 	const direction = url.searchParams.get('direction') === 'desc' ? 'desc' : 'asc';
-	const publicFilter = isValueIn(url.searchParams.get('public'), publicValues)
-		? url.searchParams.get('public')
-		: '';
 	const section = isValueIn(url.searchParams.get('section'), sectionValues)
 		? url.searchParams.get('section')
 		: '';
@@ -36,20 +33,22 @@ export const load: PageServerLoad = async ({ fetch, locals, url }) => {
 	try {
 		const query: any = { limit: 20, page, sortBy: sort, sortDirection: direction };
 		if (search) query.search = search;
-		if (publicFilter) query.showInNavigation = publicFilter === 'shown';
-		if (section) query.contentSections = [section];
+		if (section) query.sections = [section];
 
-		const { data } = await client.GET('/tags', {
+		const { data, response } = await client.GET('/tags', {
 			params: { query }
 		});
 
 		return {
-			tags: data?.data?.items ?? [],
-			pagination: data?.data?.pagination ?? { total: 0, page: 1, limit: 20, totalPages: 0 },
+			tags: (data ?? []).map((tag) => ({
+				...tag,
+				contentSection: tag.section,
+				showInNavigation: Boolean(tag.section)
+			})),
+			pagination: paginationFromResponse(response, page, 20, data?.length ?? 0),
 			search: search ?? '',
 			sort,
 			direction,
-			publicFilter,
 			section
 		};
 	} catch (error) {
@@ -60,7 +59,6 @@ export const load: PageServerLoad = async ({ fetch, locals, url }) => {
 			search: '',
 			sort: 'name',
 			direction: 'asc',
-			publicFilter: '',
 			section: '',
 			error: 'API connection failed'
 		};
@@ -70,30 +68,25 @@ export const load: PageServerLoad = async ({ fetch, locals, url }) => {
 export const actions = {
 	togglePublic: async ({ request, fetch, locals }) => {
 		const formData = await request.formData();
-		const slug = String(formData.get('slug') || '');
+		const id = String(formData.get('id') || '');
 		const showInNavigation = formData.get('showInNavigation') === 'on';
 		const contentSectionValue = String(formData.get('contentSection') || '');
 		const contentSection = contentSectionValue || null;
-		const displayOrderValue = String(formData.get('displayOrder') || '');
-		const displayOrder = displayOrderValue === '' ? null : Number(displayOrderValue);
 
-		if (!slug) return fail(400, { success: false, message: 'Tag tidak valid.' });
+		if (!id) return fail(400, { success: false, message: 'Tag tidak valid.' });
 		if (showInNavigation && !contentSection) {
 			return fail(400, {
 				success: false,
 				message: 'Pilih bagian Berita atau Edukasi terlebih dahulu.'
 			});
 		}
-		if (displayOrder !== null && (!Number.isInteger(displayOrder) || displayOrder < 0)) {
-			return fail(400, { success: false, message: 'Urutan harus berupa angka nol atau lebih.' });
-		}
-
-		const client = createApiClient({ fetch, accessToken: locals.user?.accessToken }) as any;
-		const { data, error } = await client.PATCH(`/tags/${slug}`, {
-			body: { contentSection, showInNavigation, displayOrder }
+		const client = createApiClient({ fetch, accessToken: locals.user?.accessToken });
+		const { error } = await client.PATCH('/tags/{id}', {
+			params: { path: { id } },
+			body: { section: showInNavigation ? (contentSection as 'news' | 'education') : null }
 		});
 
-		if (error || !data?.success) {
+		if (error) {
 			return fail(400, {
 				success: false,
 				message: error?.message || 'Status kategori gagal diperbarui.'

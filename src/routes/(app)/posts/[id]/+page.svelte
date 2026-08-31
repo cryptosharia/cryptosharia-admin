@@ -138,7 +138,9 @@
 							});
 							const res = await response.json();
 							if (res.success && res.url) {
-								const altText = document.getElementById('toastuiAltTextInput')?.value || '';
+								const altText =
+									(document.getElementById('toastuiAltTextInput') as HTMLInputElement | null)
+										?.value || '';
 								callback(res.url, altText);
 								toast.success('Image uploaded successfully', { id: toastId });
 							} else {
@@ -194,7 +196,13 @@
 		</form>
 	</div>
 
-	<form action="?/update" method="POST" enctype="multipart/form-data" use:enhance={enhanceSave} class="space-y-8">
+	<form
+		action="?/update"
+		method="POST"
+		enctype="multipart/form-data"
+		use:enhance={enhanceSave}
+		class="space-y-8"
+	>
 		<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
 			<!-- Main Editor -->
 			<div class="space-y-6 lg:col-span-2">

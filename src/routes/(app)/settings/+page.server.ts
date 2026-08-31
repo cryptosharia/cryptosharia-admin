@@ -1,4 +1,3 @@
-import { createApiClient } from '$lib/api';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -17,29 +16,16 @@ export const actions = {
 		return { success: true, message: 'Settings saved.' };
 	},
 
-	changePassword: async ({ fetch, locals }) => {
+	changePassword: async ({ locals }) => {
 		const email = locals.user?.email;
 
 		if (!email) {
 			return fail(401, { message: 'Not authenticated.' });
 		}
 
-		const client = createApiClient({ fetch }) as any;
-
-		try {
-			const { data, error } = await client.POST('/auth/password/forgot', {
-				query: { notify: true },
-				body: { email }
-			});
-
-			if (error || !data?.success) {
-				return fail(400, { message: data?.message || 'Failed to send reset email.' });
-			}
-
-			return { success: true, message: `A password reset link has been sent to ${email}.` };
-		} catch (err: any) {
-			return fail(500, { message: 'Internal server error.' });
-		}
+		return fail(410, {
+			message: `API v2 menggunakan OTP untuk ${email}; password tidak lagi diperlukan.`
+		});
 	},
 
 	enable2FA: async () => {

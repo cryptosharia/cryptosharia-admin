@@ -1,55 +1,79 @@
-import { redirect, type Handle } from '@sveltejs/kit';
+import { env } from '$env/dynamic/public';
+import { redirect, type Handle, type HandleFetch } from '@sveltejs/kit';
 import { createApiClient } from '$lib/api';
 
+const ADMIN_ROLES = new Set(['super_admin', 'admin', 'posts_manager', 'cryptoassets_manager']);
+
+function isTokenExpiring(token: string) {
+	try {
+		const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8')) as {
+			exp?: number;
+		};
+		return typeof payload.exp !== 'number' || payload.exp * 1000 <= Date.now() + 30_000;
+	} catch {
+		return true;
+	}
+}
+
+export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
+	const apiUrl = env.PUBLIC_CS_API_URL;
+	if (apiUrl && request.url.startsWith(apiUrl)) {
+		const headers = new Headers(request.headers);
+		try {
+			const clientAddress = event.getClientAddress();
+			headers.set('Forwarded', `for="${clientAddress.replace(/["\\]/g, '')}"`);
+		} catch {
+			// Some local adapters do not expose a client address.
+		}
+		request = new Request(request, { headers });
+	}
+
+	return fetch(request);
+};
+
 export const handle: Handle = async ({ event, resolve }) => {
-	const accessToken = event.cookies.get('access_token');
+	let accessToken = event.cookies.get('access_token');
+	const refreshToken = event.cookies.get('refresh_token');
+
+	if (accessToken && refreshToken && isTokenExpiring(accessToken)) {
+		const client = createApiClient({ fetch: event.fetch });
+		const { data, error } = await client.POST('/auth/refresh', { body: { refreshToken } });
+		if (!error && data?.accessToken) {
+			accessToken = data.accessToken;
+			event.cookies.set('access_token', accessToken, {
+				path: '/',
+				httpOnly: true,
+				sameSite: 'strict',
+				secure: process.env.NODE_ENV === 'production',
+				maxAge: 60 * 15
+			});
+			event.cookies.delete('user_session', { path: '/' });
+		} else {
+			accessToken = undefined;
+			event.cookies.delete('access_token', { path: '/' });
+			event.cookies.delete('refresh_token', { path: '/' });
+			event.cookies.delete('user_session', { path: '/' });
+		}
+	}
 
 	if (accessToken) {
-		// Try to read cached user data from cookie first (avoids API call on every request)
-		const cachedUserRaw = event.cookies.get('user_session');
+		const client = createApiClient({ fetch: event.fetch, accessToken });
+		const { data } = await client.GET('/auth/me');
 
-		if (cachedUserRaw) {
-			try {
-				const cachedUser = JSON.parse(cachedUserRaw);
-				event.locals.user = {
-					...cachedUser,
-					accessToken
-				};
-			} catch {
-				// Invalid cache, fall through to API call
-			}
-		}
-
-		// Only call API if we don't have cached user data
-		if (!event.locals.user) {
-			const client = createApiClient({ fetch: event.fetch, accessToken });
-			const { data, error } = await client.GET('/auth/me');
-
-			if (data?.success && data.data) {
-				const userData = {
-					id: data.data.id,
-					name: data.data.name,
-					email: data.data.email,
-					role: data.data.role,
-					permissions: data.data.permissions
-				};
-
-				event.locals.user = { ...userData, accessToken };
-
-				// Cache user data in a separate cookie (not httpOnly so it's readable)
-				event.cookies.set('user_session', JSON.stringify(userData), {
-					path: '/',
-					httpOnly: true,
-					sameSite: 'strict',
-					secure: process.env.NODE_ENV === 'production',
-					maxAge: 60 * 60 // 1 hour - matches access token expiry
-				});
-			} else {
-				// Invalidate session if token is invalid
-				event.cookies.delete('access_token', { path: '/' });
-				event.cookies.delete('refresh_token', { path: '/' });
-				event.cookies.delete('user_session', { path: '/' });
-			}
+		if (data) {
+			event.locals.user = {
+				id: data.id,
+				name: data.name,
+				email: data.email,
+				role: data.role,
+				permissions: [],
+				accessToken
+			};
+		} else {
+			// Invalidate the complete session when the API rejects the access token.
+			event.cookies.delete('access_token', { path: '/' });
+			event.cookies.delete('refresh_token', { path: '/' });
+			event.cookies.delete('user_session', { path: '/' });
 		}
 	}
 
@@ -66,13 +90,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	// Redirect member role users away from app routes (pending approval)
-	if (event.locals.user?.role === 'member' && !isAuthRoute) {
+	// Only administrative roles may access the admin application.
+	if (event.locals.user && !ADMIN_ROLES.has(event.locals.user.role) && !isAuthRoute) {
 		throw redirect(303, '/login?pending=true');
 	}
 
-	// Redirect logged in non-member users away from auth routes
-	if (event.locals.user && isAuthRoute && event.locals.user.role !== 'member') {
+	// Redirect logged-in administrative users away from auth routes.
+	if (event.locals.user && isAuthRoute && ADMIN_ROLES.has(event.locals.user.role)) {
 		throw redirect(303, '/dashboard');
 	}
 

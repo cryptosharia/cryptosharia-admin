@@ -6,19 +6,21 @@
 		currentUrl = null as string | null,
 		required = false,
 		aspectRatio = 'square' as 'square' | 'video' | 'auto',
-		label = 'Image',
+		label = 'Image'
 	} = $props();
 
 	let preview = $state<string | null>(null);
 	let removeImage = $state(false);
-	let fileInput: HTMLInputElement;
+	let fileInput = $state<HTMLInputElement>();
 
 	function handleChange(e: Event) {
 		const file = (e.target as HTMLInputElement).files?.[0];
 		if (!file) return;
 		removeImage = false;
 		const reader = new FileReader();
-		reader.onload = (ev) => { preview = ev.target?.result as string; };
+		reader.onload = (ev) => {
+			preview = ev.target?.result as string;
+		};
 		reader.readAsDataURL(file);
 	}
 
@@ -36,29 +38,39 @@
 		removeImage = false;
 	}
 
-	const aspectClass = {
-		square: 'aspect-square',
-		video: 'aspect-video',
-		auto: 'min-h-32',
-	}[aspectRatio];
+	const aspectClass = $derived(
+		{
+			square: 'aspect-square',
+			video: 'aspect-video',
+			auto: 'min-h-32'
+		}[aspectRatio]
+	);
 </script>
 
 <div class="space-y-3">
 	<!-- Preview area -->
-	<div class="relative w-full {aspectClass} rounded-xl overflow-hidden border border-input bg-muted/30 flex items-center justify-center">
+	<div
+		class="relative w-full {aspectClass} flex items-center justify-center overflow-hidden rounded-xl border border-input bg-muted/30"
+	>
 		{#if removeImage}
-			<div class="flex flex-col items-center gap-2 text-muted-foreground p-4">
-				<Trash2 size={28} class="opacity-30 text-destructive" />
-				<span class="text-xs text-destructive/70 text-center">Will be removed on save</span>
+			<div class="flex flex-col items-center gap-2 p-4 text-muted-foreground">
+				<Trash2 size={28} class="text-destructive opacity-30" />
+				<span class="text-center text-xs text-destructive/70">Will be removed on save</span>
 			</div>
 		{:else if preview}
-			<img src={preview} alt="Preview" class="w-full h-full object-contain p-4" />
-			<span class="absolute top-2 left-2 text-[10px] font-semibold bg-amber-500 text-white px-2 py-0.5 rounded-full">New</span>
+			<img src={preview} alt="Preview" class="h-full w-full object-contain p-4" />
+			<span
+				class="absolute top-2 left-2 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-semibold text-white"
+				>New</span
+			>
 		{:else if currentUrl}
-			<img src={currentUrl} alt={label} class="w-full h-full object-contain p-4" />
-			<span class="absolute top-2 left-2 text-[10px] font-semibold bg-background/80 text-muted-foreground px-2 py-0.5 rounded-full border border-input">Current</span>
+			<img src={currentUrl} alt={label} class="h-full w-full object-contain p-4" />
+			<span
+				class="absolute top-2 left-2 rounded-full border border-input bg-background/80 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground"
+				>Current</span
+			>
 		{:else}
-			<div class="flex flex-col items-center gap-2 text-muted-foreground p-4">
+			<div class="flex flex-col items-center gap-2 p-4 text-muted-foreground">
 				<ImageIcon size={32} class="opacity-20" />
 				<span class="text-xs">No image{required ? ' (required)' : ''}</span>
 			</div>
@@ -70,7 +82,7 @@
 		{#if !removeImage}
 			<label
 				for="{name}-input"
-				class="flex items-center justify-center gap-2 h-9 px-4 rounded-md border border-input bg-background text-sm font-medium cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+				class="flex h-9 cursor-pointer items-center justify-center gap-2 rounded-md border border-input bg-background px-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
 			>
 				{#if preview}
 					<Pencil size={14} />
@@ -98,7 +110,7 @@
 				<button
 					type="button"
 					onclick={clearPreview}
-					class="flex items-center justify-center gap-2 h-9 px-4 rounded-md border border-input bg-background text-sm font-medium hover:bg-muted transition-colors text-muted-foreground"
+					class="flex h-9 items-center justify-center gap-2 rounded-md border border-input bg-background px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
 				>
 					<RotateCcw size={14} />
 					Revert to Current
@@ -109,7 +121,7 @@
 				<button
 					type="button"
 					onclick={handleRemove}
-					class="flex items-center justify-center gap-2 h-9 px-4 rounded-md border border-destructive/30 bg-destructive/5 text-sm font-medium hover:bg-destructive/10 hover:text-destructive transition-colors text-destructive/70"
+					class="flex h-9 items-center justify-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-4 text-sm font-medium text-destructive/70 transition-colors hover:bg-destructive/10 hover:text-destructive"
 				>
 					<Trash2 size={14} />
 					Remove Image
@@ -119,7 +131,7 @@
 			<button
 				type="button"
 				onclick={cancelRemove}
-				class="flex items-center justify-center gap-2 h-9 px-4 rounded-md border border-input bg-background text-sm font-medium hover:bg-accent transition-colors"
+				class="flex h-9 items-center justify-center gap-2 rounded-md border border-input bg-background px-4 text-sm font-medium transition-colors hover:bg-accent"
 			>
 				<RotateCcw size={14} />
 				Keep Current Image

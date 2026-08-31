@@ -2,60 +2,97 @@ import { fail, redirect } from '@sveltejs/kit';
 import { createApiClient } from '$lib/api';
 import type { Actions } from './$types';
 
-export const actions = {
-	default: async ({ request, cookies, fetch }) => {
-		const data = await request.formData();
-		const email = data.get('email') as string;
-		const password = data.get('password') as string;
+const ADMIN_ROLES = new Set(['super_admin', 'admin', 'posts_manager', 'cryptoassets_manager']);
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-		if (!email || !password) {
-			return fail(400, { missing: true });
+export const actions = {
+	requestOtp: async ({ request, fetch }) => {
+		const data = await request.formData();
+		const emailValue = data.get('email');
+		const email = typeof emailValue === 'string' ? emailValue.trim() : '';
+
+		if (!email || email.length > 255 || !EMAIL_PATTERN.test(email)) {
+			return fail(400, { email, error: 'Masukkan alamat email yang valid.' });
 		}
 
 		const client = createApiClient({ fetch });
-		const { data: res, error } = await client.POST('/auth/signin', {
-			body: { email, password }
+		const { error } = await client.POST('/auth/otp/request', {
+			body: { email }
 		});
 
-		if (error || !res?.success || !res.data) {
-			return fail(401, { invalid: true, message: res?.message || 'Invalid credentials' });
+		if (error) {
+			return fail(400, { email, error: 'Kode OTP gagal dikirim.' });
+		}
+
+		return { email, otpRequested: true, message: 'Kode OTP telah dikirim ke email Anda.' };
+	},
+
+	verifyOtp: async ({ request, cookies, fetch }) => {
+		const data = await request.formData();
+		const emailValue = data.get('email');
+		const codeValue = data.get('code');
+		const email = typeof emailValue === 'string' ? emailValue.trim() : '';
+		const code = typeof codeValue === 'string' ? codeValue.trim() : '';
+
+		if (!email || !EMAIL_PATTERN.test(email) || !/^[0-9]{6}$/.test(code)) {
+			return fail(400, { email, otpRequested: true, error: 'Masukkan kode OTP 6 digit.' });
+		}
+
+		const client = createApiClient({ fetch });
+		const { data: res, error } = await client.POST('/auth/otp/verify', {
+			body: { email, code }
+		});
+
+		if (error || !res) {
+			return fail(401, {
+				email,
+				otpRequested: true,
+				error: 'Kode OTP tidak valid atau kedaluwarsa.'
+			});
+		}
+
+		const meClient = createApiClient({ fetch, accessToken: res.accessToken });
+		const { data: meRes, error: meError } = await meClient.GET('/auth/me');
+		if (meError || !meRes) {
+			return fail(502, { email, otpRequested: true, error: 'Profil akun tidak dapat dimuat.' });
+		}
+
+		if (!ADMIN_ROLES.has(meRes.role)) {
+			await client.POST('/auth/signout', { body: { refreshToken: res.refreshToken } });
+			return fail(403, {
+				email,
+				otpRequested: true,
+				error: 'Akun ini tidak memiliki akses ke panel admin.'
+			});
 		}
 
 		const cookieOptions = {
 			path: '/',
 			httpOnly: true,
 			sameSite: 'strict' as const,
-			secure: process.env.NODE_ENV === 'production',
+			secure: process.env.NODE_ENV === 'production'
 		};
 
-		// Set tokens
-		cookies.set('access_token', res.data.accessToken, {
+		cookies.set('access_token', res.accessToken, {
 			...cookieOptions,
-			maxAge: 60 * 60 // 1 hour
+			maxAge: 60 * 15
 		});
-		cookies.set('refresh_token', res.data.refreshToken, {
+		cookies.set('refresh_token', res.refreshToken, {
 			...cookieOptions,
-			maxAge: 60 * 60 * 24 * 7 // 1 week
+			maxAge: 60 * 60 * 24 * 30
 		});
 
-		// Cache user data immediately so hooks.server.ts doesn't need to call /auth/me
-		// Fetch full user profile with role/permissions
-		const meClient = createApiClient({ fetch, accessToken: res.data.accessToken });
-		const { data: meRes } = await meClient.GET('/auth/me');
-		
-		if (meRes?.success && meRes.data) {
-			const userData = {
-				id: meRes.data.id,
-				name: meRes.data.name,
-				email: meRes.data.email,
-				role: meRes.data.role,
-				permissions: meRes.data.permissions,
-			};
-			cookies.set('user_session', JSON.stringify(userData), {
-				...cookieOptions,
-				maxAge: 60 * 60 // 1 hour
-			});
-		}
+		const userData = {
+			id: meRes.id,
+			name: meRes.name,
+			email: meRes.email,
+			role: meRes.role,
+			permissions: []
+		};
+		cookies.set('user_session', JSON.stringify(userData), {
+			...cookieOptions,
+			maxAge: 60 * 15
+		});
 
 		throw redirect(303, '/dashboard');
 	}
