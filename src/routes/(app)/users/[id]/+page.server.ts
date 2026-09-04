@@ -1,8 +1,7 @@
 import { createApiClient } from '$lib/api';
+import { uploadAsset } from '$lib/server/assets';
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { env as publicEnv } from '$env/dynamic/public';
-import { env as privateEnv } from '$env/dynamic/private';
 
 // Role definitions from API spec - enum values with display labels
 export const _ROLES = [
@@ -64,23 +63,8 @@ export const actions = {
 			let avatarId: string | null | undefined = undefined;
 
 			if (avatarFile && avatarFile.size > 0) {
-				const apiUrl = (
-					publicEnv.PUBLIC_CS_API_URL || 'https://preview.api.cryptosharia.id'
-				).replace(/\/$/, '');
-				const uploadForm = new FormData();
-				uploadForm.append('file', avatarFile);
-				const uploadRes = await fetch(`${apiUrl}/assets`, {
-					method: 'POST',
-					headers: {
-						Authorization: `Bearer ${locals.user?.accessToken || ''}`,
-						'Api-Key': privateEnv.CS_API_KEY
-					},
-					body: uploadForm
-				});
-				if (uploadRes.ok) {
-					const uploadData = await uploadRes.json();
-					avatarId = uploadData.id;
-				}
+				const uploadedAsset = await uploadAsset(fetch, avatarFile, locals.user?.accessToken);
+				avatarId = uploadedAsset.id;
 			} else if (removeAvatar) {
 				avatarId = null;
 			}

@@ -1,37 +1,12 @@
 import { createApiClient } from '$lib/api';
+import { uploadAsset } from '$lib/server/assets';
 import { loadAllTags } from '$lib/server/tags';
 import { fail, redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
-import { env as publicEnv } from '$env/dynamic/public';
-import { env as privateEnv } from '$env/dynamic/private';
+import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ fetch, locals }) => {
 	return { tags: await loadAllTags(fetch, locals.user?.accessToken) };
 };
-
-async function uploadAsset(fetchFn: typeof fetch, file: File, accessToken: string) {
-	const formData = new FormData();
-	formData.append('file', file);
-	const apiUrl = publicEnv.PUBLIC_CS_API_URL.replace(/\/$/, '');
-
-	const res = await fetchFn(`${apiUrl}/assets`, {
-		method: 'POST',
-		headers: {
-			Authorization: `Bearer ${accessToken}`,
-			'Api-Key': privateEnv.CS_API_KEY
-		},
-		body: formData
-	});
-
-	if (!res.ok) {
-		const errorText = await res.text();
-		console.error(`Upload failed with status ${res.status}:`, errorText);
-		throw new Error(errorText || `File upload failed with status ${res.status}`);
-	}
-
-	const json = await res.json();
-	return json.data;
-}
 
 export const actions = {
 	create: async ({ request, fetch, locals }) => {
@@ -78,7 +53,7 @@ export const actions = {
 				return fail(400, { message: 'Logo Image is required' });
 			}
 
-			const uploadedAsset = await uploadAsset(fetch, logoFile, locals.user?.accessToken || '');
+			const uploadedAsset = await uploadAsset(fetch, logoFile, locals.user?.accessToken);
 			logoId = uploadedAsset.id;
 
 			const { data, error } = await client.POST('/cryptoassets', {
@@ -108,4 +83,4 @@ export const actions = {
 			return fail(500, { message: err.message || 'Internal server error' });
 		}
 	}
-};
+} satisfies Actions;

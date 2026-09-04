@@ -10,14 +10,16 @@
 
 	let sidebarOpen = $state(false);
 	let sidebarCollapsed = $state(false);
+	let progress: Pick<typeof import('nprogress'), 'start' | 'done' | 'configure'> | undefined;
 
-	// NProgress
+	// Navigation hooks must be registered while the layout component is initialized.
+	beforeNavigate(() => progress?.start());
+	afterNavigate(() => progress?.done());
+
+	// Load NProgress in the browser without delaying component initialization.
 	onMount(async () => {
-		const NProgress = (await import('nprogress')).default;
-		NProgress.configure({ showSpinner: false, minimum: 0.15, speed: 300 });
-
-		beforeNavigate(() => NProgress.start());
-		afterNavigate(() => NProgress.done());
+		progress = (await import('nprogress')).default;
+		progress.configure({ showSpinner: false, minimum: 0.15, speed: 300 });
 	});
 
 	// Persist collapsed state

@@ -1,37 +1,12 @@
 import { createApiClient } from '$lib/api';
+import { uploadAsset } from '$lib/server/assets';
 import { loadAllTags } from '$lib/server/tags';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { env as publicEnv } from '$env/dynamic/public';
-import { env as privateEnv } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async ({ fetch, locals }) => {
 	return { tags: await loadAllTags(fetch, locals.user?.accessToken) };
 };
-
-async function uploadAsset(fetchFn: typeof fetch, file: File, accessToken: string) {
-	const formData = new FormData();
-	formData.append('file', file);
-	const apiUrl = publicEnv.PUBLIC_CS_API_URL.replace(/\/$/, '');
-
-	const res = await fetchFn(`${apiUrl}/assets`, {
-		method: 'POST',
-		headers: {
-			Authorization: `Bearer ${accessToken}`,
-			'Api-Key': privateEnv.CS_API_KEY
-		},
-		body: formData
-	});
-
-	if (!res.ok) {
-		const errorText = await res.text();
-		console.error(`Upload failed with status ${res.status}:`, errorText);
-		throw new Error(errorText || `File upload failed with status ${res.status}`);
-	}
-
-	const json = await res.json();
-	return json;
-}
 
 export const actions = {
 	default: async ({ request, fetch, locals }) => {
@@ -80,7 +55,7 @@ export const actions = {
 			const uploadedAsset = await uploadAsset(
 				fetch,
 				coverImageFile,
-				locals.user?.accessToken || ''
+				locals.user?.accessToken
 			);
 			coverImageId = uploadedAsset.id;
 

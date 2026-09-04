@@ -3,6 +3,10 @@ import type { paths } from '$lib/api-types';
 import { env as publicEnv } from '$env/dynamic/public';
 import { env as privateEnv } from '$env/dynamic/private';
 
+export const API_BASE_URL = (
+	publicEnv.PUBLIC_CS_API_URL || 'https://api.cryptosharia.id'
+).replace(/\/$/, '');
+
 /**
  * Factory untuk membuat API Client.
  */
@@ -22,7 +26,7 @@ export const createApiClient = (
 	if (options.accessToken) headers['Authorization'] = `Bearer ${options.accessToken}`;
 
 	return createClient<paths>({
-		baseUrl: publicEnv.PUBLIC_CS_API_URL,
+		baseUrl: API_BASE_URL,
 		fetch: options.fetch,
 		headers
 	});

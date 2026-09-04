@@ -35,30 +35,61 @@ export const handle: Handle = async ({ event, resolve }) => {
 	let accessToken = event.cookies.get('access_token');
 	const refreshToken = event.cookies.get('refresh_token');
 
-	if (accessToken && refreshToken && isTokenExpiring(accessToken)) {
+	const cookieOptions = {
+		path: '/',
+		httpOnly: true,
+		sameSite: 'strict' as const,
+		secure: process.env.NODE_ENV === 'production'
+	};
+
+	const clearAuthCookies = () => {
+		accessToken = undefined;
+		event.cookies.delete('access_token', { path: '/' });
+		event.cookies.delete('refresh_token', { path: '/' });
+		event.cookies.delete('user_session', { path: '/' });
+	};
+
+	const tryRefresh = async (): Promise<string | null> => {
+		if (!refreshToken) return null;
 		const client = createApiClient({ fetch: event.fetch });
 		const { data, error } = await client.POST('/auth/refresh', { body: { refreshToken } });
 		if (!error && data?.accessToken) {
 			accessToken = data.accessToken;
 			event.cookies.set('access_token', accessToken, {
-				path: '/',
-				httpOnly: true,
-				sameSite: 'strict',
-				secure: process.env.NODE_ENV === 'production',
+				...cookieOptions,
 				maxAge: 60 * 15
 			});
+			event.cookies.set('refresh_token', refreshToken, {
+				...cookieOptions,
+				maxAge: 60 * 60 * 24 * 30
+			});
 			event.cookies.delete('user_session', { path: '/' });
-		} else {
-			accessToken = undefined;
-			event.cookies.delete('access_token', { path: '/' });
-			event.cookies.delete('refresh_token', { path: '/' });
-			event.cookies.delete('user_session', { path: '/' });
+			return accessToken;
 		}
+		clearAuthCookies();
+		return null;
+	};
+
+	// 1. If access token is missing or expiring soon, but refresh token exists, refresh it
+	if (refreshToken && (!accessToken || isTokenExpiring(accessToken))) {
+		accessToken = (await tryRefresh()) ?? undefined;
 	}
 
+	// 2. Fetch current user if we have an access token
 	if (accessToken) {
-		const client = createApiClient({ fetch: event.fetch, accessToken });
-		const { data } = await client.GET('/auth/me');
+		let client = createApiClient({ fetch: event.fetch, accessToken });
+		let { data } = await client.GET('/auth/me');
+
+		// Fallback: if /auth/me failed (e.g. token expired/invalid) and we have a refreshToken, try refresh once
+		if (!data && refreshToken) {
+			const refreshedToken = await tryRefresh();
+			if (refreshedToken) {
+				accessToken = refreshedToken;
+				client = createApiClient({ fetch: event.fetch, accessToken });
+				const retry = await client.GET('/auth/me');
+				data = retry.data;
+			}
+		}
 
 		if (data) {
 			event.locals.user = {
@@ -70,10 +101,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 				accessToken
 			};
 		} else {
-			// Invalidate the complete session when the API rejects the access token.
-			event.cookies.delete('access_token', { path: '/' });
-			event.cookies.delete('refresh_token', { path: '/' });
-			event.cookies.delete('user_session', { path: '/' });
+			clearAuthCookies();
 		}
 	}
 
