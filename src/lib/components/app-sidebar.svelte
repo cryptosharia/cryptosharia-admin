@@ -9,7 +9,8 @@
 		Tag,
 		ChevronLeft,
 		ChevronRight,
-		BookOpen
+		BookOpen,
+		UsersRound
 	} from 'lucide-svelte';
 	import { cn } from '$lib/utils';
 	import LogoutButton from '$lib/components/LogoutButton.svelte';
@@ -24,6 +25,7 @@
 		{ label: 'Posts', href: '/posts', icon: Newspaper },
 		{ label: 'Tokens', href: '/tokens', icon: Coins },
 		{ label: 'Tags', href: '/tags', icon: Tag },
+		{ label: 'Tim Kami', href: '/team', icon: UsersRound },
 		{ label: 'Users', href: '/users', icon: Users },
 		{ label: 'Messages', href: '/messages', icon: MessageSquare }
 	];

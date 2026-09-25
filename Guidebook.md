@@ -186,6 +186,9 @@ A: Pastikan status token sudah diatur ke `Published`. Jika masih `Draft`, koin h
 **Q: Bagaimana jika kode OTP tidak diterima?**
 A: Pastikan email benar, periksa folder spam, lalu minta kode baru. Jika akun tetap tidak dapat masuk, hubungi **Superadmin** untuk memeriksa role dan status akun.
 
+**Q: Bagaimana cara reset password jika lupa?**
+A: Anda dapat mereset sendiri, buka link untuk reset password, masukkan email yang terdaftar, lalu otomatis di inbox email anda ada link untuk update password.
+
 ---
 
 _Dokumen ini adalah gabungan resmi dari Manual Operasional & Guide Book CryptoSharia Admin._
