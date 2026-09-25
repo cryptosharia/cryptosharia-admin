@@ -7,6 +7,7 @@
 	import ImageUpload from '$lib/components/ImageUpload.svelte';
 	import { enhance } from '$app/forms';
 	import { toast } from 'svelte-sonner';
+	import { resolveTeamImageUrl } from '$lib/team-image';
 
 	let { data, form } = $props();
 
@@ -113,7 +114,7 @@
 							name="image"
 							label="Foto Profil"
 							aspectRatio="square"
-							currentUrl={member.image || member.imageUrl}
+							currentUrl={resolveTeamImageUrl(member.image || member.imageUrl)}
 						/>
 
 						<div class="space-y-1.5 pt-2 border-t border-border/40">

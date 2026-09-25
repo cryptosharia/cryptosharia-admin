@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Plus, UsersRound, Search, Edit, Trash2, CheckCircle2, XCircle, ArrowUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
+	import { resolveTeamImageUrl } from '$lib/team-image';
 	import { Input } from '$lib/components/ui/input';
 	import { Badge } from '$lib/components/ui/badge';
 	import { goto } from '$app/navigation';
@@ -111,7 +112,7 @@
 							<div class="relative shrink-0">
 								{#if member.image}
 									<img
-										src={member.image}
+										src={resolveTeamImageUrl(member.image)}
 										alt={member.name}
 										class="h-16 w-16 rounded-xl object-cover border border-border bg-muted/50"
 									/>
