@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { resolve } from '$app/paths';
 	import {
 		LayoutDashboard,
 		Coins,
@@ -15,10 +16,9 @@
 	import { cn } from '$lib/utils';
 	import LogoutButton from '$lib/components/LogoutButton.svelte';
 	import ThemeToggle from '$lib/components/theme-toggle.svelte';
+	import { canManageCryptoassets } from '$lib/permissions';
 
 	let { user, collapsed = $bindable(false), class: className } = $props();
-
-	const ADMIN_GUIDE_URL = 'https://anything.mdaffailhami.my.id/cryptosharia-admin-guide';
 
 	const navItems = [
 		{ label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -28,9 +28,8 @@
 		{ label: 'Tim Kami', href: '/team', icon: UsersRound },
 		{ label: 'Users', href: '/users', icon: Users },
 		{ label: 'Messages', href: '/messages', icon: MessageSquare }
-	];
-
-	const helpItems = [{ label: 'Panduan', href: ADMIN_GUIDE_URL, icon: BookOpen, external: true }];
+	] as const;
+	const canManageTokens = $derived(canManageCryptoassets(user?.role));
 </script>
 
 <aside
@@ -44,7 +43,7 @@
 	<div class="relative flex h-16 shrink-0 items-center border-b border-sidebar-border px-3">
 		{#if !collapsed}
 			<a
-				href="/dashboard"
+				href={resolve('/dashboard')}
 				class="flex items-center gap-2 overflow-hidden text-xl font-bold transition-opacity hover:opacity-80"
 			>
 				<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-500/10">
@@ -54,7 +53,7 @@
 			</a>
 		{:else}
 			<a
-				href="/dashboard"
+				href={resolve('/dashboard')}
 				class="flex w-full items-center justify-center transition-opacity hover:opacity-80"
 			>
 				<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-500/10">
@@ -80,11 +79,11 @@
 	<!-- Nav -->
 	<div class="custom-scrollbar flex-1 overflow-x-hidden overflow-y-auto px-2 py-4">
 		<nav class="flex flex-col gap-1" data-sveltekit-preload-data="tap">
-			{#each navItems as item}
+			{#each navItems.filter((item) => item.href !== '/tokens' || canManageTokens) as item (item.href)}
 				{@const active =
 					$page.url.pathname === item.href || $page.url.pathname.startsWith(item.href + '/')}
 				<a
-					href={item.href}
+					href={resolve(item.href)}
 					title={collapsed ? item.label : undefined}
 					class={cn(
 						'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150',
@@ -103,24 +102,22 @@
 
 			<div class="my-3 border-t border-sidebar-border/60"></div>
 
-			{#each helpItems as item}
-				<a
-					href={item.href}
-					target={item.external ? '_blank' : undefined}
-					rel={item.external ? 'noopener noreferrer' : undefined}
-					title={collapsed ? item.label : undefined}
-					class={cn(
-						'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150',
-						collapsed ? 'justify-center px-2' : '',
-						'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-					)}
-				>
-					<item.icon class="size-4 shrink-0" />
-					{#if !collapsed}
-						<span class="truncate">{item.label}</span>
-					{/if}
-				</a>
-			{/each}
+			<a
+				href="https://anything.mdaffailhami.my.id/cryptosharia-admin-guide"
+				target="_blank"
+				rel="noopener noreferrer"
+				title={collapsed ? 'Panduan' : undefined}
+				class={cn(
+					'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150',
+					collapsed ? 'justify-center px-2' : '',
+					'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+				)}
+			>
+				<BookOpen class="size-4 shrink-0" />
+				{#if !collapsed}
+					<span class="truncate">Panduan</span>
+				{/if}
+			</a>
 		</nav>
 	</div>
 

@@ -1,15 +1,85 @@
 import { createApiClient } from '$lib/api';
 import { uploadAsset } from '$lib/server/assets';
 import { loadAllTags } from '$lib/server/tags';
-import { fail, redirect } from '@sveltejs/kit';
+import { canManageCryptoassets } from '$lib/permissions';
+import { error, fail, isRedirect, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null;
+}
+
+function getApiErrorCode(payload: unknown): string | undefined {
+	if (!isRecord(payload) || typeof payload.error !== 'string') return undefined;
+	return payload.error;
+}
+
+function getValidationMessage(payload: unknown): string | undefined {
+	if (!isRecord(payload) || !isRecord(payload.details)) return undefined;
+
+	const labels: Record<string, string> = {
+		name: 'Token Name',
+		ticker: 'Ticker Symbol',
+		slug: 'URL Slug',
+		shariaStatus: 'Sharia Status',
+		status: 'Status',
+		excerpt: 'Excerpt',
+		tradingviewSymbol: 'TradingView Symbol',
+		website: 'Website',
+		logoId: 'Logo',
+		content: 'Content',
+		tags: 'Tags'
+	};
+	const fields = isRecord(payload.details.fields) ? payload.details.fields : {};
+	const fieldMessages = Object.entries(fields).flatMap(([field, errors]) =>
+		Array.isArray(errors)
+			? errors
+					.filter((message): message is string => typeof message === 'string')
+					.map((message) => `${labels[field] ?? 'Token details'}: ${message}`)
+			: []
+	);
+	const rootMessages = Array.isArray(payload.details.root)
+		? payload.details.root.filter((message): message is string => typeof message === 'string')
+		: [];
+	const messages = [...fieldMessages, ...rootMessages].slice(0, 4);
+
+	return messages.length ? `Periksa kembali data token: ${messages.join('; ')}` : undefined;
+}
+
+function getCreateFailureMessage(status: number, payload: unknown): string {
+	const code = getApiErrorCode(payload);
+
+	if (status === 401 || code === 'UNAUTHORIZED') {
+		return 'Sesi admin tidak valid. Silakan login kembali.';
+	}
+	if (status === 403 || code === 'FORBIDDEN') {
+		return 'Akun ini tidak memiliki izin untuk membuat token.';
+	}
+	if (code === 'SLUG_CONFLICT') return 'URL slug sudah digunakan. Pilih slug lain.';
+	if (code === 'TICKER_CONFLICT') return 'Ticker symbol sudah digunakan. Pilih ticker lain.';
+	if (status === 409) return 'Token dengan slug atau ticker tersebut sudah ada.';
+	if (status === 422 || code === 'VALIDATION_FAILED') {
+		return getValidationMessage(payload) ?? 'Data token tidak valid. Periksa kembali semua field.';
+	}
+	if (status === 429) return 'Terlalu banyak permintaan. Coba lagi sebentar.';
+	if (status >= 500) return 'Layanan API sedang bermasalah. Coba lagi nanti.';
+	return 'API menolak data token. Periksa kembali semua field.';
+}
+
 export const load: PageServerLoad = async ({ fetch, locals }) => {
+	if (!canManageCryptoassets(locals.user?.role)) {
+		throw error(403, 'You do not have permission to create cryptoassets.');
+	}
+
 	return { tags: await loadAllTags(fetch, locals.user?.accessToken) };
 };
 
 export const actions = {
 	create: async ({ request, fetch, locals }) => {
+		if (!canManageCryptoassets(locals.user?.role)) {
+			return fail(403, { message: 'Akun ini tidak memiliki izin untuk membuat token.' });
+		}
+
 		const formData = await request.formData();
 		const client = createApiClient({
 			fetch,
@@ -56,7 +126,11 @@ export const actions = {
 			const uploadedAsset = await uploadAsset(fetch, logoFile, locals.user?.accessToken);
 			logoId = uploadedAsset.id;
 
-			const { data, error } = await client.POST('/cryptoassets', {
+			const {
+				data,
+				error: apiError,
+				response
+			} = await client.POST('/cryptoassets', {
 				body: {
 					name,
 					ticker,
@@ -72,15 +146,28 @@ export const actions = {
 				}
 			});
 
-			if (error || !data) {
-				return fail(400, { message: 'Failed to create cryptoasset via API' });
+			if (apiError || !data) {
+				const code = getApiErrorCode(apiError) ?? 'UNKNOWN';
+				console.error('Create cryptoasset API request failed', {
+					status: response.status,
+					code
+				});
+				return fail(400, { message: getCreateFailureMessage(response.status, apiError) });
 			}
 
 			throw redirect(303, `/tokens/${data.slug}`);
-		} catch (err: any) {
-			if (err instanceof Response) throw err; // re-throw redirect
+		} catch (err) {
+			if (isRedirect(err)) throw err;
 			console.error('Create token error:', err);
-			return fail(500, { message: err.message || 'Internal server error' });
+			const isConfigurationError =
+				err instanceof Error &&
+				(err.message === 'CS_API_KEY belum dikonfigurasi pada panel admin.' ||
+					err.message === 'Sesi admin tidak tersedia. Silakan login ulang.');
+			return fail(500, {
+				message: isConfigurationError
+					? err.message
+					: 'Gagal menghubungi API saat mengunggah logo atau membuat token. Coba lagi nanti.'
+			});
 		}
 	}
 } satisfies Actions;
