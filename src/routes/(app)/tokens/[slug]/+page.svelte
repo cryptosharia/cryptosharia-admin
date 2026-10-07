@@ -48,10 +48,12 @@
 	// Keep updated when navigation changes
 	$effect(() => {
 		if (data.token) {
-			excerpt = data.token.excerpt || '';
-			content = data.token.content || '';
-			if (editor) {
-				editor.setMarkdown(content);
+			const nextExcerpt = data.token.excerpt || '';
+			const nextContent = data.token.content || '';
+			excerpt = nextExcerpt;
+			content = nextContent;
+			if (editor && editor.getMarkdown() !== nextContent) {
+				editor.setMarkdown(nextContent);
 			}
 		}
 	});
