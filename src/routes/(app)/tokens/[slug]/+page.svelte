@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Trash2, Save, ArrowLeft, CheckCircle2, ImageIcon } from 'lucide-svelte';
+	import type { SubmitFunction } from '@sveltejs/kit';
+	import { Trash2, Save, ArrowLeft, CheckCircle2, ImageIcon, LoaderCircle } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import {
@@ -18,6 +19,20 @@
 	let { data, form } = $props();
 	let token = $derived(data.token);
 	let selectedTags = $state<string[]>([]);
+	let isUpdating = $state(false);
+
+	const enhanceUpdate: SubmitFunction = () => {
+		isUpdating = true;
+
+		return async ({ update }) => {
+			try {
+				// Keep entered values visible while the refreshed token data loads.
+				await update({ reset: false });
+			} finally {
+				isUpdating = false;
+			}
+		};
+	};
 
 	$effect(() => {
 		if (data.token) {
@@ -131,7 +146,13 @@
 		</form>
 	</div>
 
-	<form action="?/update" method="POST" enctype="multipart/form-data" use:enhance class="space-y-8">
+	<form
+		action="?/update"
+		method="POST"
+		enctype="multipart/form-data"
+		use:enhance={enhanceUpdate}
+		class="space-y-8"
+	>
 		<input type="hidden" name="id" value={token.id} />
 		<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
 			<!-- Main Editor -->
@@ -308,9 +329,28 @@
 
 						<Separator />
 
-						<Button type="submit" class="h-12 w-full gap-2 font-bold">
-							<Save size={20} />
-							Update Token
+						{#if isUpdating}
+							<div class="space-y-2" role="status" aria-live="polite">
+								<div
+									class="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+									role="progressbar"
+									aria-label="Saving token changes"
+									aria-valuetext="Saving token changes"
+								>
+									<div class="indeterminate-progress h-full w-2/5 rounded-full bg-primary"></div>
+								</div>
+								<p class="text-xs text-muted-foreground">Saving token changes…</p>
+							</div>
+						{/if}
+
+						<Button type="submit" disabled={isUpdating} class="h-12 w-full gap-2 font-bold">
+							{#if isUpdating}
+								<LoaderCircle size={20} class="animate-spin" />
+								Saving Token…
+							{:else}
+								<Save size={20} />
+								Update Token
+							{/if}
 						</Button>
 
 						{#if form?.message && !form?.success}
@@ -353,3 +393,24 @@
 		</div>
 	</form>
 </div>
+
+<style>
+	.indeterminate-progress {
+		animation: token-progress 1.2s ease-in-out infinite alternate;
+	}
+
+	@keyframes token-progress {
+		from {
+			transform: translateX(-110%);
+		}
+		to {
+			transform: translateX(250%);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.indeterminate-progress {
+			animation: none;
+		}
+	}
+</style>
