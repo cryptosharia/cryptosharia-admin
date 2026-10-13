@@ -1,7 +1,8 @@
 import type { LayoutServerLoad } from './$types';
+import { toPublicUser } from '$lib/server/public-user';
 
-export const load: LayoutServerLoad = async ({ locals }) => {
+export const load = (({ locals }) => {
 	return {
-		user: locals.user
+		user: toPublicUser(locals.user)
 	};
-};
+}) satisfies LayoutServerLoad;
