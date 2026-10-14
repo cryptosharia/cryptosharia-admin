@@ -1,4 +1,5 @@
 import { createApiClient } from '$lib/api';
+import { canManageCryptoassets } from '$lib/permissions';
 import { uploadAsset } from '$lib/server/assets';
 import { loadAllTags } from '$lib/server/tags';
 import { fail, redirect, error } from '@sveltejs/kit';
@@ -36,6 +37,13 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 
 export const actions = {
 	update: async ({ request, params, fetch, locals }) => {
+		if (!canManageCryptoassets(locals.user?.role)) {
+			return fail(403, {
+				success: false,
+				message: 'Akun ini tidak memiliki izin untuk mengelola token.'
+			});
+		}
+
 		const formData = await request.formData();
 		const client = createApiClient({
 			fetch,
@@ -109,6 +117,13 @@ export const actions = {
 		}
 	},
 	delete: async ({ request, fetch, locals }) => {
+		if (!canManageCryptoassets(locals.user?.role)) {
+			return fail(403, {
+				success: false,
+				message: 'Akun ini tidak memiliki izin untuk mengelola token.'
+			});
+		}
+
 		const formData = await request.formData();
 		const id = formData.get('id');
 		if (typeof id !== 'string' || !id) {

@@ -34,6 +34,16 @@ export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
 export const handle: Handle = async ({ event, resolve }) => {
 	let accessToken = event.cookies.get('access_token');
 	const refreshToken = event.cookies.get('refresh_token');
+	const isAuthRoute =
+		event.url.pathname.startsWith('/login') ||
+		event.url.pathname.startsWith('/signup') ||
+		event.url.pathname.startsWith('/reset-password') ||
+		event.url.pathname.startsWith('/verify');
+
+	// Applies to SSR, navigation data, actions, errors and auth redirects.
+	if (accessToken || refreshToken || isAuthRoute) {
+		event.setHeaders({ 'cache-control': 'private,no-store' });
+	}
 
 	const cookieOptions = {
 		path: '/',
@@ -104,12 +114,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 			clearAuthCookies();
 		}
 	}
-
-	const isAuthRoute =
-		event.url.pathname.startsWith('/login') ||
-		event.url.pathname.startsWith('/signup') ||
-		event.url.pathname.startsWith('/reset-password') ||
-		event.url.pathname.startsWith('/verify');
 
 	// Protect app routes
 	if (!event.locals.user && !isAuthRoute) {

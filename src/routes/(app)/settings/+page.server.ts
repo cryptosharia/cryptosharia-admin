@@ -1,14 +1,15 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { toPublicUser } from '$lib/server/public-user';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load = (({ locals }) => {
 	return {
-		user: locals.user,
+		user: toPublicUser(locals.user),
 		twoFactorEnabled: false,
 		qrCodeUrl: undefined as string | undefined,
 		twoFactorSecret: undefined as string | undefined
 	};
-};
+}) satisfies PageServerLoad;
 
 export const actions = {
 	update: async () => {
