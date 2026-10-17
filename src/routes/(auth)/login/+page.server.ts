@@ -1,8 +1,8 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { createApiClient } from '$lib/api';
+import { ADMIN_ROLES, getRolePermissions } from '$lib/permissions';
 import type { Actions } from './$types';
 
-const ADMIN_ROLES = new Set(['super_admin', 'admin', 'posts_manager', 'cryptoassets_manager']);
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const actions = {
@@ -27,7 +27,7 @@ export const actions = {
 		return { email, otpRequested: true, message: 'Kode OTP telah dikirim ke email Anda.' };
 	},
 
-	verifyOtp: async ({ request, cookies, fetch }) => {
+	verifyOtp: async ({ request, cookies, fetch, url }) => {
 		const data = await request.formData();
 		const emailValue = data.get('email');
 		const codeValue = data.get('code');
@@ -87,13 +87,22 @@ export const actions = {
 			name: meRes.name,
 			email: meRes.email,
 			role: meRes.role,
-			permissions: []
+			permissions: getRolePermissions(meRes.role)
 		};
 		cookies.set('user_session', JSON.stringify(userData), {
 			...cookieOptions,
 			maxAge: 60 * 15
 		});
 
-		throw redirect(303, '/dashboard');
+		const redirectParam = url.searchParams.get('redirect');
+		const target =
+			redirectParam &&
+			redirectParam.startsWith('/') &&
+			!redirectParam.startsWith('//') &&
+			!redirectParam.includes('\\')
+				? redirectParam
+				: '/dashboard';
+
+		throw redirect(303, target);
 	}
 } satisfies Actions;

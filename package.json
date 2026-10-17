@@ -12,8 +12,10 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
-		"test:unit": "svelte-kit sync && tsc --project tests/tsconfig.unit.json && node --test tests/public-user.test.ts",
+		"test:unit": "svelte-kit sync && tsc --project tests/tsconfig.unit.json && node --test tests/*.test.ts",
 		"test:security": "node tests/security-serialization.mjs",
+		"test:smoke": "node tests/phase2-integration-smoke-test.mjs",
+		"test:integration:real": "node tests/real-neon-integration.mjs",
 		"gen:api-types": "openapi-typescript http://localhost:5173/openapi.json -o src/lib/api-types.ts",
 		"gen:api-types:preview": "openapi-typescript https://preview.api.cryptosharia.id/openapi.json -o src/lib/api-types.ts"
 	},

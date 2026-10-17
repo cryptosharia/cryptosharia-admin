@@ -1,5 +1,69 @@
-const CRYPTOASSET_MANAGER_ROLES = new Set(['super_admin', 'admin', 'cryptoassets_manager']);
+export const ALL_PERMISSIONS = [
+	'posts.manage',
+	'posts.read',
+	'cryptoassets.manage',
+	'tags.manage',
+	'users.read',
+	'users.update',
+	'users.manage_status',
+	'users.manage_role',
+	'messages.read',
+	'team.manage',
+	'academy.manage',
+	'academy.review',
+	'academy.publish'
+] as const;
+
+export type Permission = (typeof ALL_PERMISSIONS)[number];
+
+export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
+	super_admin: [...ALL_PERMISSIONS],
+	admin: ALL_PERMISSIONS.filter(
+		(permission) =>
+			permission !== 'users.manage_role' &&
+			permission !== 'users.manage_status'
+	),
+	posts_manager: ['posts.manage', 'tags.manage'],
+	cryptoassets_manager: ['cryptoassets.manage', 'tags.manage'],
+	member: []
+};
+
+export const ADMIN_ROLES = new Set(['super_admin', 'admin', 'posts_manager', 'cryptoassets_manager']);
+
+export function getRolePermissions(role: string | null | undefined): Permission[] {
+	if (!role || !(role in ROLE_PERMISSIONS)) return [];
+	return [...ROLE_PERMISSIONS[role]];
+}
+
+export function hasPermission(role: string | null | undefined, permission: Permission): boolean {
+	const permissions = getRolePermissions(role);
+	return permissions.includes(permission);
+}
 
 export function canManageCryptoassets(role: string | null | undefined): boolean {
-	return role !== undefined && role !== null && CRYPTOASSET_MANAGER_ROLES.has(role);
+	return hasPermission(role, 'cryptoassets.manage');
+}
+
+export function canManageAcademy(role: string | null | undefined): boolean {
+	return hasPermission(role, 'academy.manage');
+}
+
+export function canReviewAcademy(role: string | null | undefined): boolean {
+	return hasPermission(role, 'academy.review');
+}
+
+export function canPublishAcademy(role: string | null | undefined): boolean {
+	return hasPermission(role, 'academy.publish');
+}
+
+export function canManagePosts(role: string | null | undefined): boolean {
+	return hasPermission(role, 'posts.manage');
+}
+
+export function canManageUsers(role: string | null | undefined): boolean {
+	return hasPermission(role, 'users.read');
+}
+
+export function canManageTeam(role: string | null | undefined): boolean {
+	return hasPermission(role, 'team.manage');
 }

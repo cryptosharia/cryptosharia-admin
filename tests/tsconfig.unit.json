@@ -3,8 +3,15 @@
 	"compilerOptions": { "noEmit": true },
 	"include": [
 		"../src/app.d.ts",
+		"../src/lib/permissions.ts",
 		"../src/lib/types/public-user.ts",
 		"../src/lib/server/public-user.ts",
-		"./public-user.test.ts"
+		"../src/lib/academyDtos.ts",
+		"../src/lib/server/academyAuth.ts",
+		"../src/lib/server/academyValidation.ts",
+		"./public-user.test.ts",
+		"./phase1-auth-hardening.test.ts",
+		"./phase2-bff-auth-rbac.test.ts",
+		"./phase2-bff-endpoints.test.ts"
 	]
 }

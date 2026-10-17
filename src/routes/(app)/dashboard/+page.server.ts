@@ -1,13 +1,19 @@
 import { createApiClient } from '$lib/api';
+import { getAdminStats, getAdminContent } from '$lib/server/academyClient';
+import { canManageAcademy } from '$lib/permissions';
+import type { PageServerLoad } from './$types';
 
-export const load = async ({ fetch, locals }) => {
+export const load: PageServerLoad = async ({ fetch, locals }) => {
+	const accessToken = locals.user?.accessToken || locals.accessToken;
+	const isAcademyManager = canManageAcademy(locals.user?.role);
+
 	const client = createApiClient({
 		fetch,
-		accessToken: locals.user?.accessToken
+		accessToken
 	});
 
-	// Stream semua counts secara parallel - halaman langsung render, data menyusul
-	const counts = Promise.all([
+	// 1. Fetch Core Ecosystem Counts in parallel
+	const ecosystemCounts = Promise.all([
 		client.GET('/cryptoassets', { params: { query: { limit: 1 } } }),
 		client.GET('/users', { params: { query: { limit: 1 } } }),
 		client.GET('/posts', { params: { query: { limit: 1 } } }),
@@ -29,5 +35,32 @@ export const load = async ({ fetch, locals }) => {
 			tagCount: 0
 		}));
 
-	return { counts };
+	// 2. Fetch Academy Stats and Pending Reviews if permitted
+	let academyStatsPromise = Promise.resolve<{
+		totalLessons: number;
+		publishedLessons: number;
+		draftContent: number;
+		reviewContent: number;
+		totalScopes: number;
+		totalGrants: number;
+	} | null>(null);
+
+	let pendingReviewsPromise = Promise.resolve<any[]>([]);
+
+	if (isAcademyManager && accessToken) {
+		academyStatsPromise = getAdminStats(accessToken)
+			.then((res) => (res.ok && res.data ? res.data : null))
+			.catch(() => null);
+
+		pendingReviewsPromise = getAdminContent({ status: 'review' }, accessToken)
+			.then((res) => (res.ok && Array.isArray(res.data) ? res.data.slice(0, 5) : []))
+			.catch(() => []);
+	}
+
+	return {
+		ecosystemCounts,
+		academyStats: await academyStatsPromise,
+		pendingReviews: await pendingReviewsPromise,
+		canAcademy: isAcademyManager
+	};
 };

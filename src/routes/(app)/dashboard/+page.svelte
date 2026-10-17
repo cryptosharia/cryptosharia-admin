@@ -1,178 +1,361 @@
 <script lang="ts">
-	import { TrendingUp, Users, FileText, Activity, ShieldCheck, BookOpen } from 'lucide-svelte';
+	import {
+		TrendingUp,
+		Users,
+		FileText,
+		Activity,
+		ShieldCheck,
+		BookOpen,
+		GraduationCap,
+		CheckSquare,
+		Layers,
+		KeyRound,
+		AlertTriangle,
+		ArrowRight,
+		Clock,
+		Plus,
+		CheckCircle,
+		Sparkles
+	} from 'lucide-svelte';
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
-	import { fly } from 'svelte/transition';
+	import { resolve } from '$app/paths';
 
 	let { data } = $props();
-
-	// Skeleton placeholder while streaming
-	const skeleton = { tokenCount: 0, userCount: 0, postCount: 0, messageCount: 0, tagCount: 0 };
 
 	const ADMIN_GUIDE_URL = 'https://anything.mdaffailhami.my.id/cryptosharia-admin-guide';
 </script>
 
-<div class="space-y-8">
-	<!-- Stats Grid -->
-	<section>
-		<div class="mb-6 flex items-start justify-between gap-4">
-			<div>
-				<h2 class="text-2xl font-bold tracking-tight">System Overview</h2>
-				<p class="mt-1 text-muted-foreground">Real-time metrics from the ecosystem.</p>
+<svelte:head>
+	<title>Unified Admin Dashboard | CryptoSharia</title>
+</svelte:head>
+
+<div class="space-y-6">
+	<!-- Top Banner & System Header -->
+	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+		<div>
+			<div class="flex items-center gap-2 mb-1">
+				<span class="inline-flex items-center gap-1 rounded-full bg-orange-500/10 px-2.5 py-0.5 text-xs font-semibold text-orange-500 border border-orange-500/20">
+					<Sparkles class="h-3 w-3" /> Unified Portal v2.0
+				</span>
 			</div>
+			<h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+				Dashboard Operasional
+			</h1>
+			<p class="text-xs sm:text-sm text-muted-foreground mt-0.5">
+				Pusat pemantauan ekosistem CryptoSharia, kurikulum pembelajaran, dan screening aset.
+			</p>
+		</div>
+		<div class="flex items-center gap-2">
 			<Button
 				href={ADMIN_GUIDE_URL}
 				variant="outline"
 				size="sm"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="shrink-0"
+				class="shrink-0 text-xs border-border bg-card hover:bg-muted"
 			>
-				<BookOpen class="h-4 w-4" />
-				<span class="ml-2">Panduan</span>
+				<BookOpen class="h-3.5 w-3.5 mr-1.5" />
+				Panduan Admin
 			</Button>
 		</div>
+	</div>
 
-		{#await data.counts}
-			<!-- Skeleton while loading -->
-			<div class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-5">
-				{#each Array(5) as _}
-					<Card class="h-full">
-						<CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-							<div class="h-4 w-20 animate-pulse rounded bg-muted"></div>
-							<div class="h-9 w-9 animate-pulse rounded-lg bg-muted"></div>
-						</CardHeader>
-						<CardContent>
-							<div class="mb-2 h-8 w-16 animate-pulse rounded bg-muted"></div>
-							<div class="h-3 w-24 animate-pulse rounded bg-muted"></div>
-						</CardContent>
-					</Card>
+	<!-- Pending Review Alert (Real Academy Gate) -->
+	{#if data.canAcademy && (data.academyStats?.reviewContent ?? 0) > 0}
+		<div class="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5 text-amber-500 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+			<div class="flex items-start gap-3">
+				<div class="rounded-lg bg-amber-500/20 p-2 text-amber-500 shrink-0 mt-0.5">
+					<AlertTriangle class="h-5 w-5" />
+				</div>
+				<div>
+					<h3 class="text-sm sm:text-base font-bold text-foreground">
+						{data.academyStats?.reviewContent} Materi Menunggu Review Syariah & Editorial
+					</h3>
+					<p class="text-xs text-muted-foreground mt-0.5">
+						Terdapat materi kurikulum baru yang diajukan oleh penyusun dan memerlukan verifikasi kepatuhan sebelum dipublikasikan.
+					</p>
+				</div>
+			</div>
+			<a
+				href={resolve('/academy/editorial')}
+				class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors shrink-0"
+			>
+				Buka Antrean Review
+				<ArrowRight class="h-3.5 w-3.5" />
+			</a>
+		</div>
+	{/if}
+
+	<!-- Quick Actions Row -->
+	<section class="rounded-xl border border-border bg-card p-4 sm:p-5 shadow-sm">
+		<h2 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+			Aksi Cepat (Quick Actions)
+		</h2>
+		<div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+			{#if data.canAcademy}
+				<a
+					href={resolve('/academy/courses')}
+					class="flex items-center gap-2.5 p-3 rounded-lg border border-border bg-muted/30 hover:bg-orange-500/10 hover:border-orange-500/30 transition-all text-xs font-medium text-foreground group"
+				>
+					<div class="p-1.5 rounded bg-orange-500/10 text-orange-500 group-hover:scale-110 transition-transform">
+						<Plus class="h-4 w-4" />
+					</div>
+					<span class="truncate">Tambah Materi</span>
+				</a>
+
+				<a
+					href={resolve('/academy/editorial')}
+					class="flex items-center gap-2.5 p-3 rounded-lg border border-border bg-muted/30 hover:bg-amber-500/10 hover:border-amber-500/30 transition-all text-xs font-medium text-foreground group"
+				>
+					<div class="p-1.5 rounded bg-amber-500/10 text-amber-500 group-hover:scale-110 transition-transform">
+						<CheckSquare class="h-4 w-4" />
+					</div>
+					<span class="truncate">Review Syariah</span>
+				</a>
+
+				<a
+					href={resolve('/academy/scopes')}
+					class="flex items-center gap-2.5 p-3 rounded-lg border border-border bg-muted/30 hover:bg-blue-500/10 hover:border-blue-500/30 transition-all text-xs font-medium text-foreground group"
+				>
+					<div class="p-1.5 rounded bg-blue-500/10 text-blue-500 group-hover:scale-110 transition-transform">
+						<Layers class="h-4 w-4" />
+					</div>
+					<span class="truncate">Kelola Scope</span>
+				</a>
+
+				<a
+					href={resolve('/academy/grants')}
+					class="flex items-center gap-2.5 p-3 rounded-lg border border-border bg-muted/30 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all text-xs font-medium text-foreground group"
+				>
+					<div class="p-1.5 rounded bg-emerald-500/10 text-emerald-500 group-hover:scale-110 transition-transform">
+						<KeyRound class="h-4 w-4" />
+					</div>
+					<span class="truncate">Beri Akses Siswa</span>
+				</a>
+			{/if}
+
+			<a
+				href={resolve('/posts/new')}
+				class="flex items-center gap-2.5 p-3 rounded-lg border border-border bg-muted/30 hover:bg-orange-500/10 hover:border-orange-500/30 transition-all text-xs font-medium text-foreground group"
+			>
+				<div class="p-1.5 rounded bg-orange-500/10 text-orange-500 group-hover:scale-110 transition-transform">
+					<FileText class="h-4 w-4" />
+				</div>
+				<span class="truncate">Tulis Artikel</span>
+			</a>
+		</div>
+	</section>
+
+	<!-- Real KPI Metrics Grid -->
+	<section>
+		<h2 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+			Metrik Ekosistem & Pembelajaran
+		</h2>
+
+		{#await data.ecosystemCounts}
+			<!-- Skeleton loading -->
+			<div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+				{#each Array(4) as _}
+					<div class="h-24 animate-pulse rounded-xl border border-border bg-muted/40 p-4"></div>
 				{/each}
 			</div>
 		{:then counts}
-			{@const stats = [
-				{
-					label: 'Total Tokens',
-					value: counts.tokenCount.toLocaleString(),
-					change: 'Tokens tracked',
-					icon: TrendingUp
-				},
-				{
-					label: 'Total Users',
-					value: counts.userCount.toLocaleString(),
-					change: 'Registered users',
-					icon: Users
-				},
-				{
-					label: 'Total Posts',
-					value: counts.postCount.toLocaleString(),
-					change: 'Content published',
-					icon: FileText
-				},
-				{
-					label: 'Messages',
-					value: counts.messageCount.toLocaleString(),
-					change: 'Contact submissions',
-					icon: Activity
-				},
-				{
-					label: 'Tags',
-					value: counts.tagCount.toLocaleString(),
-					change: 'Taxonomy tags',
-					icon: ShieldCheck
-				}
-			]}
-			<div class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-5">
-				{#each stats as stat, i}
-					<div in:fly={{ y: 20, duration: 400, delay: i * 80 }}>
-						<Card
-							class="group h-full cursor-default transition-all duration-300 hover:border-orange-500/40"
-						>
-							<CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle
-									class="text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground"
-								>
-									{stat.label}
-								</CardTitle>
-								<div
-									class="rounded-lg bg-muted/60 p-2 transition-transform duration-200 group-hover:scale-110"
-								>
-									<stat.icon
-										class="h-5 w-5 text-muted-foreground transition-colors group-hover:text-orange-500"
-									/>
-								</div>
-							</CardHeader>
-							<CardContent>
-								<div class="mb-1 text-3xl font-bold tracking-tight">{stat.value}</div>
-								<p class="text-xs font-medium text-muted-foreground">{stat.change}</p>
-							</CardContent>
-						</Card>
-					</div>
-				{/each}
+			<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+				<!-- 1. Total Lessons -->
+				{#if data.canAcademy && data.academyStats}
+					<Card class="hover:border-orange-500/40 transition-colors">
+						<CardHeader class="flex flex-row items-center justify-between pb-1 pt-3.5 px-3.5">
+							<CardTitle class="text-[11px] font-semibold text-muted-foreground">Materi Pelajaran</CardTitle>
+							<GraduationCap class="h-4 w-4 text-orange-500" />
+						</CardHeader>
+						<CardContent class="px-3.5 pb-3.5">
+							<div class="text-2xl font-black text-foreground">{data.academyStats.totalLessons}</div>
+							<p class="text-[10px] text-muted-foreground mt-0.5">{data.academyStats.publishedLessons} telah terbit</p>
+						</CardContent>
+					</Card>
+				{/if}
+
+				<!-- 2. Registered Users -->
+				<Card class="hover:border-orange-500/40 transition-colors">
+					<CardHeader class="flex flex-row items-center justify-between pb-1 pt-3.5 px-3.5">
+						<CardTitle class="text-[11px] font-semibold text-muted-foreground">Total Pengguna</CardTitle>
+						<Users class="h-4 w-4 text-blue-500" />
+					</CardHeader>
+					<CardContent class="px-3.5 pb-3.5">
+						<div class="text-2xl font-black text-foreground">{counts.userCount.toLocaleString()}</div>
+						<p class="text-[10px] text-muted-foreground mt-0.5">Siswa & Pengelola</p>
+					</CardContent>
+				</Card>
+
+				<!-- 3. Tokens Tracked -->
+				<Card class="hover:border-orange-500/40 transition-colors">
+					<CardHeader class="flex flex-row items-center justify-between pb-1 pt-3.5 px-3.5">
+						<CardTitle class="text-[11px] font-semibold text-muted-foreground">Aset Kripto</CardTitle>
+						<TrendingUp class="h-4 w-4 text-emerald-500" />
+					</CardHeader>
+					<CardContent class="px-3.5 pb-3.5">
+						<div class="text-2xl font-black text-foreground">{counts.tokenCount.toLocaleString()}</div>
+						<p class="text-[10px] text-muted-foreground mt-0.5">Diskrining syariah</p>
+					</CardContent>
+				</Card>
+
+				<!-- 4. Posts Published -->
+				<Card class="hover:border-orange-500/40 transition-colors">
+					<CardHeader class="flex flex-row items-center justify-between pb-1 pt-3.5 px-3.5">
+						<CardTitle class="text-[11px] font-semibold text-muted-foreground">Artikel Terbit</CardTitle>
+						<FileText class="h-4 w-4 text-purple-500" />
+					</CardHeader>
+					<CardContent class="px-3.5 pb-3.5">
+						<div class="text-2xl font-black text-foreground">{counts.postCount.toLocaleString()}</div>
+						<p class="text-[10px] text-muted-foreground mt-0.5">Publikasi edukasi</p>
+					</CardContent>
+				</Card>
+
+				<!-- 5. Active Scopes -->
+				{#if data.canAcademy && data.academyStats}
+					<Card class="hover:border-orange-500/40 transition-colors">
+						<CardHeader class="flex flex-row items-center justify-between pb-1 pt-3.5 px-3.5">
+							<CardTitle class="text-[11px] font-semibold text-muted-foreground">Scope Akses</CardTitle>
+							<Layers class="h-4 w-4 text-indigo-500" />
+						</CardHeader>
+						<CardContent class="px-3.5 pb-3.5">
+							<div class="text-2xl font-black text-foreground">{data.academyStats.totalScopes}</div>
+							<p class="text-[10px] text-muted-foreground mt-0.5">Tingkatan program</p>
+						</CardContent>
+					</Card>
+				{/if}
+
+				<!-- 6. Student Grants -->
+				{#if data.canAcademy && data.academyStats}
+					<Card class="hover:border-orange-500/40 transition-colors">
+						<CardHeader class="flex flex-row items-center justify-between pb-1 pt-3.5 px-3.5">
+							<CardTitle class="text-[11px] font-semibold text-muted-foreground">Hak Akses Siswa</CardTitle>
+							<KeyRound class="h-4 w-4 text-emerald-500" />
+						</CardHeader>
+						<CardContent class="px-3.5 pb-3.5">
+							<div class="text-2xl font-black text-foreground">{data.academyStats.totalGrants}</div>
+							<p class="text-[10px] text-muted-foreground mt-0.5">Siswa terdaftar</p>
+						</CardContent>
+					</Card>
+				{/if}
 			</div>
 		{/await}
 	</section>
 
-	<!-- Bottom Row -->
-	<section class="grid grid-cols-1 gap-5 lg:grid-cols-3">
-		<!-- Recent Activity -->
-		<Card class="lg:col-span-2">
-			<CardHeader>
-				<CardTitle class="flex items-center gap-2">
-					<Activity class="h-5 w-5 text-orange-500" />
-					Recent Activity
-				</CardTitle>
-			</CardHeader>
-			<CardContent>
-				<div class="space-y-1">
-					{#each [1, 2, 3] as i}
-						<div
-							class="group flex items-center justify-between rounded-lg p-3 transition-colors hover:bg-muted/50"
+	<!-- Main Details Split: Pending Review Queue vs Ecosystem Status -->
+	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+		<!-- Left: Recent Review Items (2 cols) -->
+		<div class="lg:col-span-2 space-y-4">
+			<Card class="h-full">
+				<CardHeader class="flex flex-row items-center justify-between pb-3 border-b border-border/50">
+					<CardTitle class="text-sm sm:text-base font-bold flex items-center gap-2">
+						<Clock class="h-4 w-4 text-amber-500" />
+						Antrean Verifikasi Editorial Terkini
+					</CardTitle>
+					{#if data.canAcademy}
+						<a
+							href={resolve('/academy/editorial')}
+							class="text-xs font-medium text-orange-500 hover:underline flex items-center gap-1"
 						>
-							<div class="flex items-center gap-3">
-								<div
-									class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-orange-500/10 text-orange-500 transition-transform group-hover:scale-105"
-								>
-									<FileText class="h-4 w-4" />
-								</div>
-								<div>
-									<p class="text-sm font-medium">Token Analysis Updated</p>
-									<p class="text-xs text-muted-foreground">BTC-2024 Report finalized</p>
-								</div>
-							</div>
-							<span class="text-xs whitespace-nowrap text-muted-foreground">{i * 2}m ago</span>
+							Lihat Semua &rarr;
+						</a>
+					{/if}
+				</CardHeader>
+				<CardContent class="pt-4">
+					{#if !data.canAcademy}
+						<div class="p-8 text-center text-xs text-muted-foreground">
+							Akses modul Academy memerlukan izin administrator akademi.
 						</div>
-					{/each}
-				</div>
-			</CardContent>
-		</Card>
+					{:else if data.pendingReviews.length === 0}
+						<div class="p-8 text-center text-xs text-muted-foreground space-y-2">
+							<CheckCircle class="h-8 w-8 mx-auto text-emerald-500/60" />
+							<p class="font-medium text-foreground">Semua Materi Telah Diverifikasi</p>
+							<p>Tidak ada draf yang sedang menunggu persetujuan review syariah.</p>
+						</div>
+					{:else}
+						<div class="divide-y divide-border/60">
+							{#each data.pendingReviews as item}
+								<div class="py-3 flex items-center justify-between gap-3 first:pt-0 last:pb-0">
+									<div class="space-y-0.5 min-w-0">
+										<div class="flex items-center gap-2">
+											<span class="text-xs font-semibold text-foreground truncate">{item.title}</span>
+											<span class="rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-500 border border-amber-500/20 uppercase">
+												{item.status}
+											</span>
+										</div>
+										<p class="text-[11px] text-muted-foreground truncate">
+											{item.subjectId.toUpperCase()} &bull; Level {item.level} &bull; Bab {item.chapterNumber} &bull; Instruktur: {item.instructor || '-'}
+										</p>
+									</div>
+									<a
+										href={`/academy/courses?select=${item.id}`}
+										class="shrink-0 px-2.5 py-1 rounded text-[11px] font-medium border border-border bg-card hover:bg-muted text-foreground transition-colors"
+									>
+										Tinjau
+									</a>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</CardContent>
+			</Card>
+		</div>
 
-		<!-- System Health -->
-		<Card class="border-emerald-500/20">
-			<CardHeader>
-				<CardTitle class="flex items-center gap-2">
-					<ShieldCheck class="h-5 w-5 text-emerald-500" />
-					System Health
-				</CardTitle>
-			</CardHeader>
-			<CardContent>
-				<div class="flex h-44 flex-col items-center justify-center space-y-4">
-					<div class="relative">
-						<div
-							class="absolute inset-0 animate-pulse rounded-full bg-emerald-500/20 blur-2xl"
-						></div>
-						<div
-							class="relative z-10 flex h-24 w-24 items-center justify-center rounded-full border-4 border-emerald-500/30 bg-emerald-500/10"
-						>
-							<span class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">98%</span>
-						</div>
+		<!-- Right: Clean Real System Health & Status -->
+		<div class="space-y-4">
+			<Card>
+				<CardHeader class="pb-3 border-b border-border/50">
+					<CardTitle class="text-sm font-bold flex items-center gap-2">
+						<ShieldCheck class="h-4 w-4 text-emerald-500" />
+						Integritas & Status Sistem
+					</CardTitle>
+				</CardHeader>
+				<CardContent class="pt-4 space-y-3.5 text-xs">
+					<div class="flex items-center justify-between py-1 border-b border-border/40">
+						<span class="text-muted-foreground">Portal Terpusat</span>
+						<span class="font-semibold text-foreground">admin.cryptosharia.id</span>
 					</div>
-					<div class="text-center">
-						<p class="font-semibold text-foreground">Operational</p>
-						<p class="mt-0.5 text-xs text-muted-foreground">All nodes synced</p>
+					<div class="flex items-center justify-between py-1 border-b border-border/40">
+						<span class="text-muted-foreground">Backend API</span>
+						<span class="inline-flex items-center gap-1.5 font-semibold text-emerald-500">
+							<span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+							Online (v2.0)
+						</span>
 					</div>
-				</div>
-			</CardContent>
-		</Card>
-	</section>
+					<div class="flex items-center justify-between py-1 border-b border-border/40">
+						<span class="text-muted-foreground">Autentikasi Session</span>
+						<span class="font-semibold text-foreground capitalize">{data.user?.role?.replace('_', ' ') ?? 'Admin'}</span>
+					</div>
+					<div class="flex items-center justify-between py-1 border-b border-border/40">
+						<span class="text-muted-foreground">Kepatuhan Syariah</span>
+						<span class="font-semibold text-emerald-500">Dual-Gate Enforced</span>
+					</div>
+					<div class="flex items-center justify-between py-1">
+						<span class="text-muted-foreground">Keamanan Sesi</span>
+						<span class="font-semibold text-foreground">Strict Host-Only Cookie</span>
+					</div>
+				</CardContent>
+			</Card>
+
+			<!-- Quick Link to Documentation -->
+			<div class="rounded-xl border border-orange-500/20 bg-orange-500/5 p-4 space-y-2">
+				<h4 class="text-xs font-bold text-orange-500 flex items-center gap-1.5">
+					<BookOpen class="h-3.5 w-3.5" />
+					Panduan Operasional CMS
+				</h4>
+				<p class="text-[11px] text-muted-foreground leading-relaxed">
+					Pelajari standar penyusunan materi kurikulum, format YouTube ID, dan alur verifikasi syariah sebelum memublikasikan pelajaran.
+				</p>
+				<a
+					href={ADMIN_GUIDE_URL}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="inline-flex items-center gap-1 text-xs font-semibold text-orange-500 hover:underline pt-1"
+				>
+					Buka Panduan Lengkap &rarr;
+				</a>
+			</div>
+		</div>
+	</div>
 </div>
