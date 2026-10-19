@@ -95,7 +95,7 @@
 		<div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
 			{#if data.canAcademy}
 				<a
-					href={resolve('/academy/courses')}
+					href={`${resolve('/academy/courses')}?create=true`}
 					class="flex items-center gap-2.5 p-3 rounded-lg border border-border bg-muted/30 hover:bg-orange-500/10 hover:border-orange-500/30 transition-all text-xs font-medium text-foreground group"
 				>
 					<div class="p-1.5 rounded bg-orange-500/10 text-orange-500 group-hover:scale-110 transition-transform">

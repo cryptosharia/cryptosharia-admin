@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { replaceState } from '$app/navigation';
 	import {
 		BookOpen,
 		ChevronRight,
 		ChevronDown,
 		Plus,
 		Search,
-		Filter,
 		Video,
 		CheckCircle,
 		Clock,
@@ -14,16 +14,11 @@
 		Save,
 		Trash2,
 		X,
-		FileText,
-		Layers,
-		ShieldCheck,
-		ExternalLink,
 		Play,
-		ArrowLeft,
-		Eye,
 		AlertCircle,
 		Check,
-		Sparkles
+		Sparkles,
+		Loader2
 	} from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { untrack } from 'svelte';
@@ -53,7 +48,6 @@
 
 	// Editor Form State
 	let formTitle = $state('');
-	let formId = $state('');
 	let formDescription = $state('');
 	let formScopeId = $state<string | null>(null);
 	let formOrder = $state(0);
@@ -67,7 +61,6 @@
 	let readingRefs = $state<string[]>([]);
 	let attachmentRefs = $state<string[]>([]);
 	let newReadingRef = $state('');
-	let newAttachmentRef = $state('');
 
 	// Dirty tracking & Loading states
 	let isDirty = $state(false);
@@ -75,17 +68,40 @@
 	let isTransitioning = $state(false);
 	let isDeleting = $state(false);
 
-	// Modal States
+	// Modal States & Guided Creation
+	const SUBJECT_METADATA: Record<string, { title: string; desc: string }> = {
+		fundamental: {
+			title: 'Analisis Fundamental',
+			desc: 'Konsep dasar, tokenomics, utilitas, dan evaluasi nilai intrinsik aset kripto.'
+		},
+		technical: {
+			title: 'Analisis Teknikal',
+			desc: 'Analisis grafik harga, indikator teknikal, tren pasar, dan manajemen risiko.'
+		},
+		muamalah: {
+			title: 'Fikih & Muamalah Aset Kripto',
+			desc: 'Kajian fikih muamalah Islam, prinsip halal-haram, gharar, maysir, dan kepatuhan syariah pada aset kripto.'
+		},
+		web3: {
+			title: 'Web3 & Ekosistem Blockchain',
+			desc: 'Teknologi blockchain, smart contracts, dompet kripto, DeFi, dan ekosistem terdesentralisasi.'
+		}
+	};
+
 	let showCreateModal = $state(false);
-	let createKind = $state<'level' | 'chapter' | 'lesson'>('level');
-	let createParentId = $state('');
-	let createSubjectId = $state('fundamental');
+	let isDirectFromNode = $state(false);
+	let createKind = $state<'subject' | 'level' | 'chapter' | 'lesson'>('subject');
+	let createParentId = $state('root');
+	let createSubjectId = $state<'fundamental' | 'technical' | 'muamalah' | 'web3'>('fundamental');
 	let createTitle = $state('');
 	let createId = $state('');
+	let createDescription = $state('');
 	let createScopeId = $state<string | null>(null);
-	let createDurationSeconds = $state(300);
-	let createInstructor = $state('');
+	let createDurationMinutes = $state(15);
+	let createInstructor = $state('Tim Edukasi CryptoSharia');
 	let createSyariahRequired = $state(false);
+	let isCreating = $state(false);
+	let createError = $state<string | null>(null);
 
 	// Review & Workflow Modal
 	let showReviewModal = $state(false);
@@ -116,7 +132,6 @@
 		}
 		selectedItem = item;
 		formTitle = item.title;
-		formId = item.id;
 		formDescription = item.description || '';
 		formScopeId = item.scopeId || null;
 		formOrder = item.order;
@@ -148,6 +163,21 @@
 		}
 	});
 
+	let hasHandledCreateAction = false;
+
+	// Handle ?create=true quick action from dashboard
+	$effect(() => {
+		if (data.filters.createAction && data.permissions.canManage && !hasHandledCreateAction) {
+			hasHandledCreateAction = true;
+			openCreateModalRoot();
+			if (typeof window !== 'undefined') {
+				const cleanUrl = new URL(window.location.href);
+				cleanUrl.searchParams.delete('create');
+				replaceState(`${resolve('/academy/courses')}${cleanUrl.search}`, {});
+			}
+		}
+	});
+
 	// Build Tree Structure
 	interface TreeNode {
 		item: AdminContentDto;
@@ -167,21 +197,52 @@
 			.filter((s) => selectedSubjectFilter === 'all' || s.subjectId === selectedSubjectFilter)
 			.map((sub) => {
 				const subLevels = levels.filter((lvl) => lvl.parentId === sub.id);
-				const levelNodes = subLevels.map((lvl) => {
-					const lvlChapters = chapters.filter((ch) => ch.parentId === lvl.id);
-					const chapterNodes = lvlChapters.map((ch) => {
-						const chLessons = lessons.filter((ls) => ls.parentId === ch.id);
-						const filteredLessons = chLessons.filter((ls) => {
-							const matchesQuery = !q || ls.title.toLowerCase().includes(q) || ls.id.toLowerCase().includes(q);
-							const matchesStatus = selectedStatusFilter === 'all' || ls.status === selectedStatusFilter;
-							return matchesQuery && matchesStatus;
-						});
-						return { item: ch, children: filteredLessons.map((ls) => ({ item: ls, children: [] })) };
-					});
-					return { item: lvl, children: chapterNodes };
-				});
-				return { item: sub, children: levelNodes };
-			});
+				const levelNodes = subLevels
+					.map((lvl) => {
+						const lvlChapters = chapters.filter((ch) => ch.parentId === lvl.id);
+						const chapterNodes = lvlChapters
+							.map((ch) => {
+								const chLessons = lessons.filter((ls) => ls.parentId === ch.id);
+								const filteredLessons = chLessons.filter((ls) => {
+									const matchesQuery = !q || ls.title.toLowerCase().includes(q) || ls.id.toLowerCase().includes(q);
+									const matchesStatus = selectedStatusFilter === 'all' || ls.status === selectedStatusFilter;
+									return matchesQuery && matchesStatus;
+								});
+								const chMatches = !q || ch.title.toLowerCase().includes(q) || ch.id.toLowerCase().includes(q);
+								const chStatusMatches = selectedStatusFilter === 'all' || ch.status === selectedStatusFilter;
+								if (!q && selectedStatusFilter === 'all') {
+									return { item: ch, children: filteredLessons.map((ls) => ({ item: ls, children: [] })) };
+								}
+								if ((chMatches && chStatusMatches) || filteredLessons.length > 0) {
+									return { item: ch, children: filteredLessons.map((ls) => ({ item: ls, children: [] })) };
+								}
+								return null;
+							})
+							.filter(Boolean) as TreeNode[];
+
+						const lvlMatches = !q || lvl.title.toLowerCase().includes(q) || lvl.id.toLowerCase().includes(q);
+						const lvlStatusMatches = selectedStatusFilter === 'all' || lvl.status === selectedStatusFilter;
+						if (!q && selectedStatusFilter === 'all') {
+							return { item: lvl, children: chapterNodes };
+						}
+						if ((lvlMatches && lvlStatusMatches) || chapterNodes.length > 0) {
+							return { item: lvl, children: chapterNodes };
+						}
+						return null;
+					})
+					.filter(Boolean) as TreeNode[];
+
+				const subMatches = !q || sub.title.toLowerCase().includes(q) || sub.id.toLowerCase().includes(q);
+				const subStatusMatches = selectedStatusFilter === 'all' || sub.status === selectedStatusFilter;
+				if (!q && selectedStatusFilter === 'all') {
+					return { item: sub, children: levelNodes };
+				}
+				if ((subMatches && subStatusMatches) || levelNodes.length > 0) {
+					return { item: sub, children: levelNodes };
+				}
+				return null;
+			})
+			.filter(Boolean) as TreeNode[];
 	});
 
 	function toggleNode(id: string) {
@@ -329,32 +390,238 @@
 		}
 	}
 
-	// Create New Entity
+	// Reset filters helper
+	function resetFilters() {
+		searchQuery = '';
+		selectedSubjectFilter = 'all';
+		selectedStatusFilter = 'all';
+	}
+
+	// Change Subject Helper in Modal
+	function handleSubjectChange(newSub: string) {
+		const validSubs = ['fundamental', 'technical', 'muamalah', 'web3'] as const;
+		if (!validSubs.includes(newSub as any)) return;
+		const typedSub = newSub as 'fundamental' | 'technical' | 'muamalah' | 'web3';
+		createSubjectId = typedSub;
+
+		if (createKind === 'subject') {
+			createId = typedSub;
+			createTitle = SUBJECT_METADATA[typedSub]?.title || '';
+			createDescription = SUBJECT_METADATA[typedSub]?.desc || '';
+			createParentId = 'root';
+		} else if (createKind === 'level') {
+			const sub = contents.find((c) => c.kind === 'subject' && c.subjectId === typedSub);
+			if (sub) {
+				createParentId = sub.id;
+				const existingLevels = contents.filter((c) => c.kind === 'level' && c.parentId === sub.id);
+				const nextLvl = existingLevels.length + 1;
+				createId = `${sub.id}-l${nextLvl}`;
+				createTitle = `Level ${nextLvl}: `;
+			}
+		} else if (createKind === 'chapter') {
+			const firstLvl = contents.find((c) => c.kind === 'level' && c.subjectId === typedSub);
+			if (firstLvl) {
+				createParentId = firstLvl.id;
+				const existingChs = contents.filter((c) => c.kind === 'chapter' && c.parentId === firstLvl.id);
+				const nextCh = existingChs.length + 1;
+				createId = `${firstLvl.id}-c${nextCh}`;
+				createTitle = `Bab ${nextCh}: `;
+			}
+		} else if (createKind === 'lesson') {
+			const firstCh = contents.find((c) => c.kind === 'chapter' && c.subjectId === typedSub);
+			if (firstCh) {
+				createParentId = firstCh.id;
+				const existingLs = contents.filter((c) => c.kind === 'lesson' && c.parentId === firstCh.id);
+				const nextLs = existingLs.length + 1;
+				createId = `${firstCh.id}-ls${nextLs}`;
+				createTitle = `Pelajaran ${nextLs}: `;
+			}
+		}
+	}
+
+	function handleLevelParentChange(parentId: string) {
+		createParentId = parentId;
+		const p = contents.find((c) => c.id === parentId);
+		if (p) {
+			createSubjectId = p.subjectId as 'fundamental' | 'technical' | 'muamalah' | 'web3';
+			const chs = contents.filter((c) => c.kind === 'chapter' && c.parentId === p.id);
+			const nextNum = chs.length + 1;
+			createId = `${p.id}-c${nextNum}`;
+			createTitle = `Bab ${nextNum}: `;
+		}
+	}
+
+	function handleChapterParentChange(parentId: string) {
+		createParentId = parentId;
+		const p = contents.find((c) => c.id === parentId);
+		if (p) {
+			createSubjectId = p.subjectId as 'fundamental' | 'technical' | 'muamalah' | 'web3';
+			const ls = contents.filter((c) => c.kind === 'lesson' && c.parentId === p.id);
+			const nextNum = ls.length + 1;
+			createId = `${p.id}-ls${nextNum}`;
+			createTitle = `Pelajaran ${nextNum}: `;
+		}
+	}
+
+	// Switch creation kind inside modal
+	function setCreateKind(newKind: 'subject' | 'level' | 'chapter' | 'lesson') {
+		createKind = newKind;
+		createError = null;
+
+		const subjects = contents.filter((c) => c.kind === 'subject');
+		const levels = contents.filter((c) => c.kind === 'level');
+		const chapters = contents.filter((c) => c.kind === 'chapter');
+
+		if (newKind === 'subject') {
+			createParentId = 'root';
+			// Pick first available subject that doesn't exist yet
+			const existingSubIds = subjects.map((s) => s.subjectId);
+			const allSubs: Array<'fundamental' | 'technical' | 'muamalah' | 'web3'> = [
+				'fundamental',
+				'technical',
+				'muamalah',
+				'web3'
+			];
+			const avail = allSubs.find((s) => !existingSubIds.includes(s)) || 'fundamental';
+			createSubjectId = avail;
+			createId = avail;
+			createTitle = SUBJECT_METADATA[avail]?.title || '';
+			createDescription = SUBJECT_METADATA[avail]?.desc || '';
+		} else if (newKind === 'level') {
+			const sub = subjects.find((s) => s.subjectId === createSubjectId) || subjects[0];
+			if (sub) {
+				createParentId = sub.id;
+				createSubjectId = sub.subjectId as any;
+				const existingLevels = contents.filter((c) => c.kind === 'level' && c.parentId === sub.id);
+				const nextLvl = existingLevels.length + 1;
+				createId = `${sub.id}-l${nextLvl}`;
+				createTitle = `Level ${nextLvl}: `;
+			}
+		} else if (newKind === 'chapter') {
+			const lvl = levels.find((l) => l.subjectId === createSubjectId) || levels[0];
+			if (lvl) {
+				createParentId = lvl.id;
+				createSubjectId = lvl.subjectId as any;
+				const existingChs = contents.filter((c) => c.kind === 'chapter' && c.parentId === lvl.id);
+				const nextCh = existingChs.length + 1;
+				createId = `${lvl.id}-c${nextCh}`;
+				createTitle = `Bab ${nextCh}: `;
+			}
+		} else if (newKind === 'lesson') {
+			const ch = chapters.find((c) => c.subjectId === createSubjectId) || chapters[0];
+			if (ch) {
+				createParentId = ch.id;
+				createSubjectId = ch.subjectId as any;
+				const existingLs = contents.filter((c) => c.kind === 'lesson' && c.parentId === ch.id);
+				const nextLs = existingLs.length + 1;
+				createId = `${ch.id}-ls${nextLs}`;
+				createTitle = `Pelajaran ${nextLs}: `;
+			}
+		}
+	}
+
+	// Open Create Modal from Header or Empty State
+	function openCreateModalRoot() {
+		isDirectFromNode = false;
+		createError = null;
+
+		const subjects = contents.filter((c) => c.kind === 'subject');
+		const levels = contents.filter((c) => c.kind === 'level');
+		const chapters = contents.filter((c) => c.kind === 'chapter');
+
+		if (subjects.length === 0) {
+			setCreateKind('subject');
+		} else if (levels.length === 0) {
+			setCreateKind('level');
+		} else if (chapters.length === 0) {
+			setCreateKind('chapter');
+		} else {
+			setCreateKind('lesson');
+		}
+
+		createScopeId = null;
+		createDurationMinutes = 15;
+		createInstructor = 'Tim Edukasi CryptoSharia';
+		createSyariahRequired = false;
+		showCreateModal = true;
+	}
+
+	// Open Create Modal directly from existing node (+ Level, + Bab, + Pelajaran)
 	function openCreateModal(kind: 'level' | 'chapter' | 'lesson', parent: AdminContentDto) {
+		isDirectFromNode = true;
+		createError = null;
 		createKind = kind;
 		createParentId = parent.id;
-		createSubjectId = parent.subjectId;
-		createTitle = '';
-		createId = '';
+		createSubjectId = parent.subjectId as any;
+
+		const siblings = contents.filter((c) => c.parentId === parent.id);
+		const nextNum = siblings.length + 1;
+
+		if (kind === 'level') {
+			createTitle = `Level ${nextNum}: `;
+			createId = `${parent.id}-l${nextNum}`;
+			createDescription = '';
+		} else if (kind === 'chapter') {
+			createTitle = `Bab ${nextNum}: `;
+			createId = `${parent.id}-c${nextNum}`;
+			createDescription = '';
+		} else {
+			createTitle = `Pelajaran ${nextNum}: `;
+			createId = `${parent.id}-ls${nextNum}`;
+			createDescription = '';
+		}
+
 		createScopeId = parent.scopeId || null;
-		createDurationSeconds = 300;
-		createInstructor = parent.instructor || '';
+		createDurationMinutes = 15;
+		createInstructor = parent.instructor || 'Tim Edukasi CryptoSharia';
 		createSyariahRequired = false;
 		showCreateModal = true;
 	}
 
 	async function handleCreateEntity() {
-		if (!createTitle.trim() || !createId.trim()) {
-			toast.error('Judul dan ID/Slug wajib diisi');
+		createError = null;
+
+		const titleTrim = createTitle.trim();
+		const idTrim = createId.trim().toLowerCase();
+
+		if (!titleTrim || !idTrim) {
+			createError = 'Judul dan ID/Slug wajib diisi.';
+			toast.error('Judul dan ID/Slug wajib diisi.');
 			return;
 		}
 
+		if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(idTrim)) {
+			createError = 'Format ID/Slug hanya boleh huruf kecil, angka, dan tanda hubung.';
+			toast.error(createError);
+			return;
+		}
+
+		// Validation for Subject
+		if (createKind === 'subject') {
+			const duplicate = contents.some((c) => c.kind === 'subject' && c.subjectId === createSubjectId);
+			if (duplicate) {
+				createError = `Subjek "${SUBJECT_METADATA[createSubjectId]?.title || createSubjectId}" sudah ada dalam kurikulum.`;
+				toast.error(createError);
+				return;
+			}
+			createParentId = 'root';
+			createId = createSubjectId;
+		} else {
+			// Validation for Level, Chapter, Lesson parent
+			const parent = contents.find((c) => c.id === createParentId);
+			if (!parent) {
+				createError = `Induk kurikulum tidak ditemukan untuk ${createKind}.`;
+				toast.error(createError);
+				return;
+			}
+		}
+
+		isCreating = true;
 		try {
 			// Compute next order
 			const siblings = contents.filter((c) => c.parentId === createParentId);
 			const nextOrder = siblings.length > 0 ? Math.max(...siblings.map((s) => s.order)) + 1 : 0;
 
-			// Determine level & chapterNumber from parent
 			let lvl = 1;
 			let chNum = 1;
 			const parent = contents.find((c) => c.id === createParentId);
@@ -376,12 +643,13 @@
 				level: lvl,
 				chapterNumber: chNum,
 				order: nextOrder,
-				scopeId: createScopeId || null,
-				title: createTitle.trim(),
-				description: '',
-				durationSeconds: createKind === 'lesson' ? Number(createDurationSeconds) : 0,
+				scopeId: createKind === 'lesson' ? (createScopeId || null) : null,
+				title: titleTrim,
+				description: createDescription.trim(),
+				thumbnail: '/favicon.png',
+				durationSeconds: createKind === 'lesson' ? Math.max(0, Math.round(Number(createDurationMinutes) * 60)) : 0,
 				instructor: createInstructor.trim(),
-				syariahRequired: Boolean(createSyariahRequired)
+				syariahRequired: createKind === 'lesson' ? Boolean(createSyariahRequired) : false
 			};
 
 			const res = await fetch('/api/academy/admin/content', {
@@ -396,12 +664,18 @@
 			}
 
 			contents = [...contents, json];
-			expandedNodes[createParentId] = true;
+			if (createParentId !== 'root') {
+				expandedNodes[createParentId] = true;
+			}
 			selectContentItem(json);
 			showCreateModal = false;
-			toast.success(`Berhasil menambahkan ${createKind} baru: "${json.title}"`);
+			toast.success(`Berhasil menambahkan ${createKind}: "${json.title}"`);
 		} catch (err: any) {
-			toast.error(err.message || 'Terjadi kesalahan saat membuat entitas');
+			const msg = err.message || 'Terjadi kesalahan saat membuat entitas kurikulum';
+			createError = msg;
+			toast.error(msg);
+		} finally {
+			isCreating = false;
 		}
 	}
 </script>
@@ -427,9 +701,20 @@
 			</h1>
 		</div>
 
-		<!-- Mobile view toggle -->
-		<div class="flex items-center gap-2 md:hidden">
-			<div class="inline-flex rounded-lg border border-border bg-card p-1">
+		<!-- Actions and View toggle -->
+		<div class="flex items-center gap-2.5">
+			{#if data.permissions.canManage}
+				<button
+					onclick={openCreateModalRoot}
+					class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-orange-500/50 shrink-0"
+				>
+					<Plus class="h-4 w-4" />
+					<span>Tambah Materi</span>
+				</button>
+			{/if}
+
+			<!-- Mobile view toggle -->
+			<div class="inline-flex rounded-lg border border-border bg-card p-1 md:hidden">
 				<button
 					onclick={() => (mobileView = 'tree')}
 					class="px-3 py-1 text-xs font-semibold rounded-md transition-colors {mobileView === 'tree' ? 'bg-orange-500 text-white' : 'text-muted-foreground'}"
@@ -500,10 +785,48 @@
 
 			<!-- Hierarchical Tree Container -->
 			<div class="rounded-xl border border-border bg-card p-3 shadow-sm min-h-[500px] max-h-[720px] overflow-y-auto custom-scrollbar">
-				{#if hierarchicalTree().length === 0}
-					<div class="p-8 text-center text-xs text-muted-foreground space-y-2">
-						<BookOpen class="h-8 w-8 mx-auto opacity-30" />
-						<p>Tidak ada materi kurikulum yang cocok dengan filter pencarian.</p>
+				{#if contents.length === 0}
+					<!-- Empty State 1: Truly Empty Database -->
+					<div class="p-6 text-center text-xs space-y-3 bg-muted/10 rounded-xl border border-dashed border-border/80">
+						<div class="h-10 w-10 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center mx-auto">
+							<BookOpen class="h-5 w-5" />
+						</div>
+						<div class="space-y-1">
+							<h3 class="font-bold text-foreground text-sm">Kurikulum Masih Kosong</h3>
+							<p class="text-muted-foreground max-w-xs mx-auto leading-relaxed">
+								Belum ada kurikulum yang dibuat di CryptoSharia Academy. Mulai dengan membuat Subjek pertama untuk membangun hierarki pembelajaran.
+							</p>
+						</div>
+						{#if data.permissions.canManage}
+							<button
+								onclick={openCreateModalRoot}
+								class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+							>
+								<Plus class="h-3.5 w-3.5" />
+								Buat Materi Pertama
+							</button>
+						{:else}
+							<p class="text-[11px] text-muted-foreground italic">
+								Hubungi administrator untuk mulai menambahkan materi.
+							</p>
+						{/if}
+					</div>
+				{:else if hierarchicalTree().length === 0}
+					<!-- Empty State 2: Filter Mismatch -->
+					<div class="p-6 text-center text-xs text-muted-foreground space-y-3 bg-muted/10 rounded-xl border border-border/50">
+						<Search class="h-8 w-8 mx-auto opacity-30" />
+						<div class="space-y-1">
+							<h3 class="font-bold text-foreground text-sm">Tidak Ada Materi yang Cocok</h3>
+							<p class="max-w-xs mx-auto">
+								Tidak ditemukan materi kurikulum yang cocok dengan pencarian atau filter status yang dipilih.
+							</p>
+						</div>
+						<button
+							onclick={resetFilters}
+							class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted text-foreground font-medium text-xs transition-colors"
+						>
+							Reset Filter & Pencarian
+						</button>
 					</div>
 				{:else}
 					<div class="space-y-2 select-none text-xs">
@@ -628,18 +951,79 @@
 		<!-- Right Panel: Content Workspace Editor (7 cols) -->
 		<div class="md:col-span-7 space-y-3 {mobileView === 'tree' ? 'hidden md:block' : 'block'}">
 			{#if !selectedItem}
-				<!-- Empty Selection Guide State -->
-				<div class="rounded-xl border border-dashed border-border bg-card p-8 sm:p-12 text-center text-muted-foreground space-y-4">
-					<div class="h-12 w-12 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center mx-auto">
-						<BookOpen class="h-6 w-6" />
+				{#if contents.length === 0}
+					<!-- Onboarding & Hierarchy Guide when Database is Completely Empty -->
+					<div class="rounded-xl border border-dashed border-border bg-card p-6 sm:p-10 text-center space-y-6">
+						<div class="h-12 w-12 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center mx-auto">
+							<BookOpen class="h-6 w-6" />
+						</div>
+						<div class="space-y-2 max-w-lg mx-auto">
+							<h3 class="text-base sm:text-lg font-bold text-foreground">
+								Mulai Membangun Kurikulum CryptoSharia
+							</h3>
+							<p class="text-xs text-muted-foreground leading-relaxed">
+								Struktur kurikulum Academy disusun secara berjenjang dalam 4 tingkatan untuk menjamin pembelajaran yang terstruktur dan terstandarisasi syariah:
+							</p>
+						</div>
+
+						<!-- 4-Tier Hierarchy Diagram Cards -->
+						<div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-left max-w-2xl mx-auto">
+							<div class="p-3 rounded-lg border border-border/60 bg-muted/20 space-y-1">
+								<div class="flex items-center gap-1.5 text-orange-500 font-bold text-xs">
+									<span class="w-4 h-4 rounded-full bg-orange-500/10 flex items-center justify-center text-[10px]">1</span>
+									Subjek
+								</div>
+								<p class="text-[11px] text-muted-foreground">Bidang ilmu utama (Fundamental, Teknikal, Muamalah, Web3).</p>
+							</div>
+							<div class="p-3 rounded-lg border border-border/60 bg-muted/20 space-y-1">
+								<div class="flex items-center gap-1.5 text-blue-500 font-bold text-xs">
+									<span class="w-4 h-4 rounded-full bg-blue-500/10 flex items-center justify-center text-[10px]">2</span>
+									Level
+								</div>
+								<p class="text-[11px] text-muted-foreground">Tingkatan kompetensi siswa (Level 1, Level 2, dst).</p>
+							</div>
+							<div class="p-3 rounded-lg border border-border/60 bg-muted/20 space-y-1">
+								<div class="flex items-center gap-1.5 text-emerald-500 font-bold text-xs">
+									<span class="w-4 h-4 rounded-full bg-emerald-500/10 flex items-center justify-center text-[10px]">3</span>
+									Bab
+								</div>
+								<p class="text-[11px] text-muted-foreground">Topik bahasan kurikulum dalam satu level pembelajaran.</p>
+							</div>
+							<div class="p-3 rounded-lg border border-border/60 bg-muted/20 space-y-1">
+								<div class="flex items-center gap-1.5 text-amber-500 font-bold text-xs">
+									<span class="w-4 h-4 rounded-full bg-amber-500/10 flex items-center justify-center text-[10px]">4</span>
+									Pelajaran
+								</div>
+								<p class="text-[11px] text-muted-foreground">Materi video YouTube, referensi, dan asesmen syariah.</p>
+							</div>
+						</div>
+
+						{#if data.permissions.canManage}
+							<div class="pt-2">
+								<button
+									onclick={openCreateModalRoot}
+									class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+								>
+									<Plus class="h-4 w-4" />
+									Buat Materi Pertama
+								</button>
+							</div>
+						{/if}
 					</div>
-					<div>
-						<h3 class="text-base font-bold text-foreground">Pilih Materi untuk Mulai Mengedit</h3>
-						<p class="text-xs text-muted-foreground max-w-md mx-auto mt-1">
-							Pilih materi dari pohon kurikulum di sebelah kiri untuk mengubah judul, deskripsi, durasi, video YouTube, dan menjalankan alur review syariah.
-						</p>
+				{:else}
+					<!-- Standard Selection Guide when content exists -->
+					<div class="rounded-xl border border-dashed border-border bg-card p-8 sm:p-12 text-center text-muted-foreground space-y-4">
+						<div class="h-12 w-12 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center mx-auto">
+							<BookOpen class="h-6 w-6" />
+						</div>
+						<div>
+							<h3 class="text-base font-bold text-foreground">Pilih Materi untuk Mulai Mengedit</h3>
+							<p class="text-xs text-muted-foreground max-w-md mx-auto mt-1">
+								Pilih materi dari pohon kurikulum di sebelah kiri untuk mengubah judul, deskripsi, durasi, video YouTube, dan menjalankan alur review syariah.
+							</p>
+						</div>
 					</div>
-				</div>
+				{/if}
 			{:else}
 				<!-- Workspace Editor Panel -->
 				<div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col">
@@ -977,88 +1361,390 @@
 	</div>
 </div>
 
-<!-- CREATE ENTITY MODAL -->
+<!-- CREATE ENTITY MODAL (GUIDED 4-TIER CREATOR) -->
 {#if showCreateModal}
-	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-		<div class="w-full max-w-md rounded-xl border border-border bg-card p-5 shadow-xl space-y-4">
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+		role="dialog"
+		aria-modal="true"
+		tabindex="-1"
+		onkeydown={(e) => {
+			if (e.key === 'Escape') showCreateModal = false;
+		}}
+	>
+		<div class="w-full max-w-lg rounded-xl border border-border bg-card p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
 			<div class="flex items-center justify-between border-b border-border pb-3">
-				<h3 class="text-sm font-bold text-foreground">
-					Tambah {createKind.toUpperCase()} Baru
-				</h3>
-				<button onclick={() => (showCreateModal = false)} class="p-1 text-muted-foreground hover:text-foreground">
+				<div>
+					<h3 class="text-sm font-bold text-foreground flex items-center gap-2">
+						<Plus class="h-4 w-4 text-orange-500" />
+						Tambah {createKind.toUpperCase()} Kurikulum
+					</h3>
+					<p class="text-[11px] text-muted-foreground mt-0.5">
+						{#if createKind === 'subject'}
+							Tingkat 1 dari 4: Bidang ilmu utama kurikulum CryptoSharia.
+						{:else if createKind === 'level'}
+							Tingkat 2 dari 4: Jenjang kompetensi di bawah subjek.
+						{:else if createKind === 'chapter'}
+							Tingkat 3 dari 4: Bab materi bahasan dalam satu level.
+						{:else}
+							Tingkat 4 dari 4: Materi pelajaran spesifik dengan video & materi bacaan.
+						{/if}
+					</p>
+				</div>
+				<button
+					onclick={() => (showCreateModal = false)}
+					aria-label="Tutup modal"
+					class="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted"
+				>
 					<X class="h-4 w-4" />
 				</button>
 			</div>
 
-			<div class="space-y-3 text-xs">
-				<div class="space-y-1">
-					<label for="create-title" class="font-semibold text-foreground">Judul {createKind} *</label>
-					<input
-						id="create-title"
-						type="text"
-						bind:value={createTitle}
-						oninput={() => {
-							// Auto-generate clean slug
-							createId = `${createParentId}-${createTitle
-								.toLowerCase()
-								.replace(/[^a-z0-9]+/g, '-')
-								.replace(/^-|-$/g, '')}`;
-						}}
-						placeholder="cth: Pelajaran 1: Definisi Maal"
-						class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
-					/>
+			<!-- Inline Error Banner -->
+			{#if createError}
+				<div class="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-start gap-2">
+					<AlertCircle class="h-4 w-4 shrink-0 mt-0.5" />
+					<span>{createError}</span>
 				</div>
+			{/if}
 
+			<!-- Kind Selector Tabs (Only active when opened globally, not locked from node) -->
+			{#if !isDirectFromNode}
 				<div class="space-y-1">
-					<label for="create-id" class="font-semibold text-foreground">ID / Slug * (Huruf kecil, angka, tanda hubung)</label>
-					<input
-						id="create-id"
-						type="text"
-						bind:value={createId}
-						class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-mono text-foreground focus:border-orange-500 focus:outline-none"
-					/>
+					<span class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Tingkatan Entitas</span>
+					<div class="grid grid-cols-4 gap-1.5 p-1 rounded-lg border border-border bg-muted/30 text-xs">
+						<button
+							type="button"
+							onclick={() => setCreateKind('subject')}
+							class="py-1.5 px-2 rounded-md font-semibold text-center transition-colors {createKind === 'subject' ? 'bg-orange-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
+						>
+							1. Subjek
+						</button>
+						<button
+							type="button"
+							onclick={() => setCreateKind('level')}
+							disabled={contents.filter((c) => c.kind === 'subject').length === 0}
+							class="py-1.5 px-2 rounded-md font-semibold text-center transition-colors {createKind === 'level' ? 'bg-orange-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed'}"
+						>
+							2. Level
+						</button>
+						<button
+							type="button"
+							onclick={() => setCreateKind('chapter')}
+							disabled={contents.filter((c) => c.kind === 'level').length === 0}
+							class="py-1.5 px-2 rounded-md font-semibold text-center transition-colors {createKind === 'chapter' ? 'bg-orange-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed'}"
+						>
+							3. Bab
+						</button>
+						<button
+							type="button"
+							onclick={() => setCreateKind('lesson')}
+							disabled={contents.filter((c) => c.kind === 'chapter').length === 0}
+							class="py-1.5 px-2 rounded-md font-semibold text-center transition-colors {createKind === 'lesson' ? 'bg-orange-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed'}"
+						>
+							4. Pelajaran
+						</button>
+					</div>
 				</div>
+			{/if}
 
-				{#if createKind === 'lesson'}
-					<div class="space-y-1">
-						<label for="create-scope" class="font-semibold text-foreground">Scope Pembelajaran</label>
+			<div class="space-y-3.5 text-xs">
+				<!-- SUBJEK FORM -->
+				{#if createKind === 'subject'}
+					<div class="space-y-1.5">
+						<label for="create-subject-select" class="font-semibold text-foreground">Pilih Bidang Subjek Resmi *</label>
 						<select
-							id="create-scope"
-							bind:value={createScopeId}
+							id="create-subject-select"
+							value={createSubjectId}
+							onchange={(e) => handleSubjectChange(e.currentTarget.value)}
 							class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
 						>
-							<option value={null}>Bebas / Tanpa Scope Khusus</option>
-							{#each scopes as sc}
-								<option value={sc.id}>{sc.name}</option>
-							{/each}
+							<option value="fundamental">Analisis Fundamental (fundamental)</option>
+							<option value="technical">Analisis Teknikal (technical)</option>
+							<option value="muamalah">Fikih & Muamalah Aset Kripto (muamalah)</option>
+							<option value="web3">Web3 & Ekosistem Blockchain (web3)</option>
 						</select>
+						{#if contents.some((c) => c.kind === 'subject' && c.subjectId === createSubjectId)}
+							<p class="text-[11px] text-amber-500 font-medium">
+								⚠️ Subjek ini sudah ada dalam kurikulum. Silakan pilih subjek lain atau buat Level di bawah subjek ini.
+							</p>
+						{/if}
 					</div>
 
 					<div class="space-y-1">
-						<label for="create-instructor" class="font-semibold text-foreground">Nama Pengajar</label>
+						<label for="create-title-sub" class="font-semibold text-foreground">Nama Tampilan Subjek *</label>
+						<input
+							id="create-title-sub"
+							type="text"
+							bind:value={createTitle}
+							placeholder="cth: Fikih & Muamalah Aset Kripto"
+							class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
+						/>
+					</div>
+
+					<div class="space-y-1">
+						<label for="create-desc-sub" class="font-semibold text-foreground">Deskripsi Subjek</label>
+						<textarea
+							id="create-desc-sub"
+							rows="3"
+							bind:value={createDescription}
+							placeholder="Deskripsi singkat materi subjek..."
+							class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
+						></textarea>
+					</div>
+
+					<div class="space-y-1">
+						<label for="create-id-sub" class="font-semibold text-foreground">ID Subjek (Sistem)</label>
+						<input
+							id="create-id-sub"
+							type="text"
+							value={createSubjectId}
+							readonly
+							class="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-xs font-mono text-muted-foreground cursor-not-allowed"
+						/>
+						<span class="text-[10px] text-muted-foreground block">
+							Aturan backend: ID subjek utama wajib identik dengan nama subjek (`parentId: 'root'`).
+						</span>
+					</div>
+
+				<!-- LEVEL FORM -->
+				{:else if createKind === 'level'}
+					{#if !isDirectFromNode}
+						<div class="space-y-1">
+							<label for="create-parent-sub" class="font-semibold text-foreground">Subjek Induk *</label>
+							<select
+								id="create-parent-sub"
+								value={createSubjectId}
+								onchange={(e) => handleSubjectChange(e.currentTarget.value)}
+								class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
+							>
+								{#each contents.filter((c) => c.kind === 'subject') as sub}
+									<option value={sub.subjectId}>{sub.title} ({sub.subjectId})</option>
+								{/each}
+							</select>
+						</div>
+					{:else}
+						<div class="p-2.5 rounded-lg border border-border bg-muted/20 text-xs flex items-center justify-between">
+							<span class="text-muted-foreground">Subjek Induk:</span>
+							<span class="font-bold text-foreground uppercase">{createSubjectId}</span>
+						</div>
+					{/if}
+
+					<div class="space-y-1">
+						<label for="create-title-lvl" class="font-semibold text-foreground">Judul Level *</label>
+						<input
+							id="create-title-lvl"
+							type="text"
+							bind:value={createTitle}
+							placeholder="cth: Level 1: Fondasi Maal & Sil'ah"
+							class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
+						/>
+					</div>
+
+					<div class="space-y-1">
+						<label for="create-id-lvl" class="font-semibold text-foreground">ID / Slug Level *</label>
+						<input
+							id="create-id-lvl"
+							type="text"
+							bind:value={createId}
+							class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-mono text-foreground focus:border-orange-500 focus:outline-none"
+						/>
+					</div>
+
+					<div class="space-y-1">
+						<label for="create-desc-lvl" class="font-semibold text-foreground">Deskripsi Level</label>
+						<textarea
+							id="create-desc-lvl"
+							rows="2"
+							bind:value={createDescription}
+							placeholder="Capaian pembelajaran pada level ini..."
+							class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
+						></textarea>
+					</div>
+
+				<!-- CHAPTER / BAB FORM -->
+				{:else if createKind === 'chapter'}
+					{#if !isDirectFromNode}
+						<div class="space-y-1">
+							<label for="create-parent-lvl" class="font-semibold text-foreground">Level Induk *</label>
+							<select
+								id="create-parent-lvl"
+								bind:value={createParentId}
+								onchange={(e) => handleLevelParentChange(e.currentTarget.value)}
+								class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
+							>
+								{#each contents.filter((c) => c.kind === 'level') as lvl}
+									<option value={lvl.id}>{lvl.title} [{lvl.subjectId.toUpperCase()}]</option>
+								{/each}
+							</select>
+						</div>
+					{:else}
+						<div class="p-2.5 rounded-lg border border-border bg-muted/20 text-xs flex items-center justify-between">
+							<span class="text-muted-foreground">Level Induk:</span>
+							<span class="font-bold text-foreground">{createParentId}</span>
+						</div>
+					{/if}
+
+					<div class="space-y-1">
+						<label for="create-title-ch" class="font-semibold text-foreground">Judul Bab *</label>
+						<input
+							id="create-title-ch"
+							type="text"
+							bind:value={createTitle}
+							placeholder="cth: Bab 1: Definisi Maal Mutaqawwam"
+							class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
+						/>
+					</div>
+
+					<div class="space-y-1">
+						<label for="create-id-ch" class="font-semibold text-foreground">ID / Slug Bab *</label>
+						<input
+							id="create-id-ch"
+							type="text"
+							bind:value={createId}
+							class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-mono text-foreground focus:border-orange-500 focus:outline-none"
+						/>
+					</div>
+
+					<div class="space-y-1">
+						<label for="create-desc-ch" class="font-semibold text-foreground">Deskripsi Bab</label>
+						<textarea
+							id="create-desc-ch"
+							rows="2"
+							bind:value={createDescription}
+							placeholder="Pokok materi yang dibahas dalam bab ini..."
+							class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
+						></textarea>
+					</div>
+
+				<!-- LESSON / PELAJARAN FORM -->
+				{:else}
+					{#if !isDirectFromNode}
+						<div class="space-y-1">
+							<label for="create-parent-ch" class="font-semibold text-foreground">Bab Induk *</label>
+							<select
+								id="create-parent-ch"
+								bind:value={createParentId}
+								onchange={(e) => handleChapterParentChange(e.currentTarget.value)}
+								class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
+							>
+								{#each contents.filter((c) => c.kind === 'chapter') as ch}
+									<option value={ch.id}>{ch.title} [{ch.subjectId.toUpperCase()}]</option>
+								{/each}
+							</select>
+						</div>
+					{:else}
+						<div class="p-2.5 rounded-lg border border-border bg-muted/20 text-xs flex items-center justify-between">
+							<span class="text-muted-foreground">Bab Induk:</span>
+							<span class="font-bold text-foreground">{createParentId}</span>
+						</div>
+					{/if}
+
+					<div class="space-y-1">
+						<label for="create-title-ls" class="font-semibold text-foreground">Judul Pelajaran *</label>
+						<input
+							id="create-title-ls"
+							type="text"
+							bind:value={createTitle}
+							placeholder="cth: Pelajaran 1: Hakikat Uang dalam Fikih Klasik"
+							class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
+						/>
+					</div>
+
+					<div class="space-y-1">
+						<label for="create-id-ls" class="font-semibold text-foreground">ID / Slug Pelajaran *</label>
+						<input
+							id="create-id-ls"
+							type="text"
+							bind:value={createId}
+							class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-mono text-foreground focus:border-orange-500 focus:outline-none"
+						/>
+					</div>
+
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+						<div class="space-y-1">
+							<label for="create-scope" class="font-semibold text-foreground">Scope Pembelajaran</label>
+							<select
+								id="create-scope"
+								bind:value={createScopeId}
+								class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
+							>
+								<option value={null}>Bebas / Tanpa Scope Khusus</option>
+								{#each scopes as sc}
+									<option value={sc.id}>{sc.name}</option>
+								{/each}
+							</select>
+						</div>
+
+						<div class="space-y-1">
+							<label for="create-duration" class="font-semibold text-foreground">Estimasi Durasi (Menit)</label>
+							<input
+								id="create-duration"
+								type="number"
+								min="1"
+								max="300"
+								bind:value={createDurationMinutes}
+								class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
+							/>
+						</div>
+					</div>
+
+					<div class="space-y-1">
+						<label for="create-instructor" class="font-semibold text-foreground">Nama Pengajar / Narasumber</label>
 						<input
 							id="create-instructor"
 							type="text"
 							bind:value={createInstructor}
-							placeholder="cth: Tim Syariah CryptoSharia"
+							placeholder="cth: Tim Edukasi CryptoSharia"
 							class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
 						/>
+					</div>
+
+					<div class="space-y-1">
+						<label for="create-desc-ls" class="font-semibold text-foreground">Deskripsi Ringkas</label>
+						<textarea
+							id="create-desc-ls"
+							rows="2"
+							bind:value={createDescription}
+							placeholder="Ringkasan poin yang dipelajari pada materi ini..."
+							class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none"
+						></textarea>
+					</div>
+
+					<div class="pt-1">
+						<label class="flex items-center gap-2 cursor-pointer select-none">
+							<input
+								type="checkbox"
+								bind:checked={createSyariahRequired}
+								class="rounded border-border text-orange-500 focus:ring-orange-500"
+							/>
+							<span class="text-xs font-medium text-foreground">Wajib Review Kepatuhan Syariah</span>
+						</label>
 					</div>
 				{/if}
 			</div>
 
-			<div class="flex items-center justify-end gap-2 pt-2 border-t border-border">
+			<div class="flex items-center justify-end gap-2 pt-3 border-t border-border">
 				<button
+					type="button"
 					onclick={() => (showCreateModal = false)}
-					class="px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-muted/40 hover:bg-muted text-foreground"
+					disabled={isCreating}
+					class="px-3.5 py-1.5 rounded-lg text-xs font-medium border border-border bg-muted/40 hover:bg-muted text-foreground transition-colors disabled:opacity-50"
 				>
 					Batal
 				</button>
 				<button
+					type="button"
 					onclick={handleCreateEntity}
-					class="px-4 py-1.5 rounded-lg text-xs font-bold bg-orange-500 hover:bg-orange-600 text-white shadow"
+					disabled={isCreating || (createKind === 'subject' && contents.some((c) => c.kind === 'subject' && c.subjectId === createSubjectId))}
+					class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold bg-orange-600 hover:bg-orange-500 text-white shadow transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 				>
-					Tambahkan
+					{#if isCreating}
+						<Loader2 class="h-3.5 w-3.5 animate-spin" />
+						<span>Menyimpan...</span>
+					{:else}
+						<span>Simpan {createKind.toUpperCase()}</span>
+					{/if}
 				</button>
 			</div>
 		</div>
@@ -1067,7 +1753,15 @@
 
 <!-- REVIEW & WORKFLOW MODAL -->
 {#if showReviewModal && selectedItem}
-	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+		role="dialog"
+		aria-modal="true"
+		tabindex="-1"
+		onkeydown={(e) => {
+			if (e.key === 'Escape') showReviewModal = false;
+		}}
+	>
 		<div class="w-full max-w-lg rounded-xl border border-border bg-card p-5 shadow-2xl space-y-4">
 			<div class="flex items-center justify-between border-b border-border pb-3">
 				<div>
