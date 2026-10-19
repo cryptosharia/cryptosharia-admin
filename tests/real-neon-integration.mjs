@@ -210,11 +210,15 @@ async function run() {
 		CS_API_KEY: TEST_API_KEY
 	};
 
-	const adminProcess = spawn('npx', ['vite', '--port', String(ADMIN_PORT), '--strictPort'], {
-		cwd: '/Users/mac/Projects/CryptoSharia/cryptosharia-admin',
-		env: adminEnv,
-		stdio: ['ignore', 'pipe', 'pipe']
-	});
+	const adminProcess = spawn(
+		'npx',
+		['vite', '--host', '127.0.0.1', '--port', String(ADMIN_PORT), '--strictPort'],
+		{
+			cwd: '/Users/mac/Projects/CryptoSharia/cryptosharia-admin',
+			env: adminEnv,
+			stdio: ['ignore', 'pipe', 'pipe']
+		}
+	);
 
 	adminProcess.stderr.on('data', (d) => {
 		const s = sanitize(d.toString());

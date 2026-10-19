@@ -96,11 +96,15 @@ async function main() {
 		CS_API_KEY: TEST_API_KEY
 	};
 
-	const adminProcess = spawn('npx', ['vite', '--port', String(ADMIN_PORT), '--strictPort'], {
-		cwd: '/Users/mac/Projects/CryptoSharia/cryptosharia-admin',
-		env: adminEnv,
-		stdio: 'inherit'
-	});
+	const adminProcess = spawn(
+		'npx',
+		['vite', '--host', '127.0.0.1', '--port', String(ADMIN_PORT), '--strictPort'],
+		{
+			cwd: '/Users/mac/Projects/CryptoSharia/cryptosharia-admin',
+			env: adminEnv,
+			stdio: 'inherit'
+		}
+	);
 
 	await waitForUrl(`${ADMIN_URL}/login`);
 	console.log('✓ cryptosharia-admin is live on ' + ADMIN_URL);

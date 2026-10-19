@@ -9,6 +9,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const status = url.searchParams.get('status') || undefined;
 	const kind = url.searchParams.get('kind') || undefined;
 	const selectedId = url.searchParams.get('select') || undefined;
+	const createAction = url.searchParams.get('create') === 'true';
 
 	const [contentRes, scopesRes] = await Promise.all([
 		getAdminContent({ subjectId, status, kind }, accessToken),
@@ -18,7 +19,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	return {
 		contents: contentRes.ok && contentRes.data ? contentRes.data : [],
 		scopes: scopesRes.ok && scopesRes.data ? scopesRes.data : [],
-		filters: { subjectId, status, kind, selectedId },
+		filters: { subjectId, status, kind, selectedId, createAction },
 		permissions: {
 			canManage: canManageAcademy(userRole),
 			canReview: canReviewAcademy(userRole),
