@@ -13,3 +13,19 @@ The suite starts a real SvelteKit dev server and a synthetic HTTP API on random 
 After `npm run build`, `node tests/security-serialization.mjs --preview` uses the built local Vite preview with production cookie settings. It still uses only loopback mocks, never a hosted deployment.
 
 Typecheck/build and this suite do not verify backend OTP atomicity, JWT revocation, refresh persistence, production credentials, production exposure or hosted deployment identity. Those remain separately authorized workstreams.
+
+## Curriculum metadata QA regression
+
+Use clean admin and API worktrees with lockfile dependencies installed. Neither worktree may contain environment files. The API source is unchanged; point `ACADEMY_QA_API_ROOT` at its absolute path.
+
+```sh
+ACADEMY_QA_API_ROOT=/absolute/path/to/clean-api npm run test:academy-metadata:qa
+```
+
+This suite uses the existing authenticated Neon CLI session to verify the exact `qa-academy-testing` branch ID and QA endpoint before connecting. It refuses production, fixture collisions, and environment files. It starts local BFF/API processes on ports 5187/3467 with synthetic secrets and users, creates only a new synthetic `web3` hierarchy, tests all four metadata update kinds, verifies RBAC/CSRF/editorial guards and PostgreSQL invariants, and removes only its own fixture. Existing QA Academy records are hashed before and after. There are no schema migrations or production writes.
+
+Append `-- --hold` for browser testing. The suite writes a temporary local QA-only session file with mode 0600 in the evidence directory (default: the sibling `evidence` directory; override with `ACADEMY_QA_EVIDENCE`). Use that session only on the local QA origin. Rename the synthetic Level to `FOUNDATION: DASAR-DASAR CRYPTO & NILAI ASET` through the editor, then press Enter in the test terminal to verify database persistence and clean up. Delete the local QA browser cookie after testing. The session file is removed on normal completion. Do not run concurrent instances, because the existing creation contract fixes Subject IDs to their subject enum.
+
+Browser checks: independently expand/collapse using the chevrons; select and save Subject, Level, Chapter and Lesson by title; verify tree labels and descendants; reject blank titles; cancel node/route navigation with dirty inputs; simulate an offline save and retry; verify disabled inputs/selection during a slow save; and check native beforeunload in a regular browser. Raw DevTools reload can be automatically resolved by browser automation, so manually check cancelling reload/close before release.
+
+Do not substitute `academy-package4-integration.spec.ts` against shared QA: its legacy setup deletes all lessons, grants, progress and completions. The metadata suite above is bounded to its own synthetic rows.

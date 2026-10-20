@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { replaceState } from '$app/navigation';
+	import { beforeNavigate, replaceState } from '$app/navigation';
 	import {
 		BookOpen,
 		ChevronRight,
@@ -67,6 +67,26 @@
 	let isSaving = $state(false);
 	let isTransitioning = $state(false);
 	let isDeleting = $state(false);
+	let saveError = $state<string | null>(null);
+	const mutationBusy = $derived(isSaving || isTransitioning || isDeleting);
+	const kindLabels = { subject: 'Subject', level: 'Level', chapter: 'Chapter', lesson: 'Lesson' };
+	const editorKind = $derived(selectedItem ? kindLabels[selectedItem.kind] : 'Materi');
+
+	beforeNavigate(({ cancel, willUnload }) => {
+		if (!isDirty && !mutationBusy) return;
+		// SvelteKit uses the native browser confirmation when leaving the document.
+		if (willUnload) {
+			cancel();
+			return;
+		}
+		if (mutationBusy || !confirm('Ada perubahan yang belum disimpan. Tinggalkan editor?')) cancel();
+	});
+
+	function handleBeforeUnload(event: BeforeUnloadEvent) {
+		if (!isDirty && !mutationBusy) return;
+		event.preventDefault();
+		event.returnValue = '';
+	}
 
 	// Modal States & Guided Creation
 	const SUBJECT_METADATA: Record<string, { title: string; desc: string }> = {
@@ -125,12 +145,14 @@
 
 	// Select item and load into editor
 	function selectContentItem(item: AdminContentDto) {
+		if (mutationBusy || selectedItem?.id === item.id) return;
 		if (isDirty) {
 			if (!confirm('Ada perubahan yang belum disimpan. Yakin ingin beralih materi?')) {
 				return;
 			}
 		}
 		selectedItem = item;
+		saveError = null;
 		formTitle = item.title;
 		formDescription = item.description || '';
 		formScopeId = item.scopeId || null;
@@ -150,8 +172,12 @@
 		mobileView = 'editor';
 
 		// Auto-expand parents
-		if (item.parentId && item.parentId !== 'root') {
-			expandedNodes[item.parentId] = true;
+		let parent = contents.find((node) => node.id === item.parentId);
+		const visited = new Set([item.id]);
+		while (parent && !visited.has(parent.id)) {
+			visited.add(parent.id);
+			expandedNodes[parent.id] = true;
+			parent = contents.find((node) => node.id === parent?.parentId);
 		}
 	}
 
@@ -266,11 +292,21 @@
 
 	// Save Content Mutation
 	async function handleSave() {
-		if (!selectedItem) return;
+		if (!selectedItem || !data.permissions.canManage || mutationBusy || !isDirty) return;
+		const item = selectedItem;
+		saveError = null;
+		if (formTitle.trim().length < 2 || formTitle.trim().length > 255) {
+			saveError = 'Judul harus berisi 2–255 karakter.';
+			return;
+		}
+		if (item.kind === 'lesson' && mediaVideoInput.trim() && !extractedVideoId) {
+			saveError = 'Masukkan URL atau ID video YouTube yang valid sebelum menyimpan.';
+			return;
+		}
 		isSaving = true;
 
 		try {
-			const updatePayload: Record<string, unknown> = {
+			const fields: Record<string, unknown> = {
 				title: formTitle.trim(),
 				description: formDescription.trim(),
 				order: Number(formOrder),
@@ -279,8 +315,21 @@
 				instructor: formInstructor.trim(),
 				syariahRequired: Boolean(formSyariahRequired)
 			};
+			// Send only edited metadata. Identity, ancestry and editorial state are never sent.
+			const original: Record<string, unknown> = {
+				title: item.title,
+				description: item.description || '',
+				order: item.order,
+				scopeId: item.scopeId || null,
+				durationSeconds: item.durationSeconds || 0,
+				instructor: item.instructor || '',
+				syariahRequired: Boolean(item.syariahRequired)
+			};
+			const updatePayload = Object.fromEntries(
+				Object.entries(fields).filter(([key, value]) => value !== original[key])
+			);
 
-			const res = await fetch(`/api/academy/admin/content/${selectedItem.id}`, {
+			const res = await fetch(`/api/academy/admin/content/${encodeURIComponent(item.id)}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(updatePayload)
@@ -291,9 +340,16 @@
 				throw new Error(json.message || 'Gagal menyimpan pembaruan materi.');
 			}
 
+			// Reflect persisted metadata even if a subsequent media request fails.
+			const idx = contents.findIndex((node) => node.id === item.id);
+			if (idx !== -1) {
+				contents[idx] = { ...contents[idx], ...json };
+				selectedItem = contents[idx];
+			}
+
 			// If lesson and video ID was entered, also update media
-			if (selectedItem.kind === 'lesson' && extractedVideoId) {
-				const mediaRes = await fetch(`/api/academy/admin/content/${selectedItem.id}/media`, {
+			if (item.kind === 'lesson' && extractedVideoId) {
+				const mediaRes = await fetch(`/api/academy/admin/content/${encodeURIComponent(item.id)}/media`, {
 					method: 'PUT',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
@@ -308,17 +364,11 @@
 				}
 			}
 
-			// Update in local state
-			const idx = contents.findIndex((c) => c.id === selectedItem?.id);
-			if (idx !== -1) {
-				contents[idx] = { ...contents[idx], ...json };
-				selectedItem = contents[idx];
-			}
-
 			isDirty = false;
 			toast.success('Materi kurikulum berhasil disimpan');
-		} catch (err: any) {
-			toast.error(err.message || 'Terjadi kesalahan saat menyimpan materi');
+		} catch (err: unknown) {
+			saveError = err instanceof Error ? err.message : 'Terjadi kesalahan saat menyimpan materi';
+			toast.error(saveError);
 		} finally {
 			isSaving = false;
 		}
@@ -326,7 +376,11 @@
 
 	// Status Transition Execution
 	async function executeTransition(targetStatus: string, confirmed = false) {
-		if (!selectedItem) return;
+		if (!selectedItem || mutationBusy) return;
+		if (isDirty) {
+			toast.error('Simpan perubahan metadata sebelum mengubah status editorial.');
+			return;
+		}
 		isTransitioning = true;
 
 		try {
@@ -362,7 +416,7 @@
 
 	// Delete Draft Content
 	async function handleDeleteDraft() {
-		if (!selectedItem || selectedItem.status !== 'draft') return;
+		if (!selectedItem || mutationBusy || selectedItem.status !== 'draft') return;
 		if (!confirm(`Hapus draf "${selectedItem.title}" secara permanen? Tindakan ini tidak dapat dibatalkan.`)) {
 			return;
 		}
@@ -520,8 +574,18 @@
 		}
 	}
 
+	function canOpenCreate() {
+		if (!data.permissions.canManage || mutationBusy) return false;
+		if (isDirty) {
+			toast.error('Simpan perubahan metadata sebelum menambah materi.');
+			return false;
+		}
+		return true;
+	}
+
 	// Open Create Modal from Header or Empty State
 	function openCreateModalRoot() {
+		if (!canOpenCreate()) return;
 		isDirectFromNode = false;
 		createError = null;
 
@@ -548,6 +612,7 @@
 
 	// Open Create Modal directly from existing node (+ Level, + Bab, + Pelajaran)
 	function openCreateModal(kind: 'level' | 'chapter' | 'lesson', parent: AdminContentDto) {
+		if (!canOpenCreate()) return;
 		isDirectFromNode = true;
 		createError = null;
 		createKind = kind;
@@ -679,6 +744,8 @@
 		}
 	}
 </script>
+
+<svelte:window onbeforeunload={handleBeforeUnload} />
 
 <svelte:head>
 	<title>Curriculum Tree Builder & Editor | CryptoSharia Admin</title>
@@ -836,22 +903,35 @@
 								<div class="flex items-center justify-between p-2 bg-muted/40 hover:bg-muted/60 transition-colors">
 									<button
 										onclick={() => toggleNode(subjectNode.item.id)}
-										class="flex items-center gap-1.5 font-bold text-foreground truncate text-left flex-1"
+										aria-label={`${expandedNodes[subjectNode.item.id] ? 'Ciutkan' : 'Perluas'} Subject: ${subjectNode.item.title}`}
+										aria-expanded={Boolean(expandedNodes[subjectNode.item.id])}
+										class="p-1.5 shrink-0 rounded hover:bg-muted focus-visible:ring-2 focus-visible:ring-orange-500"
 									>
 										{#if expandedNodes[subjectNode.item.id]}
 											<ChevronDown class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
 										{:else}
 											<ChevronRight class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
 										{/if}
-										<span class="truncate uppercase text-orange-500">{subjectNode.item.title}</span>
 									</button>
 									<button
-										onclick={() => openCreateModal('level', subjectNode.item)}
-										title="Tambah Level baru"
-										class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 transition-colors shrink-0"
+										onclick={() => selectContentItem(subjectNode.item)}
+										disabled={mutationBusy}
+										aria-label={`Buka Subject: ${subjectNode.item.title}`}
+										aria-pressed={selectedItem?.id === subjectNode.item.id}
+										title={subjectNode.item.title}
+										class="min-w-0 flex-1 rounded px-1.5 py-1 text-left text-orange-500 font-bold {selectedItem?.id === subjectNode.item.id ? 'bg-orange-500/15 ring-1 ring-orange-500/40' : 'hover:bg-muted/50'}"
 									>
-										<Plus class="h-3 w-3" /> Level
+										<span class="block text-[11px] break-words">{subjectNode.item.title}</span>
 									</button>
+									{#if data.permissions.canManage}
+										<button
+											onclick={() => openCreateModal('level', subjectNode.item)}
+											title="Tambah Level baru"
+											class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 transition-colors shrink-0"
+										>
+											<Plus class="h-3 w-3" /> Level
+										</button>
+									{/if}
 								</div>
 
 								<!-- 2. Levels Children -->
@@ -862,22 +942,35 @@
 												<div class="flex items-center justify-between p-1.5 hover:bg-muted/30 transition-colors">
 													<button
 														onclick={() => toggleNode(levelNode.item.id)}
-														class="flex items-center gap-1 font-semibold text-foreground truncate text-left flex-1"
+														aria-label={`${expandedNodes[levelNode.item.id] ? 'Ciutkan' : 'Perluas'} Level: ${levelNode.item.title}`}
+														aria-expanded={Boolean(expandedNodes[levelNode.item.id])}
+														class="p-1.5 shrink-0 rounded hover:bg-muted focus-visible:ring-2 focus-visible:ring-orange-500"
 													>
 														{#if expandedNodes[levelNode.item.id]}
 															<ChevronDown class="h-3 w-3 shrink-0 text-muted-foreground" />
 														{:else}
 															<ChevronRight class="h-3 w-3 shrink-0 text-muted-foreground" />
 														{/if}
-														<span class="truncate text-[11px]">{levelNode.item.title}</span>
 													</button>
 													<button
-														onclick={() => openCreateModal('chapter', levelNode.item)}
-														title="Tambah Bab (Chapter) baru"
-														class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 transition-colors shrink-0"
+														onclick={() => selectContentItem(levelNode.item)}
+														disabled={mutationBusy}
+														aria-label={`Buka Level: ${levelNode.item.title}`}
+														aria-pressed={selectedItem?.id === levelNode.item.id}
+														title={levelNode.item.title}
+														class="min-w-0 flex-1 rounded px-1.5 py-1 text-left text-foreground font-semibold {selectedItem?.id === levelNode.item.id ? 'bg-orange-500/15 ring-1 ring-orange-500/40' : 'hover:bg-muted/50'}"
 													>
-														<Plus class="h-3 w-3" /> Bab
+														<span class="block text-[11px] break-words">{levelNode.item.title}</span>
 													</button>
+													{#if data.permissions.canManage}
+														<button
+															onclick={() => openCreateModal('chapter', levelNode.item)}
+															title="Tambah Bab (Chapter) baru"
+															class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 transition-colors shrink-0"
+														>
+															<Plus class="h-3 w-3" /> Bab
+														</button>
+													{/if}
 												</div>
 
 												<!-- 3. Chapters Children -->
@@ -888,22 +981,35 @@
 																<div class="flex items-center justify-between p-1.5 hover:bg-muted/40 transition-colors">
 																	<button
 																		onclick={() => toggleNode(chapterNode.item.id)}
-																		class="flex items-center gap-1 font-medium text-foreground truncate text-left flex-1"
+																		aria-label={`${expandedNodes[chapterNode.item.id] ? 'Ciutkan' : 'Perluas'} Chapter: ${chapterNode.item.title}`}
+																		aria-expanded={Boolean(expandedNodes[chapterNode.item.id])}
+																		class="p-1.5 shrink-0 rounded hover:bg-muted focus-visible:ring-2 focus-visible:ring-orange-500"
 																	>
 																		{#if expandedNodes[chapterNode.item.id]}
 																			<ChevronDown class="h-3 w-3 shrink-0 text-muted-foreground" />
 																		{:else}
 																			<ChevronRight class="h-3 w-3 shrink-0 text-muted-foreground" />
 																		{/if}
-																		<span class="truncate text-[11px]">{chapterNode.item.title}</span>
 																	</button>
 																	<button
-																		onclick={() => openCreateModal('lesson', chapterNode.item)}
-																		title="Tambah Pelajaran (Lesson) baru"
-																		class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-colors shrink-0"
+																		onclick={() => selectContentItem(chapterNode.item)}
+																		disabled={mutationBusy}
+																		aria-label={`Buka Chapter: ${chapterNode.item.title}`}
+																		aria-pressed={selectedItem?.id === chapterNode.item.id}
+																		title={chapterNode.item.title}
+																		class="min-w-0 flex-1 rounded px-1.5 py-1 text-left text-foreground font-semibold {selectedItem?.id === chapterNode.item.id ? 'bg-orange-500/15 ring-1 ring-orange-500/40' : 'hover:bg-muted/50'}"
 																	>
-																		<Plus class="h-3 w-3" /> Pelajaran
+																		<span class="block text-[11px] break-words">{chapterNode.item.title}</span>
 																	</button>
+																	{#if data.permissions.canManage}
+																		<button
+																			onclick={() => openCreateModal('lesson', chapterNode.item)}
+																			title="Tambah Pelajaran (Lesson) baru"
+																			class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-colors shrink-0"
+																		>
+																			<Plus class="h-3 w-3" /> Pelajaran
+																		</button>
+																	{/if}
 																</div>
 
 																<!-- 4. Lessons Leaf Nodes -->
@@ -913,6 +1019,8 @@
 																			{@const isSelected = selectedItem?.id === lessonNode.item.id}
 																			<button
 																				onclick={() => selectContentItem(lessonNode.item)}
+																			aria-pressed={isSelected}
+																			disabled={mutationBusy}
 																				class="w-full flex items-center justify-between gap-2 p-1.5 rounded text-left transition-colors {isSelected ? 'bg-orange-500/15 border border-orange-500/40 text-foreground font-semibold' : 'hover:bg-muted/50 text-muted-foreground'}"
 																			>
 																				<div class="flex items-center gap-1.5 min-w-0">
@@ -1019,14 +1127,16 @@
 						<div>
 							<h3 class="text-base font-bold text-foreground">Pilih Materi untuk Mulai Mengedit</h3>
 							<p class="text-xs text-muted-foreground max-w-md mx-auto mt-1">
-								Pilih materi dari pohon kurikulum di sebelah kiri untuk mengubah judul, deskripsi, durasi, video YouTube, dan menjalankan alur review syariah.
+								Klik judul Subject, Level, Chapter, atau Lesson untuk membuka editor. Gunakan chevron di samping judul untuk membuka atau menutup cabang.
 							</p>
 						</div>
 					</div>
 				{/if}
 			{:else}
 				<!-- Workspace Editor Panel -->
-				<div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col">
+				<p class="text-xs text-muted-foreground">Editor {editorKind} · ID dan induk tetap saat metadata disimpan.</p>
+				<p class="text-xs text-muted-foreground">Induk: {contents.find((node) => node.id === selectedItem?.parentId)?.title || 'Akar kurikulum'}</p>
+				<div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col" aria-busy={mutationBusy}>
 					<!-- Editor Top Bar: Breadcrumb & Status & Actions -->
 					<div class="p-3.5 border-b border-border bg-muted/20 flex flex-wrap items-center justify-between gap-3">
 						<div class="space-y-0.5 min-w-0">
@@ -1047,16 +1157,16 @@
 						<!-- Action Controls -->
 						<div class="flex items-center gap-2">
 							<!-- Context-aware workflow button -->
-							{#if selectedItem.status === 'draft'}
+							{#if selectedItem.status === 'draft' && data.permissions.canManage}
 								<button
 									onclick={() => executeTransition('review')}
-									disabled={isTransitioning}
+									disabled={mutationBusy || isDirty}
 									class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition-colors"
 								>
 									<Clock class="h-3.5 w-3.5" />
 									Ajukan Review
 								</button>
-							{:else if selectedItem.status === 'review'}
+							{:else if selectedItem.status === 'review' && data.permissions.canReview}
 								<button
 									onclick={() => {
 										reviewAction = 'approve';
@@ -1067,7 +1177,7 @@
 									<CheckCircle class="h-3.5 w-3.5" />
 									Verifikasi Review
 								</button>
-							{:else if selectedItem.status === 'approved'}
+							{:else if selectedItem.status === 'approved' && data.permissions.canPublish}
 								<button
 									onclick={() => {
 										reviewAction = 'publish';
@@ -1078,7 +1188,7 @@
 									<Sparkles class="h-3.5 w-3.5" />
 									Publikasikan
 								</button>
-							{:else if selectedItem.status === 'published'}
+							{:else if selectedItem.status === 'published' && data.permissions.canPublish}
 								<button
 									onclick={() => {
 										reviewAction = 'archive';
@@ -1091,10 +1201,10 @@
 							{/if}
 
 							<!-- Delete draft button -->
-							{#if selectedItem.status === 'draft'}
+							{#if selectedItem.status === 'draft' && data.permissions.canManage}
 								<button
 									onclick={handleDeleteDraft}
-									disabled={isDeleting}
+									disabled={mutationBusy}
 									title="Hapus draf ini"
 									class="p-1.5 rounded-lg border border-red-500/30 text-red-500 hover:bg-red-500/10 transition-colors"
 									aria-label="Hapus draf"
@@ -1125,17 +1235,18 @@
 					</div>
 
 					<!-- Tab Content Body -->
-					<div class="p-4 sm:p-5 space-y-4">
+					<fieldset disabled={!data.permissions.canManage || mutationBusy} class="p-4 sm:p-5 space-y-4 min-w-0">
 						{#if activeTab === 'meta'}
 							<!-- 1. Metadata Tab -->
 							<div class="space-y-4 text-xs">
 								<!-- Title -->
 								<div class="space-y-1">
-									<label for="form-title" class="font-semibold text-foreground">Judul Materi *</label>
+									<label for="form-title" class="font-semibold text-foreground">Nama {editorKind} *</label>
 									<input
 										id="form-title"
 										type="text"
 										bind:value={formTitle}
+										minlength="2" maxlength="255" required
 										oninput={() => (isDirty = true)}
 										class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
 									/>
@@ -1143,7 +1254,7 @@
 
 								<!-- Description / Summary -->
 								<div class="space-y-1">
-									<label for="form-desc" class="font-semibold text-foreground">Ringkasan Materi Pelajaran</label>
+									<label for="form-desc" class="font-semibold text-foreground">Deskripsi {editorKind}</label>
 									<textarea
 										id="form-desc"
 										rows="4"
@@ -1158,7 +1269,7 @@
 								<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 									<!-- Scope Selection -->
 									<div class="space-y-1">
-										<label for="form-scope" class="font-semibold text-foreground">Scope Akses Pelajaran</label>
+										<label for="form-scope" class="font-semibold text-foreground">Scope Akses Materi</label>
 										<select
 											id="form-scope"
 											bind:value={formScopeId}
@@ -1330,8 +1441,11 @@
 								</div>
 							</div>
 						{/if}
-					</div>
+					</fieldset>
 
+					{#if saveError}
+						<p role="alert" class="mx-4 mb-3 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-500">{saveError} Perubahan yang belum tersimpan tetap ada di editor; coba simpan kembali.</p>
+					{/if}
 					<!-- Bottom Sticky Save Bar -->
 					<div class="p-3.5 border-t border-border bg-card flex items-center justify-between gap-3">
 						<div class="text-xs">
@@ -1348,10 +1462,10 @@
 
 						<button
 							onclick={handleSave}
-							disabled={isSaving}
+							disabled={!data.permissions.canManage || mutationBusy || !isDirty}
 							class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-orange-500 hover:bg-orange-600 text-white shadow transition-all disabled:opacity-50"
 						>
-							<Save class="h-4 w-4" />
+							{#if isSaving}<Loader2 class="h-4 w-4 animate-spin" />{:else}<Save class="h-4 w-4" />{/if}
 							{isSaving ? 'Menyimpan...' : 'Simpan Materi'}
 						</button>
 					</div>
@@ -1862,7 +1976,7 @@
 				{:else if reviewAction === 'publish'}
 					<button
 						onclick={() => executeTransition('published', true)}
-						disabled={isTransitioning}
+						disabled={mutationBusy || isDirty}
 						class="px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white shadow disabled:opacity-40 transition-all"
 					>
 						{isTransitioning ? 'Memublikasikan...' : 'Rilis Publikasi'}
@@ -1870,7 +1984,7 @@
 				{:else if reviewAction === 'reject'}
 					<button
 						onclick={() => executeTransition('draft', false)}
-						disabled={isTransitioning}
+						disabled={mutationBusy || isDirty}
 						class="px-4 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow disabled:opacity-40 transition-all"
 					>
 						{isTransitioning ? 'Mengembalikan...' : 'Kembalikan ke Draf'}
@@ -1878,7 +1992,7 @@
 				{:else if reviewAction === 'archive'}
 					<button
 						onclick={() => executeTransition('archived', false)}
-						disabled={isTransitioning}
+						disabled={mutationBusy || isDirty}
 						class="px-4 py-1.5 rounded-lg text-xs font-bold bg-zinc-600 hover:bg-zinc-700 text-white shadow transition-all"
 					>
 						Arsipkan Materi

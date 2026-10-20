@@ -16,6 +16,7 @@
 		"test:security": "node tests/security-serialization.mjs",
 		"test:smoke": "node tests/phase2-integration-smoke-test.mjs",
 		"test:integration:real": "node tests/real-neon-integration.mjs",
+		"test:academy-metadata:qa": "node tests/curriculum-metadata-qa.mjs",
 		"gen:api-types": "openapi-typescript http://localhost:5173/openapi.json -o src/lib/api-types.ts",
 		"gen:api-types:preview": "openapi-typescript https://preview.api.cryptosharia.id/openapi.json -o src/lib/api-types.ts"
 	},
