@@ -1,19 +1,25 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
-	import { Save, Settings as SettingsIcon, Globe, Shield, Bell, CheckCircle2 } from 'lucide-svelte';
+	import { Save, Globe, Shield, Bell, CheckCircle2, Eye } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
 	import { cn } from "$lib/utils";
+	import WebsiteVisibilitySettings from '$lib/components/settings/WebsiteVisibilitySettings.svelte';
 
 	let { data, form } = $props();
 
-	let sections = [
+	let baseSections = [
 		{ id: 'general', label: 'General', icon: Globe },
 		{ id: 'security', label: 'Security', icon: Shield },
 		{ id: 'notifications', label: 'Notifications', icon: Bell }
 	];
+	let sections = $derived(
+		data.canManageWebsite
+			? [...baseSections, { id: 'website', label: 'Website', icon: Eye }]
+			: baseSections
+	);
 
 	// Use query parameter to manage active section
 	let activeSection = $derived($page.url.searchParams.get('tab') || 'general');
@@ -48,7 +54,12 @@
 		<!-- Content -->
 		<div class="flex-1">
 			<div class="space-y-6">
-				{#if activeSection === 'general'}
+				{#if activeSection === 'website' && data.canManageWebsite}
+					<WebsiteVisibilitySettings
+						settings={data.websiteSettings}
+						settingsError={data.websiteSettingsError}
+					/>
+				{:else if activeSection === 'general'}
 					<form method="POST" action="?/update" use:enhance>
 						<Card>
 							<CardHeader>
