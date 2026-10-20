@@ -11,7 +11,8 @@ export const ALL_PERMISSIONS = [
 	'team.manage',
 	'academy.manage',
 	'academy.review',
-	'academy.publish'
+	'academy.publish',
+	'website.settings.manage'
 ] as const;
 
 export type Permission = (typeof ALL_PERMISSIONS)[number];
@@ -21,7 +22,8 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
 	admin: ALL_PERMISSIONS.filter(
 		(permission) =>
 			permission !== 'users.manage_role' &&
-			permission !== 'users.manage_status'
+			permission !== 'users.manage_status' &&
+			permission !== 'website.settings.manage'
 	),
 	posts_manager: ['posts.manage', 'tags.manage'],
 	cryptoassets_manager: ['cryptoassets.manage', 'tags.manage'],
@@ -66,4 +68,8 @@ export function canManageUsers(role: string | null | undefined): boolean {
 
 export function canManageTeam(role: string | null | undefined): boolean {
 	return hasPermission(role, 'team.manage');
+}
+
+export function canManageWebsiteSettings(role: string | null | undefined): boolean {
+	return hasPermission(role, 'website.settings.manage');
 }

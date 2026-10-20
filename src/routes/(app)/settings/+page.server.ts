@@ -1,10 +1,19 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { toPublicUser } from '$lib/server/public-user';
+import { canManageWebsiteSettings } from '$lib/permissions';
+import { readAcademyVisibility } from '$lib/server/websiteSettings';
 
-export const load = (({ locals }) => {
+export const load = (async ({ locals, fetch }) => {
+	const canManageWebsite = canManageWebsiteSettings(locals.user?.role);
+	const accessToken = locals.accessToken || locals.user?.accessToken;
+	const websiteSettings =
+		canManageWebsite && accessToken ? await readAcademyVisibility(fetch, accessToken) : null;
 	return {
 		user: toPublicUser(locals.user),
+		canManageWebsite,
+		websiteSettings: websiteSettings?.ok ? websiteSettings.data : null,
+		websiteSettingsError: websiteSettings && !websiteSettings.ok ? websiteSettings.message : null,
 		twoFactorEnabled: false,
 		qrCodeUrl: undefined as string | undefined,
 		twoFactorSecret: undefined as string | undefined
