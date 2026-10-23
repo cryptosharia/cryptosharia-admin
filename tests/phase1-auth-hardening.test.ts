@@ -15,19 +15,20 @@ import {
 	canManageTeam
 } from '../src/lib/permissions.ts';
 
-test('ALL_PERMISSIONS contains exact 13 official backend permissions', () => {
-	assert.equal(ALL_PERMISSIONS.length, 13);
+test('ALL_PERMISSIONS contains exact 14 official backend permissions', () => {
+	assert.equal(ALL_PERMISSIONS.length, 14);
 	assert.ok(ALL_PERMISSIONS.includes('academy.manage'));
 	assert.ok(ALL_PERMISSIONS.includes('academy.review'));
 	assert.ok(ALL_PERMISSIONS.includes('academy.publish'));
 	assert.ok(ALL_PERMISSIONS.includes('posts.manage'));
 	assert.ok(ALL_PERMISSIONS.includes('cryptoassets.manage'));
 	assert.ok(ALL_PERMISSIONS.includes('users.manage_role'));
+	assert.ok(ALL_PERMISSIONS.includes('website.settings.manage'));
 });
 
 test('ROLE_PERMISSIONS accurately maps all official roles', () => {
 	// super_admin has all permissions
-	assert.equal(ROLE_PERMISSIONS.super_admin.length, 13);
+	assert.equal(ROLE_PERMISSIONS.super_admin.length, 14);
 	assert.ok(canManageAcademy('super_admin'));
 	assert.ok(canReviewAcademy('super_admin'));
 	assert.ok(canPublishAcademy('super_admin'));
@@ -69,7 +70,11 @@ test('ROLE_PERMISSIONS accurately maps all official roles', () => {
 });
 
 test('CSRF origin validation rejects cross-origin mutating requests', () => {
-	function validateCsrfOrigin(method: string, originHeader: string | null, appOrigin: string): boolean {
+	function validateCsrfOrigin(
+		method: string,
+		originHeader: string | null,
+		appOrigin: string
+	): boolean {
 		if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
 			if (originHeader) {
 				try {

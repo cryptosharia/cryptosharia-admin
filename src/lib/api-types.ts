@@ -3,7 +3,91 @@
  * Do not make direct changes to the file.
  */
 
+type AuthApiObjectResponse<T> = {
+	headers: { [name: string]: unknown };
+	content: { 'application/json': T };
+};
+type AuthApiNoContentResponse = {
+	headers: { [name: string]: unknown };
+	content?: never;
+};
+type AuthApiErrorResponse<Code extends string> = AuthApiObjectResponse<{
+	error: Code;
+	message: string;
+}>;
+type AuthApiRateLimitResponse<Code extends string> = {
+	headers: { 'Retry-After': string; [name: string]: unknown };
+	content: { 'application/json': { error: Code; message: string } };
+};
+type AuthApiValidationResponse = AuthApiObjectResponse<{
+	error: 'VALIDATION_FAILED';
+	message: 'Validasi gagal';
+	details: { root: string[]; fields: Record<string, string[]> };
+}>;
+type AuthApiOperation<Body, Responses> = {
+	parameters: { query?: never; header?: never; path?: never; cookie?: never };
+	requestBody?: { content: { 'application/json': Body } };
+	responses: Responses;
+};
+type AuthApiPath<Operation> = {
+	parameters: { query?: never; header?: never; path?: never; cookie?: never };
+	get?: never;
+	put?: never;
+	post: Operation;
+	delete?: never;
+	options?: never;
+	head?: never;
+	patch?: never;
+	trace?: never;
+};
+
 export interface paths {
+	'/auth/password/login': AuthApiPath<
+		AuthApiOperation<
+			{ email: string; password: string },
+			{
+				200: AuthApiObjectResponse<{ accessToken: string; refreshToken: string }>;
+				401: AuthApiErrorResponse<'PASSWORD_INVALID_CREDENTIALS'>;
+				422: AuthApiValidationResponse;
+				429: AuthApiRateLimitResponse<'PASSWORD_LOGIN_RATE_LIMITED'>;
+			}
+		>
+	>;
+	'/auth/password/forgot': AuthApiPath<
+		AuthApiOperation<
+			{ email: string; application: 'admin' | 'learning' },
+			{
+				204: AuthApiNoContentResponse;
+				401: AuthApiErrorResponse<'UNAUTHORIZED'>;
+				422: AuthApiValidationResponse;
+			}
+		>
+	>;
+	'/auth/password/reset': AuthApiPath<
+		AuthApiOperation<
+			{ token: string; newPassword: string },
+			{
+				204: AuthApiNoContentResponse;
+				400: AuthApiErrorResponse<'PASSWORD_RESET_INVALID'>;
+				401: AuthApiErrorResponse<'UNAUTHORIZED'>;
+				422: AuthApiValidationResponse;
+			}
+		>
+	>;
+	'/auth/password/set': AuthApiPath<
+		AuthApiOperation<
+			{ otpCode: string; newPassword: string },
+			{
+				204: AuthApiNoContentResponse;
+				400: AuthApiErrorResponse<'OTP_INVALID_OR_EXPIRED'>;
+				401: AuthApiErrorResponse<'UNAUTHORIZED'>;
+				403: AuthApiErrorResponse<'USER_INACTIVE'>;
+				409: AuthApiErrorResponse<'PASSWORD_ALREADY_SET'>;
+				422: AuthApiValidationResponse;
+				429: AuthApiErrorResponse<'OTP_MAX_ATTEMPTS_EXCEEDED'>;
+			}
+		>
+	>;
 	'/health': {
 		parameters: {
 			query?: never;
@@ -704,6 +788,7 @@ export interface paths {
 							 * @description User pengubah terakhir
 							 */
 							updatedBy: string | null;
+							hasPassword: boolean;
 							avatar: {
 								/**
 								 * Format: uuid

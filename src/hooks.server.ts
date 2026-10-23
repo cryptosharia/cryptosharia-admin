@@ -111,7 +111,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			});
 			event.cookies.set('refresh_token', refreshToken, {
 				...cookieOptions,
-				maxAge: 60 * 60 * 24 * 30
+				maxAge: 60 * 60 * 24 * 15
 			});
 			event.cookies.delete('user_session', { path: '/' });
 			return accessToken;

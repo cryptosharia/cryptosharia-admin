@@ -30,6 +30,9 @@ const { chromium } = await import(pathToFileURL(process.env.P01_PLAYWRIGHT_MODUL
 const key = 'p01-synthetic-shared-key';
 const refresh = 'p01-synthetic-refresh-credential';
 const extra = 'p01-synthetic-future-session-secret';
+const loginPassword = 'Synthetic browser password 2026!';
+const resetPassword = 'Synthetic reset password 2026!';
+const resetToken = 'A'.repeat(43);
 const id = '10000000-0000-4000-8000-000000000001';
 function token(role, expired = false) {
 	return [
@@ -48,7 +51,15 @@ const roleTokens = new Map(
 		role
 	])
 );
-const secrets = [key, refresh, extra, expiredToken, ...roleTokens.keys()];
+const secrets = [
+	key,
+	refresh,
+	extra,
+	loginPassword,
+	resetPassword,
+	expiredToken,
+	...roleTokens.keys()
+];
 const forbidden = ['accessToken', 'refreshToken', 'apiKey', 'sessionSecret', 'authorization'];
 const publicKeys = ['email', 'id', 'name', 'permissions', 'role'];
 const cryptoasset = {
@@ -109,6 +120,27 @@ const mock = createServer(async (req, res) => {
 	};
 	if (!apiKeyMatched)
 		return json(401, { error: 'UNAUTHORIZED', message: 'Synthetic key required' });
+	if (pathname === '/auth/password/login') {
+		const data = JSON.parse(body);
+		if (![loginPassword, resetPassword].includes(data.password))
+			return json(401, { error: 'PASSWORD_INVALID', message: 'Invalid synthetic password' });
+		const accessToken =
+			data.email === 'member@p01.invalid'
+				? [...roleTokens].find(([, value]) => value === 'member')[0]
+				: adminToken;
+		return json(200, { accessToken, refreshToken: refresh });
+	}
+	if (pathname === '/auth/password/forgot') {
+		res.writeHead(204);
+		return res.end();
+	}
+	if (pathname === '/auth/password/reset') {
+		const data = JSON.parse(body);
+		if (data.token !== resetToken || data.newPassword !== resetPassword)
+			return json(400, { error: 'PASSWORD_RESET_INVALID' });
+		res.writeHead(204);
+		return res.end();
+	}
 	if (pathname === '/auth/otp/request') {
 		res.writeHead(204);
 		return res.end();
@@ -804,6 +836,9 @@ try {
 				await ctx.close();
 			}
 		);
+		const warmDashboard = await admin.newPage();
+		await warmDashboard.goto(`${origin}/dashboard`, { waitUntil: 'networkidle' });
+		await warmDashboard.close();
 		const ui = await context();
 		const page = await ui.newPage();
 		page.on('pageerror', (error) => pageErrors.push(redacted(error.message)));
@@ -826,40 +861,115 @@ try {
 			);
 		});
 		await record(
-			'Real browser OTP login, hydration and client navigation preserve auth',
+			'Password login toggles visibility, rejects credentials and admits only admin roles',
 			async () => {
-				await page.goto(`${origin}/login`);
-				await page.locator('#email').fill('admin@p01.invalid');
-				await page.getByRole('button', { name: 'Kirim kode OTP' }).click();
-				await page.locator('#code').fill('123456');
-				await page.getByRole('button', { name: 'Verifikasi dan masuk' }).click();
+				const guest = await context();
+				const guestPage = await guest.newPage();
+				await guestPage.goto(`${origin}/login`, { waitUntil: 'networkidle' });
+				await guestPage.locator('#password-email').fill('admin@p01.invalid');
+				await guestPage.locator('#password').fill('wrong synthetic password');
+				await guestPage.getByRole('button', { name: /Masuk/ }).click();
+				await guestPage
+					.getByRole('alert')
+					.filter({ hasText: 'Email atau kata sandi tidak valid.' })
+					.waitFor();
+				assert.equal((await guest.cookies()).length, 0, 'Failed login sets no session cookies');
+
+				await guestPage.locator('#password-email').fill('member@p01.invalid');
+				await guestPage.locator('#password').fill(loginPassword);
+				await guestPage.getByRole('button', { name: /Masuk/ }).click();
+				await guestPage
+					.getByRole('alert')
+					.filter({ hasText: 'tidak memiliki akses ke panel admin' })
+					.waitFor();
+				assert.equal((await guest.cookies()).length, 0, 'Member login sets no Admin session');
+				await guest.close();
+
+				await page.goto(`${origin}/login`, { waitUntil: 'networkidle' });
+				const passwordInput = page.locator('#password');
+				assert.equal(await passwordInput.getAttribute('type'), 'password');
+				await page.getByRole('button', { name: 'Tampilkan kata sandi' }).click();
+				await page.waitForFunction(
+					() => document.querySelector('#password')?.getAttribute('type') === 'text'
+				);
+				await page.getByRole('button', { name: 'Sembunyikan kata sandi' }).click();
+				await page.waitForFunction(
+					() => document.querySelector('#password')?.getAttribute('type') === 'password'
+				);
+				await page.locator('#password-email').fill('admin@p01.invalid');
+				await passwordInput.fill(loginPassword);
+				await page.getByRole('button', { name: /Masuk/ }).click();
 				await page.waitForURL(`${origin}/dashboard`);
-				await page.getByRole('heading', { name: 'System Overview', exact: true }).waitFor();
-				safePayload(await page.content(), 'hydrated HTML');
+				await page.waitForLoadState('networkidle');
+				await page.getByRole('heading', { name: 'Dashboard Operasional', exact: true }).waitFor();
+				safePayload(await page.content(), 'password-login hydrated HTML');
 				safePayload(await page.evaluate(() => document.cookie), 'browser JS cookies');
 				const cookies = new Map((await ui.cookies()).map((cookie) => [cookie.name, cookie]));
 				for (const name of ['access_token', 'refresh_token', 'user_session']) {
 					const cookie = cookies.get(name);
-					assert.ok(cookie, `${name} is set after synthetic OTP login`);
+					assert.ok(cookie, `${name} is set after synthetic password login`);
 					assert.equal(cookie.httpOnly, true);
 					assert.equal(cookie.sameSite, 'Strict');
 					assert.equal(cookie.path, '/');
 					assert.equal(cookie.secure, preview, `${name} Secure matches local runtime mode`);
 				}
-				await page.getByRole('link', { name: 'Users', exact: true }).click();
-				await page.waitForURL(`${origin}/users`);
-				assert.ok(await page.getByText('Synthetic Admin', { exact: true }).count());
+				assert.ok(
+					calls.some((call) => call.path === '/auth/password/login' && call.apiKeyMatched),
+					'Password login is delegated through the server API client'
+				);
 				assert.ok(pendingResponses.length > 0);
 			}
 		);
+		await record('Admin browser retains OTP login as a working fallback', async () => {
+			const otpContext = await context();
+			const otpPage = await otpContext.newPage();
+			await otpPage.goto(`${origin}/login`, { waitUntil: 'networkidle' });
+			await otpPage.getByRole('button', { name: 'Kode email', exact: true }).click();
+			await otpPage.locator('#otp-email').fill('admin@p01.invalid');
+			await otpPage.getByRole('button', { name: /Kirim kode OTP/ }).click();
+			await otpPage.locator('#code').fill('123456');
+			await otpPage.getByRole('button', { name: 'Verifikasi dan masuk' }).click();
+			await otpPage.waitForURL(`${origin}/dashboard`);
+			await otpPage.getByRole('heading', { name: 'Dashboard Operasional', exact: true }).waitFor();
+			safePayload(await otpPage.content(), 'OTP-login hydrated HTML');
+			await otpContext.close();
+		});
+		await record('Admin reset request and token reset use the generic browser flow', async () => {
+			const resetContext = await context();
+			const resetPage = await resetContext.newPage();
+			await resetPage.goto(`${origin}/reset-password`, { waitUntil: 'networkidle' });
+			await resetPage.locator('#email').fill('admin@p01.invalid');
+			await resetPage.getByRole('button', { name: /Kirim tautan reset/ }).click();
+			await resetPage.getByRole('heading', { name: 'Periksa Email Anda' }).waitFor();
+
+			await resetPage.goto(`${origin}/reset-password/${resetToken}`, { waitUntil: 'networkidle' });
+			await resetPage.locator('#password').fill(resetPassword);
+			await resetPage.locator('#confirmPassword').fill(resetPassword);
+			await resetPage.getByRole('button', { name: /Atur kata sandi/ }).click();
+			await resetPage.getByRole('heading', { name: 'Kata sandi diperbarui' }).waitFor();
+			assert.ok(calls.some((call) => call.path === '/auth/password/forgot'));
+			assert.ok(calls.some((call) => call.path === '/auth/password/reset'));
+
+			await resetPage.getByRole('link', { name: 'Masuk', exact: true }).click();
+			await resetPage.locator('#password-email').fill('admin@p01.invalid');
+			await resetPage.locator('#password').fill(resetPassword);
+			await resetPage.getByRole('button', { name: /Masuk/ }).click();
+			await resetPage.waitForURL(`${origin}/dashboard`);
+			assert.ok(await resetContext.cookies());
+			await resetContext.close();
+		});
+		await page.getByRole('link', { name: 'Daftar Pengguna', exact: true }).click();
+		await page.waitForURL(`${origin}/users`);
+		await page.waitForLoadState('networkidle');
+		assert.ok(await page.getByText('Synthetic Admin', { exact: true }).count());
 		await record('Main sidebar shows token access only to cryptoasset managers', async () => {
-			assert.equal(await page.getByRole('link', { name: 'Tokens', exact: true }).count(), 1);
+			assert.equal(await page.getByRole('link', { name: 'Token Kripto', exact: true }).count(), 1);
 			const managerToken = [...roleTokens].find(([, role]) => role === 'posts_manager')?.[0];
 			assert.ok(managerToken, 'Synthetic posts manager token exists');
 			const ctx = await context(managerToken, refresh);
 			const managerPage = await ctx.newPage();
 			await managerPage.goto(`${origin}/dashboard`);
-			assert.equal(await managerPage.getByRole('link', { name: 'Tokens', exact: true }).count(), 0);
+			assert.equal(await managerPage.getByRole('link', { name: 'Token Kripto', exact: true }).count(), 0);
 			await ctx.close();
 			await ui.close();
 		});

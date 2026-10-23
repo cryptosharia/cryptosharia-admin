@@ -1,10 +1,11 @@
 <script lang="ts">
+	import type { PageProps } from './$types';
 	import { enhance } from '$app/forms';
 	import { Loader2, ArrowRight, CheckCircle2, ArrowLeft } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 
-	let { form }: { form: any } = $props();
+	let { form }: PageProps = $props();
 	let loading = $state(false);
 </script>
 
@@ -26,20 +27,21 @@
 		>
 			<CheckCircle2 size={32} />
 		</div>
-		<h2 class="text-xl font-bold text-foreground">Check Your Email</h2>
+		<h2 class="text-xl font-bold text-foreground">Periksa Email Anda</h2>
 		<p class="mx-auto max-w-xs text-sm text-muted-foreground">
-			If an account exists for that email, a reset link has been sent.
+			Jika email tersebut terdaftar, tautan untuk mengatur ulang kata sandi telah dikirim.
 		</p>
-		<Button href="/login" variant="outline" class="mt-2">Back to Login</Button>
+		<Button href="/login" variant="outline" class="mt-2">Kembali ke login</Button>
 	</div>
 {:else}
 	<div class="mb-6 space-y-1 text-center">
-		<h2 class="text-xl font-bold text-foreground">Forgot Password?</h2>
-		<p class="text-sm text-muted-foreground">Enter your email to receive a reset link.</p>
+		<h2 class="text-xl font-bold text-foreground">Lupa kata sandi?</h2>
+		<p class="text-sm text-muted-foreground">Masukkan email untuk menerima tautan reset.</p>
 	</div>
 
 	<form
 		method="POST"
+		action="?/requestReset"
 		use:enhance={() => {
 			loading = true;
 			return async ({ update }) => {
@@ -50,13 +52,14 @@
 		class="space-y-4"
 	>
 		<div class="space-y-2">
-			<label for="email" class="text-sm leading-none font-medium">Email Address</label>
+			<label for="email" class="text-sm leading-none font-medium">Email</label>
 			<Input
 				type="email"
 				id="email"
 				name="email"
 				required
 				maxlength={255}
+				autocomplete="email"
 				placeholder="your@email.com"
 				class="h-12"
 			/>
@@ -75,7 +78,7 @@
 			disabled={loading}
 			class="h-12 w-full gap-2 text-base font-bold shadow-lg shadow-primary/20"
 		>
-			{#if loading}<Loader2 class="animate-spin" size={20} />Sending...{:else}Send Reset Link <ArrowRight
+			{#if loading}<Loader2 class="animate-spin" size={20} />Mengirim...{:else}Kirim tautan reset <ArrowRight
 					size={20}
 				/>{/if}
 		</Button>
