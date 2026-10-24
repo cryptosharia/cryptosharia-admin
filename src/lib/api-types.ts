@@ -246,6 +246,32 @@ export interface paths {
 						};
 					};
 				};
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': {
+							/** @enum {string} */
+							error: 'INTERNAL_SERVER_ERROR';
+							/** @enum {string} */
+							message: 'Terjadi kesalahan pada server';
+						};
+					};
+				};
+				503: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': {
+							/** @enum {string} */
+							error: 'SERVICE_UNAVAILABLE';
+							/** @enum {string} */
+							message: 'Layanan tidak tersedia';
+						};
+					};
+				};
 			};
 		};
 		delete?: never;

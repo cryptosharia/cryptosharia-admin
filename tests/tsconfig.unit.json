@@ -13,6 +13,7 @@
 		"./phase1-auth-hardening.test.ts",
 		"./phase2-bff-auth-rbac.test.ts",
 		"./phase2-bff-endpoints.test.ts",
+		"./otp-request-outcome.test.ts",
 		"./curriculum-creation.test.ts"
 	]
 }
