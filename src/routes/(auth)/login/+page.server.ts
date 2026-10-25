@@ -1,6 +1,7 @@
 import { fail, redirect, type Cookies } from '@sveltejs/kit';
 import { createApiClient } from '$lib/api';
 import { ADMIN_ROLES, getRolePermissions } from '$lib/permissions';
+import { getOtpRequestOutcome } from '$lib/server/otpRequestOutcome';
 import type { Actions } from './$types';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -156,12 +157,14 @@ export const actions = {
 		}
 
 		const client = createApiClient({ fetch });
-		const { error } = await client.POST('/auth/otp/request', { body: { email } });
-		if (error)
-			return fail(503, {
+		const outcome = await getOtpRequestOutcome(() =>
+			client.POST('/auth/otp/request', { body: { email } })
+		);
+		if (!outcome.ok)
+			return fail(outcome.status, {
 				email,
 				redirect: redirectPath,
-				error: 'Kode OTP belum dapat dikirim. Coba lagi.'
+				error: outcome.message
 			});
 
 		return {
