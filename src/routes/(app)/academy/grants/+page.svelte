@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import {
 		KeyRound,
+		Layers,
 		ChevronRight,
 		AlertCircle,
 		CheckCircle2,
@@ -47,6 +48,8 @@
 	let manualUserId = $state('');
 	let isManualUserMode = $state(false);
 
+	let grantAccessMode = $state<'all' | 'custom'>('all');
+	let selectedScopeIds = $state<string[]>([]);
 	let selectedScopeId = $state('');
 	let durationPreset = $state<'30' | '90' | '365' | 'lifetime' | 'custom'>('90');
 	let customExpiresAt = $state('');
@@ -133,6 +136,8 @@
 		searchedStudents = [];
 		manualUserId = '';
 		isManualUserMode = false;
+		grantAccessMode = 'all';
+		selectedScopeIds = scopes.filter((s) => s.isActive).map((s) => s.id);
 		selectedScopeId = scopes.find((s) => s.isActive)?.id || scopes[0]?.id || '';
 		durationPreset = '90';
 		customExpiresAt = '';
@@ -171,8 +176,13 @@
 			return;
 		}
 
-		if (!selectedScopeId) {
-			createError = 'Pilih Scope tingkatan akses yang akan diberikan.';
+		const scopesToGrant =
+			grantAccessMode === 'all'
+				? scopes.filter((s) => s.isActive).map((s) => s.id)
+				: selectedScopeIds;
+
+		if (scopesToGrant.length === 0) {
+			createError = 'Pilih minimal satu Scope akses materi untuk diberikan.';
 			return;
 		}
 
@@ -186,28 +196,53 @@
 
 		isSubmittingCreate = true;
 		try {
-			const res = await fetch('/api/academy/admin/grants', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({
-					userId,
-					scopeId: selectedScopeId,
-					startsAt,
-					expiresAt,
-					source: 'manual'
-				})
-			});
+			const createdGrants: AdminGrantDto[] = [];
+			const failedScopes: string[] = [];
 
-			const body = await res.json();
-			if (!res.ok) {
-				createError = body.message || 'Gagal memberikan hak akses grant.';
-				return;
+			for (const scId of scopesToGrant) {
+				try {
+					const res = await fetch('/api/academy/admin/grants', {
+						method: 'POST',
+						headers: { 'content-type': 'application/json' },
+						body: JSON.stringify({
+							userId,
+							scopeId: scId,
+							startsAt,
+							expiresAt,
+							source: 'manual'
+						})
+					});
+
+					const body = await res.json();
+					if (res.ok) {
+						createdGrants.push(body);
+					} else {
+						failedScopes.push(scId);
+					}
+				} catch {
+					failedScopes.push(scId);
+				}
 			}
 
-			// Success
-			grants = [body, ...grants];
-			isCreateModalOpen = false;
-			showFeedback('success', `Akses scope "${selectedScopeId}" berhasil diberikan ke pengguna.`);
+			if (createdGrants.length > 0) {
+				grants = [...createdGrants, ...grants];
+				isCreateModalOpen = false;
+
+				if (failedScopes.length > 0) {
+					showFeedback(
+						'error',
+						`${createdGrants.length} akses berhasil diberikan, namun gagal untuk: ${failedScopes.join(', ')}`
+					);
+				} else {
+					const label =
+						createdGrants.length === 1
+							? `Scope "${createdGrants[0].scopeId}"`
+							: `Seluruh (${createdGrants.length}) scope materi`;
+					showFeedback('success', `Akses ${label} berhasil diberikan ke pengguna.`);
+				}
+			} else {
+				createError = 'Gagal memberikan hak akses untuk scope yang dipilih.';
+			}
 		} catch {
 			createError = 'Terjadi kesalahan jaringan saat membuat grant.';
 		} finally {
@@ -587,24 +622,109 @@
 					{/if}
 				</div>
 
-				<!-- Scope Selection -->
-				<div>
-					<label for="grant-scope-id" class="block text-xs font-medium text-foreground mb-1">
-						Pilih Scope Akses <span class="text-orange-500">*</span>
-					</label>
-					<select
-						id="grant-scope-id"
-						bind:value={selectedScopeId}
-						class="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/50"
-					>
-						{#each scopes as scope}
-							<option value={scope.id}>
-								{scope.name} ({scope.id}) {scope.isActive ? '' : '[Nonaktif]'}
-							</option>
-						{/each}
-					</select>
-				</div>
+				<!-- Scope Selection Mode -->
+				<div class="space-y-2">
+					<span class="block text-xs font-medium text-foreground">
+						Pilihan Akses Siswa <span class="text-orange-500">*</span>
+					</span>
+					<div class="grid grid-cols-2 gap-2">
+						<button
+							type="button"
+							onclick={() => {
+								grantAccessMode = 'all';
+								selectedScopeIds = scopes.filter((s) => s.isActive).map((s) => s.id);
+							}}
+							class="p-2.5 rounded-lg border text-xs font-medium flex items-center justify-center gap-2 transition-all {grantAccessMode === 'all'
+								? 'border-orange-500 bg-orange-500/10 text-orange-400 font-semibold ring-1 ring-orange-500/50'
+								: 'border-border bg-background text-muted-foreground hover:bg-muted/50'}"
+						>
+							<Shield class="h-4 w-4 shrink-0" />
+							<span>Akses Semua Materi</span>
+						</button>
+						<button
+							type="button"
+							onclick={() => {
+								grantAccessMode = 'custom';
+								if (selectedScopeIds.length === 0 && scopes.length > 0) {
+									selectedScopeIds = [scopes[0].id];
+								}
+							}}
+							class="p-2.5 rounded-lg border text-xs font-medium flex items-center justify-center gap-2 transition-all {grantAccessMode === 'custom'
+								? 'border-orange-500 bg-orange-500/10 text-orange-400 font-semibold ring-1 ring-orange-500/50'
+								: 'border-border bg-background text-muted-foreground hover:bg-muted/50'}"
+						>
+							<Layers class="h-4 w-4 shrink-0" />
+							<span>Pilih Per Scope / Bab</span>
+						</button>
+					</div>
 
+					{#if grantAccessMode === 'all'}
+						<div class="p-3 rounded-lg border border-orange-500/30 bg-orange-500/5 text-xs text-orange-300 flex items-start gap-2.5">
+							<CheckCircle2 class="h-4 w-4 text-orange-400 shrink-0 mt-0.5" />
+							<div>
+								<p class="font-medium text-foreground">
+									Akses Penuh Seluruh Materi ({scopes.filter((s) => s.isActive).length} Scope)
+								</p>
+								<p class="text-[11px] text-muted-foreground mt-0.5">
+									Siswa langsung diberikan akses ke semua scope kurikulum sekaligus dalam satu klik.
+								</p>
+							</div>
+						</div>
+					{:else}
+						<div class="space-y-2 pt-1">
+							<div class="flex items-center justify-between text-xs">
+								<span class="text-muted-foreground font-medium">
+									Pilih scope atau bab ({selectedScopeIds.length} dipilih):
+								</span>
+								<div class="flex items-center gap-2">
+									<button
+										type="button"
+										onclick={() => (selectedScopeIds = scopes.map((s) => s.id))}
+										class="text-[11px] text-orange-400 hover:underline cursor-pointer"
+									>
+										Pilih Semua
+									</button>
+									<span class="text-muted-foreground">|</span>
+									<button
+										type="button"
+										onclick={() => (selectedScopeIds = [])}
+										class="text-[11px] text-muted-foreground hover:underline cursor-pointer"
+									>
+										Kosongkan
+									</button>
+								</div>
+							</div>
+
+							<div class="max-h-44 overflow-y-auto space-y-1 p-2 rounded-lg border border-border bg-muted/20">
+								{#each scopes as scope}
+									<label class="flex items-center gap-2.5 p-2 rounded-md hover:bg-muted/50 cursor-pointer transition-colors text-xs {selectedScopeIds.includes(scope.id) ? 'bg-orange-500/10 text-foreground font-medium' : 'text-muted-foreground'}">
+										<input
+											type="checkbox"
+											value={scope.id}
+											checked={selectedScopeIds.includes(scope.id)}
+											onchange={(e) => {
+												if ((e.currentTarget as HTMLInputElement).checked) {
+													selectedScopeIds = [...selectedScopeIds, scope.id];
+												} else {
+													selectedScopeIds = selectedScopeIds.filter((id) => id !== scope.id);
+												}
+											}}
+											class="rounded border-border text-orange-500 focus:ring-orange-500 h-4 w-4 cursor-pointer"
+										/>
+										<div class="flex-1 min-w-0">
+											<span class="truncate block text-foreground">{scope.name}</span>
+											<span class="text-[10px] text-muted-foreground font-mono">{scope.id}</span>
+										</div>
+										{#if !scope.isActive}
+											<span class="text-[10px] text-zinc-500 bg-muted px-1.5 py-0.5 rounded">Nonaktif</span>
+										{/if}
+									</label>
+								{/each}
+							</div>
+						</div>
+					{/if}
+				</div>
+
 				<!-- Duration Selection -->
 				<div>
 					<span class="block text-xs font-medium text-foreground mb-1">

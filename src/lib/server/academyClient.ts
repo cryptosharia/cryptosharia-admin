@@ -220,6 +220,16 @@ export async function transitionAdminContent(
 	);
 }
 
+export async function getAdminLessonMedia(
+	id: string,
+	accessToken: string
+) {
+	return academyApiFetch<MediaDto | null>(`/academy/admin/content/${encodeURIComponent(id)}/media`, {
+		method: 'GET',
+		accessToken
+	});
+}
+
 export async function setAdminLessonMedia(
 	id: string,
 	payload: SetLessonMediaPayload,

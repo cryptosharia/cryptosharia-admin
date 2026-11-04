@@ -161,11 +161,36 @@
 		formInstructor = item.instructor || '';
 		formSyariahRequired = Boolean(item.syariahRequired);
 
-		// If lesson, reset media inputs
+		// If lesson, reset and load media inputs
 		mediaVideoInput = '';
 		extractedVideoId = '';
 		readingRefs = [];
 		attachmentRefs = [];
+
+		if (item.kind === 'lesson') {
+			fetch(`/api/academy/admin/content/${encodeURIComponent(item.id)}/media`)
+				.then(async (res) => {
+					if (res.ok) {
+						const media = await res.json();
+						if (media && selectedItem?.id === item.id) {
+							if (media.videoId) {
+								mediaVideoInput = media.videoId;
+								extractedVideoId = media.videoId;
+							}
+							if (Array.isArray(media.readingRefs)) {
+								readingRefs = [...media.readingRefs];
+							}
+							if (Array.isArray(media.attachmentRefs)) {
+								attachmentRefs = [...media.attachmentRefs];
+							}
+							isDirty = false;
+						}
+					}
+				})
+				.catch((err) => {
+					console.warn('Gagal memuat media video:', err);
+				});
+		}
 
 		isDirty = false;
 		activeTab = 'meta';
