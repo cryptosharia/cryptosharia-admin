@@ -65,11 +65,15 @@
 		};
 	}
 
-	function generateSlug(str: string) {
-		return str
+	function generateSlug(str: string, maxLength = 80) {
+		const raw = str
 			.toLowerCase()
 			.replace(/[^a-z0-9]+/g, '-')
 			.replace(/(^-|-$)+/g, '');
+		if (raw.length <= maxLength) return raw;
+		const truncated = raw.slice(0, maxLength).replace(/-+$/g, '');
+		const lastDash = truncated.lastIndexOf('-');
+		return lastDash > 20 ? truncated.slice(0, lastDash) : truncated;
 	}
 
 	function handleTitleInput(e: Event) {
